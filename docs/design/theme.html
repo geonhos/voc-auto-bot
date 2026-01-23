@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOC Auto Bot - Design System</title>
+    <style>
+        /* ========================================
+           Reset & Base Styles
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #2d2d2a;
+            background-color: #f5f5f4;
+        }
+
+        /* ========================================
+           Color Variables
+           ======================================== */
+        :root {
+            /* Primary Colors - Muted Slate Blue */
+            --primary-50: #f0f2f5;
+            --primary-100: #d9dfe6;
+            --primary-200: #b8c4d1;
+            --primary-300: #8a9db3;
+            --primary-400: #6b7f99;
+            --primary-500: #556780;
+            --primary-600: #475569;
+            --primary-700: #3a4557;
+            --primary-800: #2d3745;
+            --primary-900: #1f2733;
+
+            /* Secondary Colors - Warm Gray */
+            --secondary-50: #f5f5f4;
+            --secondary-100: #e7e5e4;
+            --secondary-200: #d6d3d1;
+            --secondary-300: #a8a29e;
+            --secondary-400: #78716c;
+            --secondary-500: #57534e;
+            --secondary-600: #44403c;
+            --secondary-700: #373330;
+            --secondary-800: #292524;
+            --secondary-900: #1c1917;
+
+            /* Success Colors - Muted Sage/Olive */
+            --success-50: #f3f6f3;
+            --success-100: #e1e9e0;
+            --success-500: #6b8e6b;
+            --success-600: #587358;
+            --success-700: #475c47;
+
+            /* Warning Colors - Muted Mustard/Amber */
+            --warning-50: #f8f5f0;
+            --warning-100: #f0e8d9;
+            --warning-500: #b38f4d;
+            --warning-600: #997840;
+            --warning-700: #7d6333;
+
+            /* Danger Colors - Muted Terracotta/Burgundy */
+            --danger-50: #f6f2f2;
+            --danger-100: #ebe2e0;
+            --danger-500: #a16060;
+            --danger-600: #8a5050;
+            --danger-700: #704040;
+
+            /* Info Colors - Muted Teal/Slate */
+            --info-50: #f0f5f5;
+            --info-100: #dde9e9;
+            --info-500: #5b8a8a;
+            --info-600: #4d7575;
+            --info-700: #3f5f5f;
+
+            /* Background Colors - Warm Off-White */
+            --bg-primary: #fafaf9;
+            --bg-secondary: #f5f5f4;
+            --bg-tertiary: #e7e5e4;
+
+            /* Text Colors - Charcoal/Dark Slate */
+            --text-primary: #2d2d2a;
+            --text-secondary: #57534e;
+            --text-tertiary: #78716c;
+            --text-disabled: #a8a29e;
+
+            /* Border Colors */
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            --border-dark: #94a3b8;
+
+            /* Shadow */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+            /* Border Radius */
+            --radius-sm: 0.25rem;
+            --radius-md: 0.375rem;
+            --radius-lg: 0.5rem;
+            --radius-xl: 0.75rem;
+            --radius-2xl: 1rem;
+            --radius-full: 9999px;
+
+            /* Spacing */
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+        }
+
+        /* ========================================
+           Typography
+           ======================================== */
+        .typography-section {
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        h1, .h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        h2, .h2 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        h3, .h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        h4, .h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        h5, .h5 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        h6, .h6 {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .body-large {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: var(--text-secondary);
+        }
+
+        .body {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .body-small {
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .caption {
+            font-size: 0.75rem;
+            line-height: 1.5;
+            color: var(--text-tertiary);
+        }
+
+        .label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+
+        /* ========================================
+           Container & Layout
+           ======================================== */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: var(--spacing-xl);
+        }
+
+        .section {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .grid {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        /* ========================================
+           Buttons
+           ======================================== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            line-height: 1.5;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            text-decoration: none;
+        }
+
+        .btn:focus {
+            outline: 2px solid var(--primary-500);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-600);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-700);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:active {
+            background-color: var(--primary-800);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-100);
+            color: var(--secondary-700);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--secondary-200);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary:active {
+            background-color: var(--secondary-300);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-600);
+            border-color: var(--primary-600);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-50);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-outline:active {
+            background-color: var(--primary-100);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-600);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-700);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-danger:active {
+            background-color: var(--danger-700);
+        }
+
+        .btn-success {
+            background-color: var(--success-600);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: var(--success-700);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:disabled {
+            background-color: var(--secondary-100);
+            color: var(--text-disabled);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.875rem;
+            font-size: 0.8125rem;
+        }
+
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        /* ========================================
+           Form Elements
+           ======================================== */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            display: block;
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--radius-md);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(85, 103, 128, 0.1);
+        }
+
+        .form-input:disabled,
+        .form-textarea:disabled,
+        .form-select:disabled {
+            background-color: var(--bg-tertiary);
+            color: var(--text-disabled);
+            cursor: not-allowed;
+        }
+
+        .form-input.is-invalid,
+        .form-textarea.is-invalid,
+        .form-select.is-invalid {
+            border-color: var(--danger-500);
+        }
+
+        .form-input.is-invalid:focus,
+        .form-textarea.is-invalid:focus,
+        .form-select.is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(161, 96, 96, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-help {
+            display: block;
+            margin-top: var(--spacing-xs);
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+        }
+
+        .form-error {
+            display: block;
+            margin-top: var(--spacing-xs);
+            font-size: 0.75rem;
+            color: var(--danger-600);
+        }
+
+        .form-checkbox,
+        .form-radio {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .form-checkbox input[type="checkbox"],
+        .form-radio input[type="radio"] {
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+
+        .form-checkbox label,
+        .form-radio label {
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* ========================================
+           Cards
+           ======================================== */
+        .card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s ease-in-out;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle {
+            margin-top: var(--spacing-xs);
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .card-body {
+            padding: var(--spacing-lg);
+        }
+
+        .card-footer {
+            padding: var(--spacing-lg);
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-light);
+        }
+
+        /* ========================================
+           Tables
+           ======================================== */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .table thead {
+            background-color: var(--bg-secondary);
+        }
+
+        .table thead th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-medium);
+        }
+
+        .table tbody tr {
+            border-bottom: 1px solid var(--border-light);
+            transition: background-color 0.15s ease-in-out;
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .table tbody td {
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        /* ========================================
+           Status Badges
+           ======================================== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1.5;
+            border-radius: var(--radius-full);
+            white-space: nowrap;
+        }
+
+        .badge-received {
+            background-color: var(--info-100);
+            color: var(--info-700);
+        }
+
+        .badge-analyzing {
+            background-color: var(--primary-100);
+            color: var(--primary-700);
+        }
+
+        .badge-analysis-failed {
+            background-color: var(--danger-100);
+            color: var(--danger-700);
+        }
+
+        .badge-processing {
+            background-color: var(--warning-100);
+            color: var(--warning-700);
+        }
+
+        .badge-completed {
+            background-color: var(--success-100);
+            color: var(--success-700);
+        }
+
+        .badge-rejected {
+            background-color: var(--secondary-200);
+            color: var(--secondary-700);
+        }
+
+        .badge-dot::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        /* ========================================
+           Alerts & Toasts
+           ======================================== */
+        .alert {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            border-left: 4px solid;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .alert-success {
+            background-color: var(--success-50);
+            border-color: var(--success-600);
+            color: var(--success-700);
+        }
+
+        .alert-error {
+            background-color: var(--danger-50);
+            border-color: var(--danger-600);
+            color: var(--danger-700);
+        }
+
+        .alert-warning {
+            background-color: var(--warning-50);
+            border-color: var(--warning-600);
+            color: var(--warning-700);
+        }
+
+        .alert-info {
+            background-color: var(--info-50);
+            border-color: var(--info-600);
+            color: var(--info-700);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: var(--spacing-xl);
+            right: var(--spacing-xl);
+            max-width: 400px;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-success {
+            border-color: var(--success-600);
+        }
+
+        .toast-error {
+            border-color: var(--danger-600);
+        }
+
+        .toast-warning {
+            border-color: var(--warning-600);
+        }
+
+        .toast-info {
+            border-color: var(--info-600);
+        }
+
+        /* ========================================
+           Modal
+           ======================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: var(--spacing-lg) var(--spacing-xl);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            transition: background-color 0.2s;
+        }
+
+        .modal-close:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .modal-body {
+            padding: var(--spacing-xl);
+        }
+
+        .modal-footer {
+            padding: var(--spacing-lg) var(--spacing-xl);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: flex-end;
+        }
+
+        /* ========================================
+           Navigation
+           ======================================== */
+        .navbar {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .navbar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-600);
+            text-decoration: none;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: var(--spacing-sm);
+            list-style: none;
+        }
+
+        .navbar-link {
+            padding: 0.5rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .navbar-link:hover {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .navbar-link.active {
+            background-color: var(--primary-50);
+            color: var(--primary-600);
+        }
+
+        /* ========================================
+           Color Palette Display
+           ======================================== */
+        .color-palette {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .color-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: var(--spacing-sm);
+        }
+
+        .color-swatch {
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+        }
+
+        .color-block {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .color-label {
+            padding: var(--spacing-sm);
+            background: var(--bg-primary);
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* ========================================
+           Demo Styles
+           ======================================== */
+        .demo-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+            align-items: center;
+        }
+
+        .demo-forms {
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+
+        .demo-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="#" class="navbar-brand">VOC Auto Bot</a>
+            <ul class="navbar-nav">
+                <li><a href="#colors" class="navbar-link active">Colors</a></li>
+                <li><a href="#typography" class="navbar-link">Typography</a></li>
+                <li><a href="#components" class="navbar-link">Components</a></li>
+                <li><a href="#forms" class="navbar-link">Forms</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header style="text-align: center; margin: 3rem 0;">
+            <h1>VOC Auto Bot Design System</h1>
+            <p class="body-large" style="color: var(--text-tertiary); max-width: 600px; margin: 0 auto;">
+                깔끔하고 모던한 비즈니스 애플리케이션을 위한 디자인 시스템
+            </p>
+        </header>
+
+        <!-- Color Palette Section -->
+        <section id="colors" class="section">
+            <h2 class="section-title">Color Palette</h2>
+
+            <div class="color-palette">
+                <div>
+                    <h4 style="margin-bottom: var(--spacing-md);">Primary Colors</h4>
+                    <div class="color-group">
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--primary-100); color: var(--primary-700);">100</div>
+                            <div class="color-label">#d9dfe6</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--primary-300); color: white;">300</div>
+                            <div class="color-label">#8a9db3</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--primary-500); color: white;">500</div>
+                            <div class="color-label">#556780</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--primary-600); color: white;">600</div>
+                            <div class="color-label">#475569</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--primary-800); color: white;">800</div>
+                            <div class="color-label">#2d3745</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: var(--spacing-md);">Semantic Colors</h4>
+                    <div class="color-group">
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--success-500); color: white;">Success</div>
+                            <div class="color-label">#6b8e6b</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--warning-500); color: white;">Warning</div>
+                            <div class="color-label">#b38f4d</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--danger-500); color: white;">Danger</div>
+                            <div class="color-label">#a16060</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--info-500); color: white;">Info</div>
+                            <div class="color-label">#5b8a8a</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: var(--spacing-md);">Neutral Colors</h4>
+                    <div class="color-group">
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--secondary-100); color: var(--secondary-700);">100</div>
+                            <div class="color-label">#e7e5e4</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--secondary-300); color: white;">300</div>
+                            <div class="color-label">#a8a29e</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--secondary-500); color: white;">500</div>
+                            <div class="color-label">#57534e</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--secondary-700); color: white;">700</div>
+                            <div class="color-label">#373330</div>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-block" style="background-color: var(--secondary-900); color: white;">900</div>
+                            <div class="color-label">#1c1917</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography Section -->
+        <section id="typography" class="section">
+            <h2 class="section-title">Typography</h2>
+
+            <div class="typography-section">
+                <h1>Heading 1 - 2.25rem (36px)</h1>
+                <h2>Heading 2 - 1.875rem (30px)</h2>
+                <h3>Heading 3 - 1.5rem (24px)</h3>
+                <h4>Heading 4 - 1.25rem (20px)</h4>
+                <h5>Heading 5 - 1.125rem (18px)</h5>
+                <h6>Heading 6 - 1rem (16px)</h6>
+
+                <div style="margin-top: var(--spacing-xl);">
+                    <p class="body-large">Body Large - VOC 고객 의견을 자동으로 분석하고 처리하는 시스템입니다.</p>
+                    <p class="body">Body - VOC 고객 의견을 자동으로 분석하고 처리하는 시스템입니다.</p>
+                    <p class="body-small">Body Small - VOC 고객 의견을 자동으로 분석하고 처리하는 시스템입니다.</p>
+                    <p class="caption">Caption - VOC 고객 의견을 자동으로 분석하고 처리하는 시스템입니다.</p>
+                    <p class="label">Label - 필수 입력 항목</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Buttons Section -->
+        <section id="buttons" class="section">
+            <h2 class="section-title">Buttons</h2>
+
+            <div style="margin-bottom: var(--spacing-xl);">
+                <h4 style="margin-bottom: var(--spacing-md);">Button Variants</h4>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary">Primary Button</button>
+                    <button class="btn btn-secondary">Secondary Button</button>
+                    <button class="btn btn-outline">Outline Button</button>
+                    <button class="btn btn-success">Success Button</button>
+                    <button class="btn btn-danger">Danger Button</button>
+                    <button class="btn btn-primary" disabled>Disabled Button</button>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="margin-bottom: var(--spacing-md);">Button Sizes</h4>
+                <div class="demo-buttons">
+                    <button class="btn btn-primary btn-sm">Small Button</button>
+                    <button class="btn btn-primary">Default Button</button>
+                    <button class="btn btn-primary btn-lg">Large Button</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Form Elements Section -->
+        <section id="forms" class="section">
+            <h2 class="section-title">Form Elements</h2>
+
+            <div class="demo-forms">
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label" for="input-text">Text Input</label>
+                        <input type="text" id="input-text" class="form-input" placeholder="이름을 입력하세요">
+                        <span class="form-help">도움말 텍스트입니다.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="input-email">Email Input</label>
+                        <input type="email" id="input-email" class="form-input" placeholder="email@example.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="input-error">Error State</label>
+                    <input type="text" id="input-error" class="form-input is-invalid" value="잘못된 값">
+                    <span class="form-error">유효하지 않은 입력값입니다.</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="input-disabled">Disabled Input</label>
+                    <input type="text" id="input-disabled" class="form-input" value="비활성화된 필드" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="select-option">Select</label>
+                    <select id="select-option" class="form-select">
+                        <option>옵션을 선택하세요</option>
+                        <option>옵션 1</option>
+                        <option>옵션 2</option>
+                        <option>옵션 3</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="textarea">Textarea</label>
+                    <textarea id="textarea" class="form-textarea" placeholder="상세 내용을 입력하세요"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Checkbox</label>
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="check1" checked>
+                        <label for="check1">약관에 동의합니다</label>
+                    </div>
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="check2">
+                        <label for="check2">마케팅 정보 수신에 동의합니다</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Radio</label>
+                    <div class="form-radio">
+                        <input type="radio" id="radio1" name="priority" checked>
+                        <label for="radio1">높음</label>
+                    </div>
+                    <div class="form-radio">
+                        <input type="radio" id="radio2" name="priority">
+                        <label for="radio2">보통</label>
+                    </div>
+                    <div class="form-radio">
+                        <input type="radio" id="radio3" name="priority">
+                        <label for="radio3">낮음</label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cards Section -->
+        <section id="cards" class="section">
+            <h2 class="section-title">Cards</h2>
+
+            <div class="grid grid-3">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Card Title</div>
+                        <div class="card-subtitle">Card subtitle text</div>
+                    </div>
+                    <div class="card-body">
+                        <p class="body-small">카드 본문 내용입니다. 이곳에 다양한 콘텐츠를 배치할 수 있습니다.</p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-sm">Action</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">VOC 분석 결과</div>
+                    </div>
+                    <div class="card-body">
+                        <p class="body-small" style="margin-bottom: var(--spacing-md);">총 128건의 VOC가 접수되었습니다.</p>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--spacing-sm);">
+                            <span class="caption">처리 완료</span>
+                            <span class="label">95건</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span class="caption">처리 중</span>
+                            <span class="label">33건</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h4 style="margin-bottom: var(--spacing-sm);">Simple Card</h4>
+                        <p class="body-small">헤더와 푸터가 없는 간단한 카드 형태입니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tables Section -->
+        <section id="tables" class="section">
+            <h2 class="section-title">Tables</h2>
+
+            <div class="table-wrapper">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>제목</th>
+                            <th>상태</th>
+                            <th>우선순위</th>
+                            <th>등록일</th>
+                            <th>처리자</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>VOC-001</td>
+                            <td>배송 지연 문의</td>
+                            <td><span class="badge badge-completed badge-dot">완료</span></td>
+                            <td>높음</td>
+                            <td>2026-01-20</td>
+                            <td>김철수</td>
+                        </tr>
+                        <tr>
+                            <td>VOC-002</td>
+                            <td>제품 불량 신고</td>
+                            <td><span class="badge badge-processing badge-dot">처리중</span></td>
+                            <td>긴급</td>
+                            <td>2026-01-21</td>
+                            <td>이영희</td>
+                        </tr>
+                        <tr>
+                            <td>VOC-003</td>
+                            <td>환불 요청</td>
+                            <td><span class="badge badge-analyzing badge-dot">분석중</span></td>
+                            <td>보통</td>
+                            <td>2026-01-22</td>
+                            <td>박민수</td>
+                        </tr>
+                        <tr>
+                            <td>VOC-004</td>
+                            <td>서비스 개선 제안</td>
+                            <td><span class="badge badge-received badge-dot">접수</span></td>
+                            <td>낮음</td>
+                            <td>2026-01-23</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>VOC-005</td>
+                            <td>중복 결제 오류</td>
+                            <td><span class="badge badge-analysis-failed badge-dot">분석실패</span></td>
+                            <td>긴급</td>
+                            <td>2026-01-23</td>
+                            <td>정지원</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Status Badges Section -->
+        <section id="badges" class="section">
+            <h2 class="section-title">Status Badges</h2>
+
+            <div>
+                <h4 style="margin-bottom: var(--spacing-md);">VOC Status Badges</h4>
+                <div class="demo-badges">
+                    <span class="badge badge-received">접수</span>
+                    <span class="badge badge-analyzing">분석중</span>
+                    <span class="badge badge-analysis-failed">분석실패</span>
+                    <span class="badge badge-processing">처리중</span>
+                    <span class="badge badge-completed">완료</span>
+                    <span class="badge badge-rejected">반려</span>
+                </div>
+            </div>
+
+            <div style="margin-top: var(--spacing-xl);">
+                <h4 style="margin-bottom: var(--spacing-md);">Badges with Dot Indicator</h4>
+                <div class="demo-badges">
+                    <span class="badge badge-received badge-dot">접수</span>
+                    <span class="badge badge-analyzing badge-dot">분석중</span>
+                    <span class="badge badge-analysis-failed badge-dot">분석실패</span>
+                    <span class="badge badge-processing badge-dot">처리중</span>
+                    <span class="badge badge-completed badge-dot">완료</span>
+                    <span class="badge badge-rejected badge-dot">반려</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts Section -->
+        <section id="alerts" class="section">
+            <h2 class="section-title">Alerts & Toasts</h2>
+
+            <div style="margin-bottom: var(--spacing-xl);">
+                <h4 style="margin-bottom: var(--spacing-md);">Alerts</h4>
+
+                <div class="alert alert-success">
+                    <div class="alert-title">성공</div>
+                    <div>VOC가 성공적으로 등록되었습니다.</div>
+                </div>
+
+                <div class="alert alert-error">
+                    <div class="alert-title">오류</div>
+                    <div>VOC 분석 중 오류가 발생했습니다. 다시 시도해주세요.</div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <div class="alert-title">경고</div>
+                    <div>일부 필드가 누락되었습니다. 확인 후 다시 제출해주세요.</div>
+                </div>
+
+                <div class="alert alert-info">
+                    <div class="alert-title">안내</div>
+                    <div>시스템 점검이 2026-01-25 02:00에 예정되어 있습니다.</div>
+                </div>
+            </div>
+
+            <div>
+                <h4 style="margin-bottom: var(--spacing-md);">Toast Messages</h4>
+
+                <div class="toast toast-success">
+                    <div class="alert-title">성공</div>
+                    <div class="body-small">변경사항이 저장되었습니다.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal Section -->
+        <section id="modal" class="section">
+            <h2 class="section-title">Modal</h2>
+
+            <p class="body-small" style="margin-bottom: var(--spacing-md);">모달은 오버레이와 함께 표시됩니다.</p>
+
+            <div style="position: relative; height: 400px; background: var(--bg-secondary); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;">
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title">VOC 상세 정보</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">제목</label>
+                            <input type="text" class="form-input" value="배송 지연 문의">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">내용</label>
+                            <textarea class="form-textarea" style="min-height: 80px;">주문한 상품이 예정일보다 3일 늦게 도착했습니다.</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary">취소</button>
+                        <button class="btn btn-primary">저장</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="text-align: center; padding: var(--spacing-2xl) 0; color: var(--text-tertiary);">
+            <p class="body-small">VOC Auto Bot Design System v1.0</p>
+            <p class="caption" style="margin-top: var(--spacing-xs);">2026 All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
