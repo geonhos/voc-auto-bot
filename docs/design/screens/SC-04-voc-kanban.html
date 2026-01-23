@@ -113,34 +113,47 @@
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
 <!-- Header -->
-<header class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
+<header id="app-header" class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-2">
+        <a href="SC-11-dashboard.html" class="flex items-center gap-2">
             <span class="material-icons-outlined text-primary text-3xl">smart_toy</span>
             <span class="font-bold text-xl tracking-tight">VOC Auto Bot</span>
-        </div>
-        <nav class="hidden md:flex gap-6 text-sm font-medium">
-            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
-            <a class="text-primary border-b-2 border-primary pb-1" href="#">VOC Kanban</a>
-            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">History</a>
-            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Settings</a>
+        </a>
+        <nav id="main-nav" class="hidden md:flex gap-6 text-sm font-medium">
+            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-11-dashboard.html">Dashboard</a>
+            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-02-voc-input.html">VOC Entry</a>
+            <a class="text-primary border-b-2 border-primary pb-1 transition-colors" href="SC-04-voc-kanban.html">VOC List</a>
+            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-09-category.html">Settings</a>
         </nav>
         <div class="flex items-center gap-4">
             <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 <span class="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
             </button>
-            <div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs">JD</div>
+            <a href="SC-01-login.html" title="로그아웃" class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs hover:ring-2 hover:ring-primary transition-all">JD</a>
         </div>
     </div>
 </header>
+<script src="components/nav.js"></script>
 
 <!-- Main Content -->
-<main class="flex-grow py-6 px-4">
+<main class="flex-grow py-8 px-4">
     <div class="max-w-7xl mx-auto">
         <!-- Page Header -->
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold mb-2">VOC 칸반보드</h1>
-            <p class="text-slate-500 dark:text-slate-400">VOC를 드래그앤드롭으로 관리하세요. (SC-04)</p>
+        <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">VOC 칸반보드</h1>
+                <p class="text-slate-500 dark:text-slate-400">VOC를 드래그앤드롭으로 관리하세요. (SC-04)</p>
+            </div>
+            <div role="tablist" aria-label="뷰 전환" class="flex gap-2 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg p-1">
+                <button role="tab" aria-selected="true" class="px-4 py-2 rounded text-sm font-medium bg-primary text-white flex items-center gap-2">
+                    <span class="material-icons-outlined" style="font-size: 18px;">view_kanban</span>
+                    칸반
+                </button>
+                <a href="SC-05-voc-table.html" role="tab" aria-selected="false" class="px-4 py-2 rounded text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
+                    <span class="material-icons-outlined" style="font-size: 18px;">table_rows</span>
+                    테이블
+                </a>
+            </div>
         </div>
 
         <!-- Toolbar -->
@@ -148,18 +161,6 @@
             <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                 <!-- Left Actions -->
                 <div class="flex flex-wrap items-center gap-3">
-                    <!-- View Toggle -->
-                    <div class="inline-flex rounded-lg border border-border-light dark:border-border-dark overflow-hidden">
-                        <button class="px-4 py-2 bg-primary text-white font-medium text-sm flex items-center gap-2">
-                            <span class="material-icons-outlined text-lg">view_kanban</span>
-                            칸반보드
-                        </button>
-                        <button class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
-                            <span class="material-icons-outlined text-lg">view_list</span>
-                            리스트
-                        </button>
-                    </div>
-
                     <!-- Refresh Button -->
                     <button class="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="새로고침">
                         <span class="material-icons-outlined text-slate-600 dark:text-slate-300">refresh</span>
@@ -185,7 +186,7 @@
 
         <!-- Kanban Board -->
         <div class="overflow-x-auto pb-6">
-            <div class="inline-flex gap-4 min-w-full">
+            <div class="flex gap-4" style="min-width: max-content;">
 
                 <!-- Column 1: 접수 (RECEIVED) -->
                 <div class="kanban-column flex-shrink-0">
@@ -204,7 +205,7 @@
                         <!-- Column Body -->
                         <div class="column-dropzone p-3 space-y-3 bg-slate-50 dark:bg-slate-900/50">
                             <!-- VOC Card -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00003</p>
@@ -236,7 +237,7 @@
                             </div>
 
                             <!-- VOC Card 2 -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00002</p>
@@ -264,7 +265,7 @@
                             </div>
 
                             <!-- VOC Card 3 -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00001</p>
@@ -315,7 +316,7 @@
                         <!-- Column Body -->
                         <div class="column-dropzone p-3 space-y-3 bg-primary/5 dark:bg-primary-dark/10">
                             <!-- VOC Card -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-primary shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-primary shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00008</p>
@@ -351,7 +352,7 @@
                             </div>
 
                             <!-- More cards (simplified) -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-primary shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-primary shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00007</p>
@@ -406,7 +407,7 @@
                         <!-- Column Body -->
                         <div class="column-dropzone p-3 space-y-3 bg-danger/5 dark:bg-danger/10">
                             <!-- VOC Card -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-danger shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-danger shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00005</p>
@@ -453,7 +454,7 @@
                         <!-- Column Body -->
                         <div class="column-dropzone p-3 space-y-3 bg-warning/5 dark:bg-warning/10">
                             <!-- VOC Card -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00012</p>
@@ -493,7 +494,7 @@
                             </div>
 
                             <!-- More cards -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00011</p>
@@ -544,7 +545,7 @@
                         <!-- Column Body -->
                         <div class="column-dropzone p-3 space-y-3 bg-success/5 dark:bg-success/10">
                             <!-- VOC Card -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-success shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-success shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260122-00015</p>
@@ -576,7 +577,7 @@
                             </div>
 
                             <!-- More cards -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-success shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-success shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260122-00014</p>
@@ -631,7 +632,7 @@
                         <!-- Column Body -->
                         <div class="column-dropzone p-3 space-y-3 bg-warning/5 dark:bg-warning/10">
                             <!-- VOC Card -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260122-00010</p>
@@ -668,7 +669,7 @@
                             -->
 
                             <!-- VOC Card 2 -->
-                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                            <a href="SC-06-voc-detail.html" class="voc-card block bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
                                 <div class="p-4">
                                     <div class="mb-3">
                                         <p class="font-semibold text-sm text-primary mb-1">VOC-20260122-00009</p>

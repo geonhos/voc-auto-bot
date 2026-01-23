@@ -185,6 +185,10 @@
             loginSpinner.classList.remove('hidden');
 
             try {
+                // Demo mode: directly navigate to dashboard
+                window.location.href = 'SC-11-dashboard.html';
+                return;
+
                 // API call (simulated)
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -214,16 +218,16 @@
                     // Redirect based on role
                     switch (data.data.user.role) {
                         case 'VOC_CREATOR':
-                            window.location.href = '/voc/create';
+                            window.location.href = 'SC-02-voc-input.html';
                             break;
                         case 'VOC_HANDLER':
-                            window.location.href = '/voc/list';
+                            window.location.href = 'SC-04-voc-kanban.html';
                             break;
                         case 'ADMIN':
-                            window.location.href = '/dashboard';
+                            window.location.href = 'SC-11-dashboard.html';
                             break;
                         default:
-                            window.location.href = '/';
+                            window.location.href = 'SC-11-dashboard.html';
                     }
                 } else {
                     // Show error message

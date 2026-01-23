@@ -101,39 +101,27 @@
 </head>
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
     <!-- Header (GNB) -->
-    <header class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
+    <header id="app-header" class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-2">
+            <a href="SC-11-dashboard.html" class="flex items-center gap-2">
                 <span class="material-icons-outlined text-primary text-3xl">smart_toy</span>
                 <span class="font-bold text-xl tracking-tight">VOC Auto Bot</span>
-            </div>
-            <nav class="hidden md:flex gap-6 text-sm font-medium">
-                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
-                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">VOC Entry</a>
-                <a class="text-primary border-b-2 border-primary pb-1" href="#">History</a>
-                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Settings</a>
+            </a>
+            <nav id="main-nav" class="hidden md:flex gap-6 text-sm font-medium">
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-11-dashboard.html">Dashboard</a>
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-02-voc-input.html">VOC Entry</a>
+                <a class="text-primary border-b-2 border-primary pb-1 transition-colors" href="SC-04-voc-kanban.html">VOC List</a>
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-09-category.html">Settings</a>
             </nav>
             <div class="flex items-center gap-4">
                 <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                     <span class="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
                 </button>
-                <div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs">JD</div>
+                <a href="SC-01-login.html" title="로그아웃" class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs hover:ring-2 hover:ring-primary transition-all">JD</a>
             </div>
         </div>
     </header>
-
-    <!-- Breadcrumb -->
-    <div class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-3 px-6">
-        <div class="max-w-7xl mx-auto">
-            <nav class="flex items-center gap-2 text-sm">
-                <a href="#" class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">홈</a>
-                <span class="material-icons-outlined text-slate-400" style="font-size: 16px;">chevron_right</span>
-                <a href="#" class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">VOC 관리</a>
-                <span class="material-icons-outlined text-slate-400" style="font-size: 16px;">chevron_right</span>
-                <span class="text-slate-900 dark:text-slate-100 font-medium">VOC 리스트</span>
-            </nav>
-        </div>
-    </div>
+    <script src="components/nav.js"></script>
 
     <!-- Main Content -->
     <main class="flex-grow py-8 px-4">
@@ -145,10 +133,10 @@
                     <p class="text-slate-500 dark:text-slate-400">VOC 목록을 테이블 형태로 조회하고 관리하세요. (SC-05)</p>
                 </div>
                 <div role="tablist" aria-label="뷰 전환" class="flex gap-2 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg p-1">
-                    <button role="tab" aria-selected="false" class="px-4 py-2 rounded text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
+                    <a href="SC-04-voc-kanban.html" role="tab" aria-selected="false" class="px-4 py-2 rounded text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
                         <span class="material-icons-outlined" style="font-size: 18px;">view_kanban</span>
                         칸반
-                    </button>
+                    </a>
                     <button role="tab" aria-selected="true" class="px-4 py-2 rounded text-sm font-medium bg-primary text-white flex items-center gap-2">
                         <span class="material-icons-outlined" style="font-size: 18px;">table_rows</span>
                         테이블
@@ -278,7 +266,7 @@
                             <!-- Row 1 -->
                             <tr class="cursor-pointer">
                                 <td class="px-6 py-4">
-                                    <a href="#" aria-label="티켓 ID VOC-20260123-00001, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                    <a href="SC-06-voc-detail.html" aria-label="티켓 ID VOC-20260123-00001, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
                                         VOC-20260123-00001
                                     </a>
                                 </td>
@@ -312,7 +300,7 @@
                             <!-- Row 2 -->
                             <tr class="cursor-pointer">
                                 <td class="px-6 py-4">
-                                    <a href="#" aria-label="티켓 ID VOC-20260123-00002, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                    <a href="SC-06-voc-detail.html" aria-label="티켓 ID VOC-20260123-00002, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
                                         VOC-20260123-00002
                                     </a>
                                 </td>
@@ -347,7 +335,7 @@
                             <!-- Row 3 -->
                             <tr class="cursor-pointer">
                                 <td class="px-6 py-4">
-                                    <a href="#" aria-label="티켓 ID VOC-20260123-00003, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                    <a href="SC-06-voc-detail.html" aria-label="티켓 ID VOC-20260123-00003, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
                                         VOC-20260123-00003
                                     </a>
                                 </td>
@@ -381,7 +369,7 @@
                             <!-- Row 4 -->
                             <tr class="cursor-pointer">
                                 <td class="px-6 py-4">
-                                    <a href="#" aria-label="티켓 ID VOC-20260122-00089, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                    <a href="SC-06-voc-detail.html" aria-label="티켓 ID VOC-20260122-00089, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
                                         VOC-20260122-00089
                                     </a>
                                 </td>
@@ -416,7 +404,7 @@
                             <!-- Row 5 -->
                             <tr class="cursor-pointer">
                                 <td class="px-6 py-4">
-                                    <a href="#" aria-label="티켓 ID VOC-20260122-00088, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                    <a href="SC-06-voc-detail.html" aria-label="티켓 ID VOC-20260122-00088, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
                                         VOC-20260122-00088
                                     </a>
                                 </td>
@@ -451,7 +439,7 @@
                             <!-- Row 6 -->
                             <tr class="cursor-pointer">
                                 <td class="px-6 py-4">
-                                    <a href="#" aria-label="티켓 ID VOC-20260122-00087, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                    <a href="SC-06-voc-detail.html" aria-label="티켓 ID VOC-20260122-00087, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
                                         VOC-20260122-00087
                                     </a>
                                 </td>
@@ -486,7 +474,7 @@
                             <!-- Row 7 -->
                             <tr class="cursor-pointer">
                                 <td class="px-6 py-4">
-                                    <a href="#" aria-label="티켓 ID VOC-20260121-00134, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                    <a href="SC-06-voc-detail.html" aria-label="티켓 ID VOC-20260121-00134, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
                                         VOC-20260121-00134
                                     </a>
                                 </td>
@@ -521,7 +509,7 @@
                             <!-- Row 8 -->
                             <tr class="cursor-pointer">
                                 <td class="px-6 py-4">
-                                    <a href="#" aria-label="티켓 ID VOC-20260121-00133, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                    <a href="SC-06-voc-detail.html" aria-label="티켓 ID VOC-20260121-00133, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
                                         VOC-20260121-00133
                                     </a>
                                 </td>
