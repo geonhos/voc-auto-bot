@@ -49,28 +49,29 @@
     </style>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
-<header class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
-<div class="max-w-4xl mx-auto flex items-center justify-between">
-<div class="flex items-center gap-2">
+<header id="app-header" class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
+<div class="max-w-7xl mx-auto flex items-center justify-between">
+<a href="SC-11-dashboard.html" class="flex items-center gap-2">
 <span class="material-icons-outlined text-primary text-3xl">smart_toy</span>
 <span class="font-bold text-xl tracking-tight">VOC Auto Bot</span>
-</div>
-<nav class="hidden md:flex gap-6 text-sm font-medium">
-<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
-<a class="text-primary border-b-2 border-primary pb-1" href="#">VOC Entry</a>
-<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">History</a>
-<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Settings</a>
+</a>
+<nav id="main-nav" class="hidden md:flex gap-6 text-sm font-medium">
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-11-dashboard.html">Dashboard</a>
+<a class="text-primary border-b-2 border-primary pb-1 transition-colors" href="SC-02-voc-input.html">VOC Entry</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-04-voc-kanban.html">VOC List</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="SC-09-category.html">Settings</a>
 </nav>
 <div class="flex items-center gap-4">
 <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
 <span class="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
 </button>
-<div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs">JD</div>
+<a href="SC-01-login.html" title="로그아웃" class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs hover:ring-2 hover:ring-primary transition-all">JD</a>
 </div>
 </div>
 </header>
-<main class="flex-grow py-12 px-4">
-<div class="max-w-2xl mx-auto">
+<script src="components/nav.js"></script>
+<main class="flex-grow py-8 px-4">
+<div class="max-w-7xl mx-auto">
 <div class="mb-8">
 <h1 class="text-3xl font-bold mb-2">VOC 입력</h1>
 <p class="text-slate-500 dark:text-slate-400">고객의 목소리를 빠르고 정확하게 기록하세요. (SC-02)</p>
@@ -139,7 +140,7 @@
 <button class="flex-1 px-6 py-3 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">
                                 임시 저장
                             </button>
-<button class="flex-1 px-6 py-3 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm" type="submit">
+<button class="flex-1 px-6 py-3 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm" type="button" onclick="window.location.href='SC-02-voc-input-success-modal.html'">
                                 제출하기
                             </button>
 </div>
@@ -156,7 +157,7 @@
 </div>
 </main>
 <footer class="py-8 border-t border-border-light dark:border-border-dark mt-auto">
-<div class="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
 <p class="text-sm text-slate-500 dark:text-slate-400">VOC Auto Bot Design System v1.0</p>
 <p class="text-xs text-slate-400">2026 All rights reserved.</p>
 </div>
