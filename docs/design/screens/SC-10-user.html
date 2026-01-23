@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Management - VOC Auto Bot</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#556780",
+              "primary-light": "#8a9db3",
+              "primary-dark": "#2d3745",
+              "background-light": "#f5f5f4",
+              "background-dark": "#1c1917",
+              "surface-light": "#ffffff",
+              "surface-dark": "#2d3745",
+              "border-light": "#e7e5e4",
+              "border-dark": "#373330",
+              "success": "#6b8e6b",
+              "warning": "#b38f4d",
+              "danger": "#a16060",
+              "info": "#5b8a8a",
+            },
+            fontFamily: {
+              display: ["Inter", "Noto Sans KR", "sans-serif"],
+              body: ["Inter", "Noto Sans KR", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.375rem",
+            },
+          },
+        },
+      };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+        .required::after {
+            content: '*';
+            color: #a16060;
+            margin-left: 4px;
+        }
+        .modal {
+            display: none;
+        }
+        .modal.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<header class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
+<div class="max-w-7xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-icons-outlined text-primary text-3xl">smart_toy</span>
+<span class="font-bold text-xl tracking-tight">VOC Auto Bot</span>
+</div>
+<nav class="hidden md:flex gap-6 text-sm font-medium">
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">VOC Entry</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">History</a>
+<a class="text-primary border-b-2 border-primary pb-1" href="#">User Management</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs">AD</div>
+</div>
+</div>
+</header>
+<main class="flex-grow py-12 px-4">
+<div class="max-w-7xl mx-auto">
+<div class="mb-8">
+<h1 class="text-3xl font-bold mb-2">사용자 관리</h1>
+<p class="text-slate-500 dark:text-slate-400">시스템 사용자 계정을 관리하고 권한을 설정하세요. (SC-10)</p>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-6 mb-6">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="md:col-span-2">
+<label class="block text-sm font-semibold mb-2" for="search">검색</label>
+<input class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" id="search" name="search" placeholder="이름 또는 이메일로 검색" type="text"/>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2" for="roleFilter">역할</label>
+<select class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" id="roleFilter" name="roleFilter">
+<option value="">전체</option>
+<option value="REPORTER">VOC 접수자</option>
+<option value="HANDLER">VOC 처리 담당자</option>
+<option value="ADMIN">관리자</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2" for="statusFilter">상태</label>
+<select class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" id="statusFilter" name="statusFilter">
+<option value="">전체</option>
+<option value="ACTIVE">활성</option>
+<option value="INACTIVE">비활성</option>
+<option value="LOCKED">잠금</option>
+<option value="TEMP_PASSWORD">임시 비밀번호</option>
+</select>
+</div>
+</div>
+<div class="mt-4 flex gap-2">
+<button class="px-6 py-2 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm" type="button">
+<span class="flex items-center gap-2">
+<span class="material-icons-outlined text-lg">search</span>
+검색
+</span>
+</button>
+<button class="px-6 py-2 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">
+초기화
+</button>
+</div>
+</div>
+
+<!-- Action Bar -->
+<div class="flex items-center justify-between mb-6">
+<div class="text-sm text-slate-500 dark:text-slate-400">
+전체 <span class="font-semibold text-primary">156</span>명
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">
+<span class="flex items-center gap-2">
+<span class="material-icons-outlined text-lg">refresh</span>
+새로고침
+</span>
+</button>
+<button class="px-4 py-2 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm" onclick="openAddUserModal()" type="button">
+<span class="flex items-center gap-2">
+<span class="material-icons-outlined text-lg">add</span>
+사용자 추가
+</span>
+</button>
+</div>
+</div>
+
+<!-- User List Table -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead class="bg-slate-50 dark:bg-slate-800 border-b border-border-light dark:border-border-dark">
+<tr>
+<th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
+<span class="flex items-center gap-1">
+ID
+<span class="material-icons-outlined text-sm">unfold_more</span>
+</span>
+</th>
+<th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
+<span class="flex items-center gap-1">
+이름
+<span class="material-icons-outlined text-sm">unfold_more</span>
+</span>
+</th>
+<th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
+<span class="flex items-center gap-1">
+이메일
+<span class="material-icons-outlined text-sm">unfold_more</span>
+</span>
+</th>
+<th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
+<span class="flex items-center gap-1">
+역할
+<span class="material-icons-outlined text-sm">unfold_more</span>
+</span>
+</th>
+<th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
+<span class="flex items-center gap-1">
+상태
+<span class="material-icons-outlined text-sm">unfold_more</span>
+</span>
+</th>
+<th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
+<span class="flex items-center gap-1">
+생성일
+<span class="material-icons-outlined text-sm">unfold_more</span>
+</span>
+</th>
+<th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700">
+<span class="flex items-center gap-1">
+마지막 로그인
+<span class="material-icons-outlined text-sm">unfold_more</span>
+</span>
+</th>
+<th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+액션
+</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-light dark:divide-border-dark">
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-4 py-3 text-sm font-mono text-slate-600 dark:text-slate-400">001</td>
+<td class="px-4 py-3 text-sm font-medium">홍길동</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">hong@example.com</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info/20 text-info">
+VOC 접수자
+</span>
+</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/20 text-success">
+활성
+</span>
+</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2026-01-15 09:00</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2026-01-23 14:30</td>
+<td class="px-4 py-3 text-sm">
+<div class="flex items-center gap-2">
+<button aria-label="수정" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openEditUserModal()" title="수정" type="button">
+<span class="material-icons-outlined text-lg text-primary">edit</span>
+</button>
+<button aria-label="임시 비밀번호 발급" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openTempPasswordDialog()" title="임시 비밀번호 발급" type="button">
+<span class="material-icons-outlined text-lg text-warning">vpn_key</span>
+</button>
+<button aria-label="삭제" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openDeleteDialog()" title="삭제" type="button">
+<span class="material-icons-outlined text-lg text-danger">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-4 py-3 text-sm font-mono text-slate-600 dark:text-slate-400">002</td>
+<td class="px-4 py-3 text-sm font-medium">김철수</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">kim@example.com</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/20 text-success">
+VOC 처리 담당자
+</span>
+</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/20 text-success">
+활성
+</span>
+</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2026-01-10 10:30</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2026-01-23 11:15</td>
+<td class="px-4 py-3 text-sm">
+<div class="flex items-center gap-2">
+<button aria-label="수정" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openEditUserModal()" title="수정" type="button">
+<span class="material-icons-outlined text-lg text-primary">edit</span>
+</button>
+<button aria-label="임시 비밀번호 발급" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openTempPasswordDialog()" title="임시 비밀번호 발급" type="button">
+<span class="material-icons-outlined text-lg text-warning">vpn_key</span>
+</button>
+<button aria-label="삭제" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openDeleteDialog()" title="삭제" type="button">
+<span class="material-icons-outlined text-lg text-danger">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-4 py-3 text-sm font-mono text-slate-600 dark:text-slate-400">003</td>
+<td class="px-4 py-3 text-sm font-medium">이영희</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">lee@example.com</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger/20 text-danger">
+관리자
+</span>
+</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning/20 text-warning">
+잠금
+</span>
+</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2026-01-05 08:00</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2026-01-20 16:45</td>
+<td class="px-4 py-3 text-sm">
+<div class="flex items-center gap-2">
+<button aria-label="수정" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openEditUserModal()" title="수정" type="button">
+<span class="material-icons-outlined text-lg text-primary">edit</span>
+</button>
+<button aria-label="임시 비밀번호 발급" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openTempPasswordDialog()" title="임시 비밀번호 발급" type="button">
+<span class="material-icons-outlined text-lg text-warning">vpn_key</span>
+</button>
+<button aria-label="삭제" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openDeleteDialog()" title="삭제" type="button">
+<span class="material-icons-outlined text-lg text-danger">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-4 py-3 text-sm font-mono text-slate-600 dark:text-slate-400">004</td>
+<td class="px-4 py-3 text-sm font-medium">박민수</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">park@example.com</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info/20 text-info">
+VOC 접수자
+</span>
+</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+비활성
+</span>
+</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2025-12-20 14:20</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2026-01-18 10:00</td>
+<td class="px-4 py-3 text-sm">
+<div class="flex items-center gap-2">
+<button aria-label="수정" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openEditUserModal()" title="수정" type="button">
+<span class="material-icons-outlined text-lg text-primary">edit</span>
+</button>
+<button aria-label="임시 비밀번호 발급" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openTempPasswordDialog()" title="임시 비밀번호 발급" type="button">
+<span class="material-icons-outlined text-lg text-warning">vpn_key</span>
+</button>
+<button aria-label="삭제" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openDeleteDialog()" title="삭제" type="button">
+<span class="material-icons-outlined text-lg text-danger">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-4 py-3 text-sm font-mono text-slate-600 dark:text-slate-400">005</td>
+<td class="px-4 py-3 text-sm font-medium">정수진</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">jung@example.com</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success/20 text-success">
+VOC 처리 담당자
+</span>
+</td>
+<td class="px-4 py-3 text-sm">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning/30 text-warning">
+임시 비밀번호
+</span>
+</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">2026-01-22 11:00</td>
+<td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">-</td>
+<td class="px-4 py-3 text-sm">
+<div class="flex items-center gap-2">
+<button aria-label="수정" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openEditUserModal()" title="수정" type="button">
+<span class="material-icons-outlined text-lg text-primary">edit</span>
+</button>
+<button aria-label="임시 비밀번호 발급" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openTempPasswordDialog()" title="임시 비밀번호 발급" type="button">
+<span class="material-icons-outlined text-lg text-warning">vpn_key</span>
+</button>
+<button aria-label="삭제" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" onclick="openDeleteDialog()" title="삭제" type="button">
+<span class="material-icons-outlined text-lg text-danger">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Pagination -->
+<div class="mt-6 flex items-center justify-between">
+<div class="text-sm text-slate-500 dark:text-slate-400">
+1-20 / 156명
+</div>
+<div class="flex gap-1">
+<button class="px-3 py-1 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">
+<span class="material-icons-outlined text-sm">chevron_left</span>
+</button>
+<button class="px-3 py-1 bg-primary text-white rounded font-medium" type="button">1</button>
+<button class="px-3 py-1 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">2</button>
+<button class="px-3 py-1 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">3</button>
+<button class="px-3 py-1 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">4</button>
+<button class="px-3 py-1 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">5</button>
+<span class="px-2 py-1 text-slate-400">...</span>
+<button class="px-3 py-1 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">8</button>
+<button class="px-3 py-1 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" type="button">
+<span class="material-icons-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+
+</div>
+</main>
+
+<!-- Add User Modal -->
+<div class="modal fixed inset-0 bg-black/50 items-center justify-center z-50" id="addUserModal">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+<div class="sticky top-0 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark px-6 py-4 flex items-center justify-between">
+<h2 class="text-xl font-bold">사용자 추가</h2>
+<button class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="closeAddUserModal()" type="button">
+<span class="material-icons-outlined text-slate-600 dark:text-slate-300">close</span>
+</button>
+</div>
+<form class="p-6 space-y-5">
+<div>
+<label class="block text-sm font-semibold mb-2 required" for="addUserName">이름</label>
+<input class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" id="addUserName" name="addUserName" placeholder="홍길동" required="" type="text"/>
+<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">2-50자, 한글/영문/숫자만 입력 가능</p>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 required" for="addUserEmail">이메일</label>
+<input class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" id="addUserEmail" name="addUserEmail" placeholder="hong@example.com" required="" type="email"/>
+<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">로그인 아이디로 사용됩니다</p>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 required">역할</label>
+<div class="space-y-2">
+<label class="flex items-center p-3 border border-border-light dark:border-border-dark rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<input class="mr-3 text-primary focus:ring-primary" name="addUserRole" required="" type="radio" value="REPORTER"/>
+<div>
+<div class="font-medium">VOC 접수자</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">VOC 등록 및 조회 권한</div>
+</div>
+</label>
+<label class="flex items-center p-3 border border-border-light dark:border-border-dark rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<input class="mr-3 text-primary focus:ring-primary" name="addUserRole" type="radio" value="HANDLER"/>
+<div>
+<div class="font-medium">VOC 처리 담당자</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">VOC 처리 및 상태 변경 권한</div>
+</div>
+</label>
+<label class="flex items-center p-3 border border-border-light dark:border-border-dark rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<input class="mr-3 text-primary focus:ring-primary" name="addUserRole" type="radio" value="ADMIN"/>
+<div>
+<div class="font-medium">관리자</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">모든 권한 및 시스템 관리</div>
+</div>
+</label>
+</div>
+</div>
+<div class="p-4 bg-info/10 dark:bg-info/5 border border-info/20 rounded-lg flex gap-3">
+<span class="material-icons-outlined text-info text-lg">info</span>
+<p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+임시 비밀번호가 자동으로 생성됩니다. 생성된 비밀번호는 저장 후 1회만 표시되니 반드시 복사하여 사용자에게 전달해 주세요.
+</p>
+</div>
+<div class="flex gap-3 pt-2">
+<button class="flex-1 px-6 py-3 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="closeAddUserModal()" type="button">
+취소
+</button>
+<button class="flex-1 px-6 py-3 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm" onclick="showTempPasswordResult()" type="button">
+저장
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fixed inset-0 bg-black/50 items-center justify-center z-50" id="editUserModal">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+<div class="sticky top-0 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark px-6 py-4 flex items-center justify-between">
+<h2 class="text-xl font-bold">사용자 수정</h2>
+<button class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="closeEditUserModal()" type="button">
+<span class="material-icons-outlined text-slate-600 dark:text-slate-300">close</span>
+</button>
+</div>
+<form class="p-6 space-y-5">
+<div>
+<label class="block text-sm font-semibold mb-2 required" for="editUserName">이름</label>
+<input class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" id="editUserName" name="editUserName" required="" type="text" value="홍길동"/>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2" for="editUserEmail">이메일</label>
+<input class="w-full px-4 py-2 bg-slate-100 dark:bg-slate-700 border border-border-light dark:border-border-dark rounded cursor-not-allowed" disabled="" id="editUserEmail" name="editUserEmail" type="email" value="hong@example.com"/>
+<p class="mt-1 text-xs text-slate-500 dark:text-slate-400">이메일은 변경할 수 없습니다</p>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 required">역할</label>
+<div class="space-y-2">
+<label class="flex items-center p-3 border border-border-light dark:border-border-dark rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<input checked="" class="mr-3 text-primary focus:ring-primary" name="editUserRole" required="" type="radio" value="REPORTER"/>
+<div>
+<div class="font-medium">VOC 접수자</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">VOC 등록 및 조회 권한</div>
+</div>
+</label>
+<label class="flex items-center p-3 border border-border-light dark:border-border-dark rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<input class="mr-3 text-primary focus:ring-primary" name="editUserRole" type="radio" value="HANDLER"/>
+<div>
+<div class="font-medium">VOC 처리 담당자</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">VOC 처리 및 상태 변경 권한</div>
+</div>
+</label>
+<label class="flex items-center p-3 border border-border-light dark:border-border-dark rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<input class="mr-3 text-primary focus:ring-primary" name="editUserRole" type="radio" value="ADMIN"/>
+<div>
+<div class="font-medium">관리자</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">모든 권한 및 시스템 관리</div>
+</div>
+</label>
+</div>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2 required">상태</label>
+<div class="space-y-2">
+<label class="flex items-center p-3 border border-border-light dark:border-border-dark rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<input checked="" class="mr-3 text-primary focus:ring-primary" name="editUserStatus" required="" type="radio" value="ACTIVE"/>
+<div>
+<div class="font-medium">활성</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">로그인 가능</div>
+</div>
+</label>
+<label class="flex items-center p-3 border border-border-light dark:border-border-dark rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<input class="mr-3 text-primary focus:ring-primary" name="editUserStatus" type="radio" value="INACTIVE"/>
+<div>
+<div class="font-medium">비활성</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">로그인 불가</div>
+</div>
+</label>
+</div>
+</div>
+<div class="flex gap-3 pt-2">
+<button class="flex-1 px-6 py-3 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="closeEditUserModal()" type="button">
+취소
+</button>
+<button class="flex-1 px-6 py-3 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm" type="submit">
+저장
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- Delete Confirmation Dialog -->
+<div class="modal fixed inset-0 bg-black/50 items-center justify-center z-50" id="deleteDialog">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl max-w-md w-full mx-4">
+<div class="px-6 py-4 border-b border-border-light dark:border-border-dark">
+<h2 class="text-xl font-bold text-danger">사용자 삭제</h2>
+</div>
+<div class="p-6">
+<div class="flex gap-4 mb-4">
+<div class="flex-shrink-0">
+<span class="material-icons-outlined text-danger text-3xl">warning</span>
+</div>
+<div>
+<p class="font-medium mb-2">"홍길동" 계정을 삭제하시겠습니까?</p>
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+삭제된 계정은 복구할 수 없으며, 해당 사용자의 모든 활동 이력은 유지됩니다.
+</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 px-6 py-3 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="closeDeleteDialog()" type="button">
+취소
+</button>
+<button class="flex-1 px-6 py-3 bg-danger text-white font-semibold rounded hover:bg-danger/90 transition-colors shadow-sm" type="button">
+삭제
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Temp Password Confirmation Dialog -->
+<div class="modal fixed inset-0 bg-black/50 items-center justify-center z-50" id="tempPasswordDialog">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl max-w-md w-full mx-4">
+<div class="px-6 py-4 border-b border-border-light dark:border-border-dark">
+<h2 class="text-xl font-bold">임시 비밀번호 발급</h2>
+</div>
+<div class="p-6">
+<div class="flex gap-4 mb-4">
+<div class="flex-shrink-0">
+<span class="material-icons-outlined text-warning text-3xl">vpn_key</span>
+</div>
+<div>
+<p class="font-medium mb-2">"홍길동"에게 임시 비밀번호를 발급하시겠습니까?</p>
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+기존 비밀번호는 무효화되며, 사용자는 임시 비밀번호로 로그인 후 비밀번호를 변경해야 합니다.
+</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 px-6 py-3 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onclick="closeTempPasswordDialog()" type="button">
+취소
+</button>
+<button class="flex-1 px-6 py-3 bg-warning text-white font-semibold rounded hover:bg-warning/90 transition-colors shadow-sm" onclick="showTempPasswordResult()" type="button">
+발급
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Temp Password Result Dialog -->
+<div class="modal fixed inset-0 bg-black/50 items-center justify-center z-50" id="tempPasswordResultDialog">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl max-w-md w-full mx-4">
+<div class="px-6 py-4 border-b border-border-light dark:border-border-dark">
+<h2 class="text-xl font-bold text-success">임시 비밀번호 발급 완료</h2>
+</div>
+<div class="p-6">
+<p class="font-medium mb-4">임시 비밀번호가 발급되었습니다.</p>
+<div class="mb-4">
+<label class="block text-sm font-semibold mb-2">임시 비밀번호</label>
+<div class="flex gap-2">
+<input class="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-700 border border-border-light dark:border-border-dark rounded font-mono text-sm" readonly="" type="text" value="Temp1234!@#$"/>
+<button class="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors" type="button">
+<span class="material-icons-outlined text-lg">content_copy</span>
+</button>
+</div>
+</div>
+<div class="p-4 bg-warning/10 dark:bg-warning/5 border border-warning/20 rounded-lg flex gap-3">
+<span class="material-icons-outlined text-warning text-lg">warning</span>
+<p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+이 비밀번호는 이 화면을 닫으면 다시 조회할 수 없습니다. 사용자에게 안전하게 전달해 주세요.
+</p>
+</div>
+<div class="flex gap-3 pt-4">
+<button class="flex-1 px-6 py-3 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm" onclick="closeTempPasswordResultDialog()" type="button">
+확인
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<footer class="py-8 border-t border-border-light dark:border-border-dark mt-auto">
+<div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-sm text-slate-500 dark:text-slate-400">VOC Auto Bot Design System v1.0</p>
+<p class="text-xs text-slate-400">2026 All rights reserved.</p>
+</div>
+</footer>
+
+<script>
+    function openAddUserModal() {
+        document.getElementById('addUserModal').classList.add('active');
+    }
+    function closeAddUserModal() {
+        document.getElementById('addUserModal').classList.remove('active');
+    }
+    function openEditUserModal() {
+        document.getElementById('editUserModal').classList.add('active');
+    }
+    function closeEditUserModal() {
+        document.getElementById('editUserModal').classList.remove('active');
+    }
+    function openDeleteDialog() {
+        document.getElementById('deleteDialog').classList.add('active');
+    }
+    function closeDeleteDialog() {
+        document.getElementById('deleteDialog').classList.remove('active');
+    }
+    function openTempPasswordDialog() {
+        document.getElementById('tempPasswordDialog').classList.add('active');
+    }
+    function closeTempPasswordDialog() {
+        document.getElementById('tempPasswordDialog').classList.remove('active');
+    }
+    function showTempPasswordResult() {
+        closeTempPasswordDialog();
+        closeAddUserModal();
+        document.getElementById('tempPasswordResultDialog').classList.add('active');
+    }
+    function closeTempPasswordResultDialog() {
+        document.getElementById('tempPasswordResultDialog').classList.remove('active');
+    }
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAddUserModal();
+            closeEditUserModal();
+            closeDeleteDialog();
+            closeTempPasswordDialog();
+            closeTempPasswordResultDialog();
+        }
+    });
+
+    // Close modals on backdrop click
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+    });
+</script>
+
+</body></html>

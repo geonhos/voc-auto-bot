@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>VOC Kanban - VOC Auto Bot</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#556780",
+                        "primary-light": "#8a9db3",
+                        "primary-dark": "#2d3745",
+                        "background-light": "#f5f5f4",
+                        "background-dark": "#1c1917",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d3745",
+                        "border-light": "#e7e5e4",
+                        "border-dark": "#373330",
+                        "success": "#6b8e6b",
+                        "warning": "#b38f4d",
+                        "danger": "#a16060",
+                        "info": "#5b8a8a",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "Noto Sans KR", "sans-serif"],
+                        body: ["Inter", "Noto Sans KR", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.375rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+
+        .kanban-column {
+            min-width: 320px;
+            max-width: 320px;
+        }
+
+        .voc-card {
+            transition: all 0.2s ease;
+        }
+
+        .voc-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .voc-card.dragging {
+            opacity: 0.5;
+        }
+
+        .column-dropzone {
+            min-height: 400px;
+            transition: background-color 0.2s ease;
+        }
+
+        .column-dropzone.drag-over {
+            background-color: rgba(107, 142, 107, 0.1);
+            border: 2px dashed #6b8e6b;
+        }
+
+        .column-dropzone.disabled {
+            opacity: 0.5;
+            position: relative;
+        }
+
+        .column-dropzone.disabled::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.05);
+            cursor: not-allowed;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .priority-high {
+            color: #a16060;
+        }
+
+        .priority-medium {
+            color: #b38f4d;
+        }
+
+        .priority-low {
+            color: #8a9db3;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+
+<!-- Header -->
+<header class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <span class="material-icons-outlined text-primary text-3xl">smart_toy</span>
+            <span class="font-bold text-xl tracking-tight">VOC Auto Bot</span>
+        </div>
+        <nav class="hidden md:flex gap-6 text-sm font-medium">
+            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
+            <a class="text-primary border-b-2 border-primary pb-1" href="#">VOC Kanban</a>
+            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">History</a>
+            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Settings</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <span class="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs">JD</div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="flex-grow py-6 px-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Page Header -->
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold mb-2">VOC 칸반보드</h1>
+            <p class="text-slate-500 dark:text-slate-400">VOC를 드래그앤드롭으로 관리하세요. (SC-04)</p>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-4 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <!-- Left Actions -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- View Toggle -->
+                    <div class="inline-flex rounded-lg border border-border-light dark:border-border-dark overflow-hidden">
+                        <button class="px-4 py-2 bg-primary text-white font-medium text-sm flex items-center gap-2">
+                            <span class="material-icons-outlined text-lg">view_kanban</span>
+                            칸반보드
+                        </button>
+                        <button class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
+                            <span class="material-icons-outlined text-lg">view_list</span>
+                            리스트
+                        </button>
+                    </div>
+
+                    <!-- Refresh Button -->
+                    <button class="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="새로고침">
+                        <span class="material-icons-outlined text-slate-600 dark:text-slate-300">refresh</span>
+                    </button>
+
+                    <!-- Filter Button -->
+                    <button class="p-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="필터">
+                        <span class="material-icons-outlined text-slate-600 dark:text-slate-300">filter_list</span>
+                    </button>
+                </div>
+
+                <!-- Search -->
+                <div class="relative w-full md:w-80">
+                    <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                    <input
+                        type="text"
+                        placeholder="Ticket ID 또는 제목 검색..."
+                        class="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-sm"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="overflow-x-auto pb-6">
+            <div class="inline-flex gap-4 min-w-full">
+
+                <!-- Column 1: 접수 (RECEIVED) -->
+                <div class="kanban-column flex-shrink-0">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                        <!-- Column Header -->
+                        <div class="px-4 py-3 bg-slate-100 dark:bg-slate-800 border-b border-border-light dark:border-border-dark">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-slate-400"></div>
+                                    <h3 class="font-semibold text-sm">접수</h3>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-600 dark:text-slate-400">3</span>
+                            </div>
+                        </div>
+
+                        <!-- Column Body -->
+                        <div class="column-dropzone p-3 space-y-3 bg-slate-50 dark:bg-slate-900/50">
+                            <!-- VOC Card -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00003</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">로그인 버튼이 응답하지 않습니다</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>u***@example.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-23 15:20</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                            <span class="material-icons-outlined text-xs">attach_file</span>
+                                            2
+                                        </span>
+                                        <span class="status-badge priority-high">
+                                            <span class="material-icons-outlined text-xs">warning</span>
+                                            높음
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VOC Card 2 -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00002</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">이메일 인증 메일이 오지 않습니다</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>t***@company.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-23 14:55</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge priority-medium">
+                                            <span class="material-icons-outlined text-xs">info</span>
+                                            보통
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- VOC Card 3 -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-slate-400 shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00001</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">대시보드 로딩이 느립니다</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>a***@test.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-23 14:30</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                            <span class="material-icons-outlined text-xs">comment</span>
+                                            1
+                                        </span>
+                                        <span class="status-badge priority-low">
+                                            <span class="material-icons-outlined text-xs">arrow_downward</span>
+                                            낮음
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: 분석중 (ANALYZING) -->
+                <div class="kanban-column flex-shrink-0">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                        <!-- Column Header -->
+                        <div class="px-4 py-3 bg-primary/10 dark:bg-primary-dark/20 border-b border-border-light dark:border-border-dark">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-primary"></div>
+                                    <h3 class="font-semibold text-sm">분석중</h3>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-600 dark:text-slate-400">5</span>
+                            </div>
+                        </div>
+
+                        <!-- Column Body -->
+                        <div class="column-dropzone p-3 space-y-3 bg-primary/5 dark:bg-primary-dark/10">
+                            <!-- VOC Card -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-primary shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00008</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">API 응답 시간 초과 에러</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">folder</span>
+                                            <span>오류/버그 &gt; 시스템 오류</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>j***@example.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-23 13:45</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                            <span class="material-icons-outlined text-xs">attach_file</span>
+                                            3
+                                        </span>
+                                        <span class="status-badge priority-high">
+                                            <span class="material-icons-outlined text-xs">warning</span>
+                                            높음
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- More cards (simplified) -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-primary shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00007</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">결제 완료 후 영수증이 표시되지 않음</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">folder</span>
+                                            <span>기능/개선 &gt; UI/UX</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>k***@test.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-23 12:20</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                            <span class="material-icons-outlined text-xs">comment</span>
+                                            2
+                                        </span>
+                                        <span class="status-badge priority-medium">
+                                            <span class="material-icons-outlined text-xs">info</span>
+                                            보통
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: 분석실패 (ANALYSIS_FAILED) -->
+                <div class="kanban-column flex-shrink-0">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                        <!-- Column Header -->
+                        <div class="px-4 py-3 bg-danger/10 dark:bg-danger/20 border-b border-border-light dark:border-border-dark">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-danger"></div>
+                                    <h3 class="font-semibold text-sm">분석실패</h3>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-600 dark:text-slate-400">1</span>
+                            </div>
+                        </div>
+
+                        <!-- Column Body -->
+                        <div class="column-dropzone p-3 space-y-3 bg-danger/5 dark:bg-danger/10">
+                            <!-- VOC Card -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-danger shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00005</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">특수문자 입력 시 화면 깨짐</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>m***@company.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-23 11:10</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-danger/20 dark:bg-danger/30 text-danger">
+                                            <span class="material-icons-outlined text-xs">error</span>
+                                            AI 분석 실패
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 4: 처리중 (PROCESSING) -->
+                <div class="kanban-column flex-shrink-0">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                        <!-- Column Header -->
+                        <div class="px-4 py-3 bg-warning/10 dark:bg-warning/20 border-b border-border-light dark:border-border-dark">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-warning"></div>
+                                    <h3 class="font-semibold text-sm">처리중</h3>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-600 dark:text-slate-400">8</span>
+                            </div>
+                        </div>
+
+                        <!-- Column Body -->
+                        <div class="column-dropzone p-3 space-y-3 bg-warning/5 dark:bg-warning/10">
+                            <!-- VOC Card -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00012</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">엑셀 다운로드 시 한글 깨짐</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">folder</span>
+                                            <span>오류/버그 &gt; 데이터 오류</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>p***@example.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-23 10:05</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                            <span class="material-icons-outlined text-xs">attach_file</span>
+                                            1
+                                        </span>
+                                        <span class="status-badge bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                            <span class="material-icons-outlined text-xs">comment</span>
+                                            3
+                                        </span>
+                                        <span class="status-badge priority-medium">
+                                            <span class="material-icons-outlined text-xs">info</span>
+                                            보통
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- More cards -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260123-00011</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">모바일에서 버튼 클릭이 어려움</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">folder</span>
+                                            <span>기능/개선 &gt; 모바일</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>q***@test.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-23 09:30</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge priority-low">
+                                            <span class="material-icons-outlined text-xs">arrow_downward</span>
+                                            낮음
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 5: 완료 (COMPLETED) -->
+                <div class="kanban-column flex-shrink-0">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                        <!-- Column Header -->
+                        <div class="px-4 py-3 bg-success/10 dark:bg-success/20 border-b border-border-light dark:border-border-dark">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-success"></div>
+                                    <h3 class="font-semibold text-sm">완료</h3>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-600 dark:text-slate-400">12</span>
+                            </div>
+                        </div>
+
+                        <!-- Column Body -->
+                        <div class="column-dropzone p-3 space-y-3 bg-success/5 dark:bg-success/10">
+                            <!-- VOC Card -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-success shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260122-00015</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">검색 결과가 정확하지 않음</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">folder</span>
+                                            <span>기능/개선 &gt; 검색</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>r***@company.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-22 16:45</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-success/20 dark:bg-success/30 text-success">
+                                            <span class="material-icons-outlined text-xs">check_circle</span>
+                                            완료
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- More cards -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-success shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260122-00014</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">비밀번호 찾기 링크 오류</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">folder</span>
+                                            <span>오류/버그 &gt; 인증</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>s***@test.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-22 15:20</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                            <span class="material-icons-outlined text-xs">comment</span>
+                                            4
+                                        </span>
+                                        <span class="status-badge bg-success/20 dark:bg-success/30 text-success">
+                                            <span class="material-icons-outlined text-xs">check_circle</span>
+                                            완료
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 6: 반려 (REJECTED) -->
+                <div class="kanban-column flex-shrink-0">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                        <!-- Column Header -->
+                        <div class="px-4 py-3 bg-warning/10 dark:bg-warning/20 border-b border-border-light dark:border-border-dark">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-warning"></div>
+                                    <h3 class="font-semibold text-sm">반려</h3>
+                                </div>
+                                <span class="text-sm font-semibold text-slate-600 dark:text-slate-400">2</span>
+                            </div>
+                        </div>
+
+                        <!-- Column Body -->
+                        <div class="column-dropzone p-3 space-y-3 bg-warning/5 dark:bg-warning/10">
+                            <!-- VOC Card -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260122-00010</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">광고성 문의</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>x***@spam.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-22 11:30</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-warning/20 dark:bg-warning/30 text-warning">
+                                            <span class="material-icons-outlined text-xs">block</span>
+                                            반려
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Empty State Example (when no cards) -->
+                            <!-- Uncomment to see empty state -->
+                            <!--
+                            <div class="flex flex-col items-center justify-center py-12 text-center">
+                                <span class="material-icons-outlined text-slate-300 dark:text-slate-600 text-5xl mb-3">inbox</span>
+                                <p class="text-sm text-slate-400 dark:text-slate-500">VOC가 없습니다</p>
+                            </div>
+                            -->
+
+                            <!-- VOC Card 2 -->
+                            <div class="voc-card bg-white dark:bg-slate-800 rounded-lg border-l-4 border-warning shadow-sm hover:shadow-md cursor-pointer overflow-hidden" draggable="true">
+                                <div class="p-4">
+                                    <div class="mb-3">
+                                        <p class="font-semibold text-sm text-primary mb-1">VOC-20260122-00009</p>
+                                        <h4 class="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">중복 문의 건</h4>
+                                    </div>
+
+                                    <div class="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">person</span>
+                                            <span>y***@duplicate.com</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-icons-outlined text-sm">schedule</span>
+                                            <span>2026-01-22 10:15</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center gap-2 flex-wrap">
+                                        <span class="status-badge bg-warning/20 dark:bg-warning/30 text-warning">
+                                            <span class="material-icons-outlined text-xs">block</span>
+                                            반려
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="mt-6 p-4 bg-info/10 dark:bg-info/5 border border-info/20 rounded-lg flex gap-3">
+            <span class="material-icons-outlined text-info flex-shrink-0">info</span>
+            <div class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p class="mb-2"><strong>드래그앤드롭으로 상태를 변경할 수 있습니다.</strong></p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>접수 상태는 자동으로 분석중으로 전환됩니다.</li>
+                    <li>분석실패는 처리중으로만 이동 가능합니다.</li>
+                    <li>완료 또는 반려된 VOC는 처리중으로 재처리 가능합니다.</li>
+                    <li>카드를 클릭하면 상세 화면으로 이동합니다.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="py-8 border-t border-border-light dark:border-border-dark mt-auto">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <p class="text-sm text-slate-500 dark:text-slate-400">VOC Auto Bot Design System v1.0</p>
+        <p class="text-xs text-slate-400">2026 All rights reserved.</p>
+    </div>
+</footer>
+
+</body>
+</html>

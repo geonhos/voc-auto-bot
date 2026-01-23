@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VOC Status - VOC Auto Bot</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#556780",
+              "primary-light": "#8a9db3",
+              "primary-dark": "#2d3745",
+              "background-light": "#f5f5f4",
+              "background-dark": "#1c1917",
+              "surface-light": "#ffffff",
+              "surface-dark": "#2d3745",
+              "border-light": "#e7e5e4",
+              "border-dark": "#373330",
+              "success": "#6b8e6b",
+              "warning": "#b38f4d",
+              "danger": "#a16060",
+              "info": "#5b8a8a",
+            },
+            fontFamily: {
+              display: ["Inter", "Noto Sans KR", "sans-serif"],
+              body: ["Inter", "Noto Sans KR", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.375rem",
+            },
+          },
+        },
+      };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+        .required::after {
+            content: '*';
+            color: #a16060;
+            margin-left: 4px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 2rem;
+            bottom: -1rem;
+            width: 2px;
+            background: #e7e5e4;
+        }
+        .timeline-item:last-child::before {
+            display: none;
+        }
+        .timeline-icon {
+            position: absolute;
+            left: 0;
+            top: 0.25rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+        .timeline-icon.completed {
+            background: #6b8e6b;
+            color: white;
+        }
+        .timeline-icon.in-progress {
+            background: #556780;
+            color: white;
+        }
+        .timeline-icon.pending {
+            background: #e7e5e4;
+            color: #78716c;
+        }
+        .timeline-icon.failed {
+            background: #a16060;
+            color: white;
+        }
+        .copy-button {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .copy-button:hover {
+            color: #556780;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .dark .timeline-item::before {
+            background: #373330;
+        }
+        .dark .timeline-icon.pending {
+            background: #373330;
+            color: #a8a29e;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<header class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
+<div class="max-w-4xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-icons-outlined text-primary text-3xl">smart_toy</span>
+<span class="font-bold text-xl tracking-tight">VOC Auto Bot</span>
+</div>
+<nav class="hidden md:flex gap-6 text-sm font-medium">
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">VOC Entry</a>
+<a class="text-primary border-b-2 border-primary pb-1" href="#">VOC Status</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">History</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Settings</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs">JD</div>
+</div>
+</div>
+</header>
+<main class="flex-grow py-12 px-4">
+<div class="max-w-2xl mx-auto">
+<div class="mb-8">
+<h1 class="text-3xl font-bold mb-2">VOC 상태 조회</h1>
+<p class="text-slate-500 dark:text-slate-400">Ticket ID로 VOC의 현재 처리 상태를 빠르게 조회하세요. (SC-03)</p>
+</div>
+
+<!-- 검색 폼 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden mb-6">
+<div class="p-8">
+<form class="space-y-6">
+<div>
+<label class="block text-sm font-semibold mb-2 required" for="ticketIdInput">Ticket ID</label>
+<input
+    class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+    id="ticketIdInput"
+    name="ticketId"
+    placeholder="VOC-YYYYMMDD-XXXXX"
+    required=""
+    type="text"
+    maxlength="22"
+    pattern="VOC-\d{8}-\d{5}"
+    autocomplete="off"
+    aria-required="true"
+    aria-describedby="ticketIdHelp"/>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1" id="ticketIdHelp">예: VOC-20260123-00001</p>
+</div>
+
+<div>
+<label class="block text-sm font-semibold mb-2 required" for="userEmailInput">최종 사용자 이메일</label>
+<input
+    class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+    id="userEmailInput"
+    name="email"
+    placeholder="user@example.com"
+    required=""
+    type="email"
+    autocomplete="off"
+    aria-required="true"
+    aria-describedby="emailHelp"/>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1" id="emailHelp">VOC 접수 시 입력한 이메일 주소</p>
+</div>
+
+<div class="pt-4 flex flex-col sm:flex-row gap-3">
+<button
+    class="flex-1 px-6 py-3 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+    type="reset"
+    aria-label="입력 초기화">
+    초기화
+</button>
+<button
+    class="flex-1 px-6 py-3 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm"
+    type="submit"
+    aria-label="VOC 상태 조회">
+    조회
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- 조회 결과 영역 -->
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+<div class="p-8">
+<h2 class="text-xl font-bold mb-6">조회 결과</h2>
+
+<!-- 기본 정보 카드 -->
+<div class="space-y-4 mb-8">
+<div class="flex items-start justify-between">
+<div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Ticket ID</p>
+<div class="flex items-center gap-2">
+<span class="font-mono font-semibold text-lg">VOC-20260123-00001</span>
+<button class="copy-button p-1" title="복사" aria-label="Ticket ID 복사">
+<span class="material-icons-outlined text-slate-400 text-lg">content_copy</span>
+</button>
+</div>
+</div>
+<div>
+<span class="status-badge bg-warning/20 dark:bg-warning/30 text-warning">
+<span class="material-icons-outlined text-base">schedule</span>
+처리중
+</span>
+</div>
+</div>
+
+<div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-1">접수일시</p>
+<p class="font-medium">2026-01-23 14:30:25 KST</p>
+</div>
+
+<div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-1">제목</p>
+<p class="font-medium line-clamp-2">결제 처리 중 오류가 발생하여 결제가 완료되지 않는 문제</p>
+</div>
+
+<div>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-1">카테고리</p>
+<p class="font-medium">오류/버그 <span class="text-slate-400">&gt;</span> 시스템 오류</p>
+</div>
+</div>
+
+<!-- 처리 진행 상태 타임라인 -->
+<div class="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6 border border-border-light dark:border-border-dark">
+<h3 class="text-sm font-bold mb-6 text-slate-700 dark:text-slate-300">처리 진행 상태</h3>
+
+<ol class="space-y-6" role="list">
+<!-- 접수 (완료) -->
+<li class="timeline-item">
+<div class="timeline-icon completed">
+<span class="material-icons-outlined" style="font-size: 0.875rem;">check</span>
+</div>
+<div>
+<p class="font-semibold text-success">접수</p>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">2026-01-23 14:30:25</p>
+</div>
+</li>
+
+<!-- 분석중 (완료) -->
+<li class="timeline-item">
+<div class="timeline-icon completed">
+<span class="material-icons-outlined" style="font-size: 0.875rem;">check</span>
+</div>
+<div>
+<p class="font-semibold text-success">분석중</p>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">2026-01-23 14:31:15</p>
+</div>
+</li>
+
+<!-- 처리중 (진행중) -->
+<li class="timeline-item">
+<div class="timeline-icon in-progress">
+<span class="material-icons-outlined" style="font-size: 0.875rem;">play_arrow</span>
+</div>
+<div>
+<p class="font-semibold text-primary">처리중</p>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">2026-01-23 14:45:30</p>
+<p class="text-xs text-info mt-1">처리 중 (예상: 1-2일 소요)</p>
+</div>
+</li>
+
+<!-- 완료 (대기) -->
+<li class="timeline-item">
+<div class="timeline-icon pending">
+<span class="material-icons-outlined" style="font-size: 0.875rem;">radio_button_unchecked</span>
+</div>
+<div>
+<p class="font-medium text-slate-400">완료</p>
+<p class="text-sm text-slate-400 mt-1">대기 중</p>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+
+<!-- Empty State (조회 결과가 없을 때 표시되는 영역) -->
+<!-- 실제 구현 시 조건부 렌더링 -->
+<!--
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden" style="display: none;">
+<div class="p-16 flex flex-col items-center justify-center text-center">
+<span class="material-icons-outlined text-slate-300 dark:text-slate-600 mb-4" style="font-size: 4rem;">search</span>
+<h3 class="text-lg font-semibold text-slate-600 dark:text-slate-300 mb-2">조회 결과가 없습니다</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Ticket ID와 이메일을 확인해주세요</p>
+</div>
+</div>
+-->
+
+<!-- 안내 메시지 -->
+<div class="mt-8 p-4 bg-info/10 dark:bg-info/5 border border-info/20 rounded-lg flex gap-3">
+<span class="material-icons-outlined text-info">info</span>
+<div class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+<p class="mb-2">
+<strong>보안 안내:</strong> Ticket ID와 이메일 정보가 일치해야만 조회가 가능합니다.
+</p>
+<p>
+조회 요청은 분당 10건으로 제한됩니다. 과도한 요청 시 일시적으로 차단될 수 있습니다.
+</p>
+</div>
+</div>
+</div>
+</main>
+<footer class="py-8 border-t border-border-light dark:border-border-dark mt-auto">
+<div class="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-sm text-slate-500 dark:text-slate-400">VOC Auto Bot Design System v1.0</p>
+<p class="text-xs text-slate-400">2026 All rights reserved.</p>
+</div>
+</footer>
+
+<!-- JavaScript (실제 구현 시 별도 파일로 분리) -->
+<script>
+    // Ticket ID 복사 기능
+    document.addEventListener('DOMContentLoaded', function() {
+        const copyButton = document.querySelector('.copy-button');
+        if (copyButton) {
+            copyButton.addEventListener('click', function() {
+                const ticketId = 'VOC-20260123-00001';
+                navigator.clipboard.writeText(ticketId).then(function() {
+                    // 토스트 알림 표시 (실제 구현 시)
+                    console.log('Ticket ID가 복사되었습니다');
+                });
+            });
+        }
+
+        // 폼 제출 처리 (데모)
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('조회 요청:', {
+                    ticketId: document.getElementById('ticketIdInput').value,
+                    email: document.getElementById('userEmailInput').value
+                });
+                // 실제 API 호출 로직
+            });
+        }
+
+        // 초기화 버튼 처리
+        form.addEventListener('reset', function() {
+            console.log('폼 초기화');
+            // 실제 구현 시 결과 영역도 숨김 처리
+        });
+    });
+</script>
+
+</body></html>
