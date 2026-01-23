@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Category Management - VOC Auto Bot</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#556780",
+                        "primary-light": "#8a9db3",
+                        "primary-dark": "#2d3745",
+                        "background-light": "#f5f5f4",
+                        "background-dark": "#1c1917",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d3745",
+                        "border-light": "#e7e5e4",
+                        "border-dark": "#373330",
+                        "success": "#6b8e6b",
+                        "warning": "#b38f4d",
+                        "danger": "#a16060",
+                        "info": "#5b8a8a",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "Noto Sans KR", "sans-serif"],
+                        body: ["Inter", "Noto Sans KR", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.375rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+        .required::after {
+            content: '*';
+            color: #a16060;
+            margin-left: 4px;
+        }
+        .tree-node {
+            cursor: pointer;
+            user-select: none;
+        }
+        .tree-node:hover {
+            background-color: rgba(85, 103, 128, 0.05);
+        }
+        .tree-node.selected {
+            background-color: rgba(85, 103, 128, 0.1);
+            border-left: 3px solid #556780;
+        }
+        .tree-node.inactive {
+            opacity: 0.5;
+            font-style: italic;
+        }
+        .tree-children {
+            padding-left: 1.5rem;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-icons-outlined text-primary text-3xl">smart_toy</span>
+                <span class="font-bold text-xl tracking-tight">VOC Auto Bot</span>
+            </div>
+            <nav class="hidden md:flex gap-6 text-sm font-medium">
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">VOC Entry</a>
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">History</a>
+                <a class="text-primary border-b-2 border-primary pb-1" href="#">Settings</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <span class="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs">AD</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow py-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold mb-2">카테고리 관리</h1>
+                <p class="text-slate-500 dark:text-slate-400">VOC 카테고리를 생성, 수정, 삭제할 수 있습니다. (SC-09)</p>
+            </div>
+
+            <!-- Two Column Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left: Category Tree -->
+                <div class="lg:col-span-1">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold">카테고리 트리</h2>
+                                <button class="text-xs text-primary hover:text-primary-dark font-medium flex items-center gap-1">
+                                    <span class="material-icons-outlined text-sm">refresh</span>
+                                    새로고침
+                                </button>
+                            </div>
+
+                            <!-- Tree Container -->
+                            <div class="border border-border-light dark:border-border-dark rounded p-4 max-h-[600px] overflow-y-auto" role="tree" aria-label="카테고리 트리">
+                                <!-- Main Category 1 -->
+                                <div class="mb-2">
+                                    <div class="tree-node selected flex items-center gap-2 p-2 rounded" role="treeitem" aria-expanded="true" aria-selected="true">
+                                        <span class="material-icons-outlined text-sm text-slate-500">expand_more</span>
+                                        <span class="material-icons-outlined text-primary text-lg">folder</span>
+                                        <span class="font-medium">오류/버그</span>
+                                        <span class="ml-auto text-xs text-slate-400">3</span>
+                                    </div>
+                                    <div class="tree-children">
+                                        <div class="tree-node flex items-center gap-2 p-2 rounded" role="treeitem">
+                                            <span class="w-4"></span>
+                                            <span class="material-icons-outlined text-info text-lg">label</span>
+                                            <span class="text-sm">시스템 오류</span>
+                                        </div>
+                                        <div class="tree-node flex items-center gap-2 p-2 rounded" role="treeitem">
+                                            <span class="w-4"></span>
+                                            <span class="material-icons-outlined text-info text-lg">label</span>
+                                            <span class="text-sm">UI/UX 오류</span>
+                                        </div>
+                                        <div class="tree-node flex items-center gap-2 p-2 rounded" role="treeitem">
+                                            <span class="w-4"></span>
+                                            <span class="material-icons-outlined text-info text-lg">label</span>
+                                            <span class="text-sm">데이터 오류</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Main Category 2 -->
+                                <div class="mb-2">
+                                    <div class="tree-node flex items-center gap-2 p-2 rounded" role="treeitem" aria-expanded="false">
+                                        <span class="material-icons-outlined text-sm text-slate-500">chevron_right</span>
+                                        <span class="material-icons-outlined text-primary text-lg">folder</span>
+                                        <span class="font-medium">기능 요청</span>
+                                        <span class="ml-auto text-xs text-slate-400">2</span>
+                                    </div>
+                                </div>
+
+                                <!-- Main Category 3 -->
+                                <div class="mb-2">
+                                    <div class="tree-node flex items-center gap-2 p-2 rounded" role="treeitem" aria-expanded="false">
+                                        <span class="material-icons-outlined text-sm text-slate-500">chevron_right</span>
+                                        <span class="material-icons-outlined text-primary text-lg">folder</span>
+                                        <span class="font-medium">성능/속도</span>
+                                        <span class="ml-auto text-xs text-slate-400">1</span>
+                                    </div>
+                                </div>
+
+                                <!-- Inactive Category -->
+                                <div class="mb-2">
+                                    <div class="tree-node inactive flex items-center gap-2 p-2 rounded" role="treeitem" aria-expanded="false">
+                                        <span class="material-icons-outlined text-sm text-slate-500">chevron_right</span>
+                                        <span class="material-icons-outlined text-slate-400 text-lg">folder</span>
+                                        <span class="font-medium">기타</span>
+                                        <span class="ml-auto text-xs bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded">비활성</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="mt-4 space-y-2">
+                                <button class="w-full px-4 py-2 bg-primary text-white font-medium rounded hover:bg-primary-dark transition-colors flex items-center justify-center gap-2">
+                                    <span class="material-icons-outlined text-sm">add</span>
+                                    대분류 추가
+                                </button>
+                                <button class="w-full px-4 py-2 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-medium rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2" disabled>
+                                    <span class="material-icons-outlined text-sm">add</span>
+                                    중분류 추가
+                                </button>
+                                <p class="text-xs text-slate-400 text-center mt-2">대분류 선택 시 중분류 추가 가능</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Category Detail Form -->
+                <div class="lg:col-span-2">
+                    <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                        <div class="p-8">
+                            <div class="mb-6">
+                                <h2 class="text-xl font-semibold mb-1">카테고리 상세</h2>
+                                <p class="text-sm text-slate-500 dark:text-slate-400">선택된 카테고리: <span class="font-medium text-primary">오류/버그</span></p>
+                            </div>
+
+                            <form class="space-y-6">
+                                <!-- Category Name -->
+                                <div>
+                                    <label class="block text-sm font-semibold mb-2 required" for="categoryName">카테고리 이름</label>
+                                    <input
+                                        class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                        id="categoryName"
+                                        name="categoryName"
+                                        placeholder="카테고리 이름을 입력하세요"
+                                        required
+                                        type="text"
+                                        value="오류/버그"
+                                        maxlength="50"
+                                        aria-required="true"
+                                        aria-invalid="false"
+                                    />
+                                    <p class="text-xs text-slate-400 mt-1">최대 50자까지 입력 가능합니다</p>
+                                </div>
+
+                                <!-- Level -->
+                                <div>
+                                    <label class="block text-sm font-semibold mb-2 required" for="level">계층</label>
+                                    <select
+                                        class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                        id="level"
+                                        name="level"
+                                        required
+                                        aria-required="true"
+                                        disabled
+                                    >
+                                        <option value="MAIN" selected>대분류</option>
+                                        <option value="SUB">중분류</option>
+                                    </select>
+                                    <p class="text-xs text-slate-400 mt-1">기존 카테고리의 계층은 변경할 수 없습니다</p>
+                                </div>
+
+                                <!-- Parent Category (hidden for MAIN level) -->
+                                <div style="display: none;">
+                                    <label class="block text-sm font-semibold mb-2 required" for="parentCategory">상위 카테고리</label>
+                                    <select
+                                        class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                        id="parentCategory"
+                                        name="parentCategory"
+                                        aria-required="true"
+                                    >
+                                        <option value="">선택하세요</option>
+                                        <option value="1">오류/버그</option>
+                                        <option value="2">기능 요청</option>
+                                        <option value="3">성능/속도</option>
+                                    </select>
+                                </div>
+
+                                <!-- Sort Order -->
+                                <div>
+                                    <label class="block text-sm font-semibold mb-2 required" for="sortOrder">정렬 순서</label>
+                                    <input
+                                        class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                                        id="sortOrder"
+                                        name="sortOrder"
+                                        placeholder="1"
+                                        required
+                                        type="number"
+                                        min="1"
+                                        value="1"
+                                        aria-required="true"
+                                        aria-invalid="false"
+                                    />
+                                    <p class="text-xs text-slate-400 mt-1">동일 레벨 내 표시 순서 (1 이상의 정수)</p>
+                                </div>
+
+                                <!-- Active Status -->
+                                <div>
+                                    <div class="flex items-center gap-3">
+                                        <input
+                                            class="w-4 h-4 text-primary bg-white dark:bg-slate-800 border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary"
+                                            id="isActive"
+                                            name="isActive"
+                                            type="checkbox"
+                                            checked
+                                        />
+                                        <label class="text-sm font-semibold" for="isActive">활성 여부</label>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-2 ml-7">비활성화 시 VOC 분류에서 사용할 수 없습니다</p>
+                                </div>
+
+                                <!-- Description -->
+                                <div>
+                                    <label class="block text-sm font-semibold mb-2" for="description">설명</label>
+                                    <textarea
+                                        class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
+                                        id="description"
+                                        name="description"
+                                        placeholder="카테고리에 대한 설명을 입력하세요 (선택사항)"
+                                        rows="3"
+                                        maxlength="200"
+                                    >시스템 오류, 버그, 장애 등과 관련된 VOC를 분류합니다.</textarea>
+                                    <p class="text-xs text-slate-400 mt-1">최대 200자까지 입력 가능합니다</p>
+                                </div>
+
+                                <!-- Usage Info -->
+                                <div class="p-4 bg-info/10 dark:bg-info/5 border border-info/20 rounded-lg">
+                                    <div class="flex items-start gap-3">
+                                        <span class="material-icons-outlined text-info text-lg mt-0.5">info</span>
+                                        <div class="text-sm text-slate-600 dark:text-slate-400">
+                                            <p class="font-medium mb-1">사용 현황</p>
+                                            <p>이 카테고리는 현재 <span class="font-semibold text-primary">127건</span>의 VOC에서 사용되고 있습니다.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Metadata -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border-light dark:border-border-dark">
+                                    <div>
+                                        <p class="text-xs text-slate-400">생성일시</p>
+                                        <p class="text-sm font-medium mt-1">2026-01-15 10:30:00</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-400">생성자</p>
+                                        <p class="text-sm font-medium mt-1">admin@example.com</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-400">최종 수정일시</p>
+                                        <p class="text-sm font-medium mt-1">2026-01-23 14:22:00</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-400">최종 수정자</p>
+                                        <p class="text-sm font-medium mt-1">admin@example.com</p>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="pt-6 flex flex-col sm:flex-row gap-3">
+                                    <button
+                                        class="flex-1 px-6 py-3 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                        type="button"
+                                    >
+                                        취소
+                                    </button>
+                                    <button
+                                        class="flex-1 px-6 py-3 bg-danger text-white font-semibold rounded hover:bg-danger/90 transition-colors shadow-sm flex items-center justify-center gap-2"
+                                        type="button"
+                                    >
+                                        <span class="material-icons-outlined text-sm">delete</span>
+                                        삭제
+                                    </button>
+                                    <button
+                                        class="flex-1 px-6 py-3 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm"
+                                        type="submit"
+                                    >
+                                        저장
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Warning Notice -->
+                    <div class="mt-6 p-4 bg-warning/10 dark:bg-warning/5 border border-warning/20 rounded-lg flex gap-3">
+                        <span class="material-icons-outlined text-warning">warning</span>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                            카테고리 삭제 시 하위 카테고리가 함께 삭제되며, 해당 카테고리를 사용 중인 VOC는 '미분류'로 변경됩니다.
+                            삭제 전 <span class="font-semibold">사용 현황</span>을 반드시 확인하세요.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-border-light dark:border-border-dark mt-auto">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-slate-500 dark:text-slate-400">VOC Auto Bot Design System v1.0</p>
+            <p class="text-xs text-slate-400">2026 All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Delete Confirmation Modal (Hidden by default) -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+        <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center">
+                    <span class="material-icons-outlined text-danger">warning</span>
+                </div>
+                <div class="flex-grow">
+                    <h3 id="deleteModalTitle" class="text-lg font-semibold mb-2">카테고리 삭제</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                        이 카테고리를 삭제하시겠습니까?<br/>
+                        <span class="font-semibold text-danger">하위 카테고리 3개가 함께 삭제</span>되며,
+                        <span class="font-semibold text-danger">127건의 VOC가 '미분류'로 변경</span>됩니다.
+                    </p>
+                    <div class="flex gap-3">
+                        <button class="flex-1 px-4 py-2 border border-border-light dark:border-border-dark text-slate-600 dark:text-slate-300 font-medium rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            취소
+                        </button>
+                        <button class="flex-1 px-4 py-2 bg-danger text-white font-medium rounded hover:bg-danger/90 transition-colors">
+                            삭제
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification (Hidden by default) -->
+    <div id="toast" class="hidden fixed top-20 right-4 bg-success text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50" role="alert">
+        <span class="material-icons-outlined text-sm">check_circle</span>
+        <span class="font-medium">카테고리가 성공적으로 저장되었습니다.</span>
+    </div>
+
+    <script>
+        // Simple interactivity demo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tree node selection
+            const treeNodes = document.querySelectorAll('.tree-node');
+            treeNodes.forEach(node => {
+                node.addEventListener('click', function(e) {
+                    // Remove selected class from all nodes
+                    treeNodes.forEach(n => n.classList.remove('selected'));
+                    // Add selected class to clicked node
+                    this.classList.add('selected');
+
+                    // Toggle expand/collapse for nodes with children
+                    const icon = this.querySelector('.material-icons-outlined:first-child');
+                    if (icon && (icon.textContent === 'expand_more' || icon.textContent === 'chevron_right')) {
+                        const isExpanded = icon.textContent === 'expand_more';
+                        icon.textContent = isExpanded ? 'chevron_right' : 'expand_more';
+                        this.setAttribute('aria-expanded', !isExpanded);
+
+                        // Toggle children visibility
+                        const parent = this.parentElement;
+                        const children = parent.querySelector('.tree-children');
+                        if (children) {
+                            children.style.display = isExpanded ? 'none' : 'block';
+                        }
+                    }
+                });
+            });
+
+            // Show toast notification (demo)
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                toast.classList.remove('hidden', 'bg-success', 'bg-danger', 'bg-info');
+                toast.classList.add('bg-' + type);
+                toast.querySelector('span:last-child').textContent = message;
+
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
+
+            // Form submission
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                showToast('카테고리가 성공적으로 저장되었습니다.', 'success');
+            });
+        });
+    </script>
+</body>
+</html>

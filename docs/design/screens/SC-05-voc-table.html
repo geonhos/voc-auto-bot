@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>VOC List - VOC Auto Bot</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#556780",
+                        "primary-light": "#8a9db3",
+                        "primary-dark": "#2d3745",
+                        "background-light": "#f5f5f4",
+                        "background-dark": "#1c1917",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d3745",
+                        "border-light": "#e7e5e4",
+                        "border-dark": "#373330",
+                        "success": "#6b8e6b",
+                        "warning": "#b38f4d",
+                        "danger": "#a16060",
+                        "info": "#5b8a8a",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "Noto Sans KR", "sans-serif"],
+                        body: ["Inter", "Noto Sans KR", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.375rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .badge-gray {
+            background-color: #78716c;
+            color: white;
+        }
+        .badge-blue {
+            background-color: #556780;
+            color: white;
+        }
+        .badge-red {
+            background-color: #a16060;
+            color: white;
+        }
+        .badge-yellow {
+            background-color: #b38f4d;
+            color: white;
+        }
+        .badge-green {
+            background-color: #6b8e6b;
+            color: white;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f5f5f4;
+        }
+        .dark .table-hover tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.3;
+            transition: opacity 0.2s;
+        }
+        th:hover .sort-icon {
+            opacity: 1;
+        }
+        .sort-icon.active {
+            opacity: 1;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+    <!-- Header (GNB) -->
+    <header class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-4 px-6 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="material-icons-outlined text-primary text-3xl">smart_toy</span>
+                <span class="font-bold text-xl tracking-tight">VOC Auto Bot</span>
+            </div>
+            <nav class="hidden md:flex gap-6 text-sm font-medium">
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">VOC Entry</a>
+                <a class="text-primary border-b-2 border-primary pb-1" href="#">History</a>
+                <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Settings</a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <button class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <span class="material-icons-outlined text-slate-600 dark:text-slate-300">notifications</span>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center text-white font-bold text-xs">JD</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark py-3 px-6">
+        <div class="max-w-7xl mx-auto">
+            <nav class="flex items-center gap-2 text-sm">
+                <a href="#" class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">홈</a>
+                <span class="material-icons-outlined text-slate-400" style="font-size: 16px;">chevron_right</span>
+                <a href="#" class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">VOC 관리</a>
+                <span class="material-icons-outlined text-slate-400" style="font-size: 16px;">chevron_right</span>
+                <span class="text-slate-900 dark:text-slate-100 font-medium">VOC 리스트</span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow py-8 px-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Page Header -->
+            <div class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">VOC 리스트</h1>
+                    <p class="text-slate-500 dark:text-slate-400">VOC 목록을 테이블 형태로 조회하고 관리하세요. (SC-05)</p>
+                </div>
+                <div role="tablist" aria-label="뷰 전환" class="flex gap-2 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg p-1">
+                    <button role="tab" aria-selected="false" class="px-4 py-2 rounded text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
+                        <span class="material-icons-outlined" style="font-size: 18px;">view_kanban</span>
+                        칸반
+                    </button>
+                    <button role="tab" aria-selected="true" class="px-4 py-2 rounded text-sm font-medium bg-primary text-white flex items-center gap-2">
+                        <span class="material-icons-outlined" style="font-size: 18px;">table_rows</span>
+                        테이블
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter/Search Section -->
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <!-- Status Filter -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" for="statusFilter">상태</label>
+                        <select
+                            id="statusFilter"
+                            aria-label="상태 필터"
+                            class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                            <option value="">전체</option>
+                            <option value="접수">접수</option>
+                            <option value="분석중">분석중</option>
+                            <option value="분석실패">분석실패</option>
+                            <option value="처리중">처리중</option>
+                            <option value="완료">완료</option>
+                            <option value="반려">반려</option>
+                        </select>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" for="categoryFilter">카테고리</label>
+                        <select
+                            id="categoryFilter"
+                            aria-label="카테고리 필터"
+                            class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                            <option value="">전체</option>
+                            <option value="오류/버그">오류/버그</option>
+                            <option value="문의">문의</option>
+                            <option value="개선요청">개선요청</option>
+                            <option value="불만">불만</option>
+                        </select>
+                    </div>
+
+                    <!-- Period Filter -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" for="periodFilter">기간</label>
+                        <select
+                            id="periodFilter"
+                            aria-label="기간 필터"
+                            class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                            <option value="today">오늘</option>
+                            <option value="7days" selected>최근 7일</option>
+                            <option value="30days">최근 30일</option>
+                            <option value="90days">최근 90일</option>
+                            <option value="custom">사용자 지정</option>
+                        </select>
+                    </div>
+
+                    <!-- Page Size -->
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" for="pageSize">페이지당</label>
+                        <select
+                            id="pageSize"
+                            aria-label="페이지당 항목 수"
+                            class="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                            <option value="10">10개</option>
+                            <option value="20" selected>20개</option>
+                            <option value="50">50개</option>
+                            <option value="100">100개</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Search Input -->
+                <div class="flex gap-2">
+                    <div class="flex-1 relative">
+                        <input
+                            type="search"
+                            id="searchInput"
+                            aria-label="VOC 검색"
+                            placeholder="Ticket ID, 제목, 최종 사용자 이메일로 검색"
+                            maxlength="100"
+                            class="w-full px-4 py-2 pl-10 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"/>
+                        <span class="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="font-size: 20px;">search</span>
+                    </div>
+                    <button
+                        aria-label="검색 실행"
+                        class="px-6 py-2 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm flex items-center gap-2">
+                        <span class="material-icons-outlined" style="font-size: 18px;">search</span>
+                        검색
+                    </button>
+                </div>
+            </div>
+
+            <!-- VOC Table -->
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table role="table" aria-label="VOC 목록 테이블" class="w-full table-hover">
+                        <thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-border-light dark:border-border-dark">
+                            <tr>
+                                <th role="columnheader" aria-sort="descending" class="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" style="width: 150px;">
+                                    Ticket ID
+                                    <span class="sort-icon active">↓</span>
+                                </th>
+                                <th role="columnheader" aria-sort="none" class="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" style="min-width: 200px;">
+                                    제목
+                                    <span class="sort-icon">↕</span>
+                                </th>
+                                <th role="columnheader" aria-sort="none" class="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" style="width: 120px;">
+                                    상태
+                                    <span class="sort-icon">↕</span>
+                                </th>
+                                <th role="columnheader" aria-sort="none" class="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" style="width: 140px;">
+                                    카테고리
+                                    <span class="sort-icon">↕</span>
+                                </th>
+                                <th role="columnheader" aria-sort="none" class="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" style="width: 150px;">
+                                    접수일시
+                                    <span class="sort-icon">↕</span>
+                                </th>
+                                <th role="columnheader" aria-sort="none" class="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" style="width: 180px;">
+                                    최종 사용자
+                                    <span class="sort-icon">↕</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border-light dark:divide-border-dark">
+                            <!-- Row 1 -->
+                            <tr class="cursor-pointer">
+                                <td class="px-6 py-4">
+                                    <a href="#" aria-label="티켓 ID VOC-20260123-00001, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                        VOC-20260123-00001
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="#" class="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-primary transition-colors line-clamp-1" title="로그인이 안됩니다">
+                                        로그인이 안됩니다
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="상태: 처리중" class="badge badge-yellow">
+                                        처리중
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400" title="중분류: 시스템 오류">
+                                        오류/버그
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="접수일시 2026년 01월 23일 14시 30분" class="text-sm text-slate-500 dark:text-slate-400">
+                                        01/23 14:30
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        user@example.com
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 2 -->
+                            <tr class="cursor-pointer">
+                                <td class="px-6 py-4">
+                                    <a href="#" aria-label="티켓 ID VOC-20260123-00002, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                        VOC-20260123-00002
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="#" class="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-primary transition-colors line-clamp-1" title="결제가 완료되지 않습니다">
+                                        결제가 완료되지 않습니다
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="상태: 분석중" class="badge badge-blue">
+                                        <span class="material-icons-outlined animate-spin" style="font-size: 14px;">refresh</span>
+                                        분석중
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400" title="중분류: 데이터 오류">
+                                        오류/버그
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="접수일시 2026년 01월 23일 13시 15분" class="text-sm text-slate-500 dark:text-slate-400">
+                                        01/23 13:15
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        test@example.com
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 3 -->
+                            <tr class="cursor-pointer">
+                                <td class="px-6 py-4">
+                                    <a href="#" aria-label="티켓 ID VOC-20260123-00003, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                        VOC-20260123-00003
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="#" class="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-primary transition-colors line-clamp-1" title="대시보드 UI 개선 요청">
+                                        대시보드 UI 개선 요청
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="상태: 접수" class="badge badge-gray">
+                                        접수
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        개선요청
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="접수일시 2026년 01월 23일 11시 45분" class="text-sm text-slate-500 dark:text-slate-400">
+                                        01/23 11:45
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        admin@example.com
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 4 -->
+                            <tr class="cursor-pointer">
+                                <td class="px-6 py-4">
+                                    <a href="#" aria-label="티켓 ID VOC-20260122-00089, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                        VOC-20260122-00089
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="#" class="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-primary transition-colors line-clamp-1" title="데이터 동기화 문제">
+                                        데이터 동기화 문제
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="상태: 완료" class="badge badge-green">
+                                        <span class="material-icons-outlined" style="font-size: 14px;">check</span>
+                                        완료
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        오류/버그
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="접수일시 2026년 01월 22일" class="text-sm text-slate-500 dark:text-slate-400">
+                                        01/22 16:20
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        support@example.com
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 5 -->
+                            <tr class="cursor-pointer">
+                                <td class="px-6 py-4">
+                                    <a href="#" aria-label="티켓 ID VOC-20260122-00088, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                        VOC-20260122-00088
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="#" class="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-primary transition-colors line-clamp-1" title="API 응답 시간이 너무 느립니다">
+                                        API 응답 시간이 너무 느립니다
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="상태: 분석실패" class="badge badge-red">
+                                        <span class="material-icons-outlined" style="font-size: 14px;">warning</span>
+                                        분석실패
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        불만
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="접수일시 2026년 01월 22일" class="text-sm text-slate-500 dark:text-slate-400">
+                                        01/22 14:55
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        dev@example.com
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 6 -->
+                            <tr class="cursor-pointer">
+                                <td class="px-6 py-4">
+                                    <a href="#" aria-label="티켓 ID VOC-20260122-00087, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                        VOC-20260122-00087
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="#" class="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-primary transition-colors line-clamp-1" title="사용자 권한 설정 방법 문의">
+                                        사용자 권한 설정 방법 문의
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="상태: 완료" class="badge badge-green">
+                                        <span class="material-icons-outlined" style="font-size: 14px;">check</span>
+                                        완료
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        문의
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="접수일시 2026년 01월 22일" class="text-sm text-slate-500 dark:text-slate-400">
+                                        01/22 10:30
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        help@example.com
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 7 -->
+                            <tr class="cursor-pointer">
+                                <td class="px-6 py-4">
+                                    <a href="#" aria-label="티켓 ID VOC-20260121-00134, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                        VOC-20260121-00134
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="#" class="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-primary transition-colors line-clamp-1" title="이메일 알림이 오지 않습니다">
+                                        이메일 알림이 오지 않습니다
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="상태: 반려" class="badge badge-red">
+                                        <span class="material-icons-outlined" style="font-size: 14px;">close</span>
+                                        반려
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        오류/버그
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="접수일시 2026년 01월 21일" class="text-sm text-slate-500 dark:text-slate-400">
+                                        2026-01-21
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        notify@example.com
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 8 -->
+                            <tr class="cursor-pointer">
+                                <td class="px-6 py-4">
+                                    <a href="#" aria-label="티켓 ID VOC-20260121-00133, 클릭하여 상세보기" class="font-mono text-sm text-blue-500 hover:text-blue-600 hover:underline font-medium">
+                                        VOC-20260121-00133
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <a href="#" class="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-primary transition-colors line-clamp-1" title="엑셀 다운로드 기능 추가 요청">
+                                        엑셀 다운로드 기능 추가 요청
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="상태: 처리중" class="badge badge-yellow">
+                                        처리중
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        개선요청
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span aria-label="접수일시 2026년 01월 21일" class="text-sm text-slate-500 dark:text-slate-400">
+                                        2026-01-21
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                                        feature@example.com
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State (hidden by default, shown when no results) -->
+                <div class="hidden py-16 text-center" id="emptyState">
+                    <span class="material-icons-outlined text-slate-300 dark:text-slate-600 mb-4" style="font-size: 64px;">inbox</span>
+                    <p class="text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">조회 결과가 없습니다</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-500">다른 필터를 선택하거나 검색어를 변경해 보세요</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-sm text-slate-500 dark:text-slate-400">
+                    총 <span class="font-semibold text-slate-900 dark:text-slate-100">234</span>건
+                    (<span class="font-semibold">1</span>/<span class="font-semibold">12</span> 페이지)
+                </div>
+
+                <nav role="navigation" aria-label="페이지네이션" class="flex items-center gap-2">
+                    <button
+                        disabled
+                        aria-label="이전 페이지"
+                        class="px-3 py-2 border border-border-light dark:border-border-dark rounded text-sm font-medium text-slate-400 dark:text-slate-600 cursor-not-allowed">
+                        <span class="material-icons-outlined" style="font-size: 18px;">chevron_left</span>
+                    </button>
+
+                    <button
+                        aria-label="1페이지로 이동"
+                        aria-current="page"
+                        class="px-4 py-2 bg-primary text-white rounded text-sm font-medium">
+                        1
+                    </button>
+                    <button
+                        aria-label="2페이지로 이동"
+                        class="px-4 py-2 border border-border-light dark:border-border-dark rounded text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        2
+                    </button>
+                    <button
+                        aria-label="3페이지로 이동"
+                        class="px-4 py-2 border border-border-light dark:border-border-dark rounded text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        3
+                    </button>
+                    <button
+                        aria-label="4페이지로 이동"
+                        class="px-4 py-2 border border-border-light dark:border-border-dark rounded text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        4
+                    </button>
+                    <button
+                        aria-label="5페이지로 이동"
+                        class="px-4 py-2 border border-border-light dark:border-border-dark rounded text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        5
+                    </button>
+
+                    <button
+                        aria-label="다음 페이지"
+                        class="px-3 py-2 border border-border-light dark:border-border-dark rounded text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        <span class="material-icons-outlined" style="font-size: 18px;">chevron_right</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-border-light dark:border-border-dark mt-auto">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-slate-500 dark:text-slate-400">VOC Auto Bot Design System v1.0</p>
+            <p class="text-xs text-slate-400">2026 All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Simple interactive demo functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sort functionality demo
+            const headers = document.querySelectorAll('th[role="columnheader"]');
+            headers.forEach(header => {
+                header.addEventListener('click', function() {
+                    const currentSort = this.getAttribute('aria-sort');
+                    const sortIcon = this.querySelector('.sort-icon');
+
+                    // Reset all headers
+                    headers.forEach(h => {
+                        h.setAttribute('aria-sort', 'none');
+                        const icon = h.querySelector('.sort-icon');
+                        icon.textContent = '↕';
+                        icon.classList.remove('active');
+                    });
+
+                    // Set current header
+                    if (currentSort === 'none' || currentSort === 'descending') {
+                        this.setAttribute('aria-sort', 'ascending');
+                        sortIcon.textContent = '↑';
+                    } else {
+                        this.setAttribute('aria-sort', 'descending');
+                        sortIcon.textContent = '↓';
+                    }
+                    sortIcon.classList.add('active');
+                });
+            });
+
+            // Search on Enter key
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    console.log('Search:', this.value);
+                }
+            });
+
+            // Filter change handlers
+            ['statusFilter', 'categoryFilter', 'periodFilter', 'pageSize'].forEach(id => {
+                const element = document.getElementById(id);
+                element.addEventListener('change', function() {
+                    console.log(`${id} changed to:`, this.value);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
