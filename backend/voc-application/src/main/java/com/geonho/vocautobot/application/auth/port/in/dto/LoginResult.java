@@ -3,14 +3,9 @@ package com.geonho.vocautobot.application.auth.port.in.dto;
 public record LoginResult(
         String accessToken,
         String refreshToken,
-        UserInfo user
+        Long userId,
+        String email,
+        String name,
+        String role
 ) {
-    public record UserInfo(
-            Long id,
-            String username,
-            String name,
-            String email,
-            String role
-    ) {
-    }
 }

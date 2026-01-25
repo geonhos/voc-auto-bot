@@ -1,8 +1,8 @@
 package com.geonho.vocautobot.application.auth.port.in;
 
-import com.geonho.vocautobot.application.auth.port.in.dto.TokenRefreshCommand;
-import com.geonho.vocautobot.application.auth.port.in.dto.TokenRefreshResult;
+import com.geonho.vocautobot.application.auth.port.in.dto.TokenResult;
 
 public interface RefreshTokenUseCase {
-    TokenRefreshResult refresh(TokenRefreshCommand command);
+
+    TokenResult refresh(String refreshToken);
 }
