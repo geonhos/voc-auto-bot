@@ -400,7 +400,138 @@ Content-Type: multipart/form-data
 
 ---
 
-### 3.4 VOC 상태 변경
+### 3.4 VOC 임시 저장
+
+작성 중인 VOC를 임시 저장합니다.
+
+**Endpoint:** `POST /vocs/draft`
+
+**Headers:**
+```
+Authorization: Bearer {accessToken}
+Content-Type: multipart/form-data
+```
+
+**Request (multipart/form-data):**
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| title | string | X | 제목 (max: 200) |
+| content | string | X | 내용 |
+| customerName | string | X | 최종 사용자 이름 (max: 50) |
+| customerEmail | string | X | 최종 사용자 이메일 |
+| customerPhone | string | X | 연락처 |
+| mainCategoryId | long | X | 대분류 카테고리 ID |
+| subCategoryId | long | X | 중분류 카테고리 ID |
+| occurrenceTime | datetime | X | 발생 시각 |
+| attachments | file[] | X | 첨부파일 (최대 5개, 총 30MB) |
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "data": {
+    "draftId": 1,
+    "message": "임시 저장되었습니다",
+    "savedAt": "2026-01-25T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 3.5 VOC 임시 저장 목록 조회
+
+임시 저장된 VOC 목록을 조회합니다.
+
+**Endpoint:** `GET /vocs/drafts`
+
+**Headers:**
+```
+Authorization: Bearer {accessToken}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "draftId": 1,
+      "title": "결제 오류 발생",
+      "customerEmail": "user@example.com",
+      "savedAt": "2026-01-25T10:30:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### 3.6 VOC 임시 저장 삭제
+
+임시 저장된 VOC를 삭제합니다.
+
+**Endpoint:** `DELETE /vocs/drafts/{draftId}`
+
+**Headers:**
+```
+Authorization: Bearer {accessToken}
+```
+
+**Response (204):** No Content
+
+---
+
+### 3.7 VOC 수정
+
+VOC 정보를 수정합니다. (카테고리, 우선순위 등)
+
+**Endpoint:** `PATCH /vocs/{id}`
+
+**Headers:**
+```
+Authorization: Bearer {accessToken}
+```
+
+**Request:**
+```json
+{
+  "title": "string (optional, max: 200)",
+  "content": "string (optional)",
+  "mainCategoryId": "long (optional)",
+  "subCategoryId": "long (optional)",
+  "priority": "LOW | MEDIUM | HIGH | URGENT (optional)"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "ticketId": "VOC-20260123-00001",
+    "title": "결제 오류 발생 (수정)",
+    "mainCategory": {
+      "id": 2,
+      "name": "기능 요청"
+    },
+    "priority": "URGENT",
+    "message": "VOC 정보가 수정되었습니다"
+  }
+}
+```
+
+**Error Codes:**
+| 코드 | 설명 |
+|------|------|
+| VOC_NOT_FOUND | VOC 없음 |
+| CATEGORY_NOT_FOUND | 카테고리 없음 |
+| INVALID_STATUS | 완료/반려 상태에서는 수정 불가 |
+
+---
+
+### 3.8 VOC 상태 변경
 
 VOC 상태를 변경합니다.
 
@@ -443,7 +574,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.5 VOC 담당자 배정
+### 3.9 VOC 담당자 배정
 
 VOC 담당자를 배정/변경합니다.
 
@@ -478,7 +609,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.6 VOC 첨부파일 다운로드
+### 3.10 VOC 첨부파일 다운로드
 
 첨부파일을 다운로드합니다.
 
@@ -493,7 +624,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.7 VOC 상태 조회 (공개)
+### 3.11 VOC 상태 조회 (공개)
 
 Ticket ID와 이메일로 VOC 상태를 조회합니다. (인증 불필요)
 
@@ -543,7 +674,7 @@ Ticket ID와 이메일로 VOC 상태를 조회합니다. (인증 불필요)
 
 ---
 
-### 3.8 유사 VOC 조회
+### 3.12 유사 VOC 조회
 
 해당 VOC와 유사한 VOC 목록을 조회합니다.
 
@@ -582,7 +713,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.9 VOC 메모 목록 조회
+### 3.13 VOC 메모 목록 조회
 
 VOC 메모 목록을 조회합니다.
 
@@ -615,7 +746,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.10 VOC 메모 등록
+### 3.14 VOC 메모 등록
 
 VOC에 메모를 추가합니다.
 
@@ -653,7 +784,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.11 VOC 상태 이력 조회
+### 3.15 VOC 상태 이력 조회
 
 VOC 상태 변경 이력을 조회합니다.
 
@@ -697,7 +828,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.12 AI 분석 로그 조회
+### 3.16 AI 분석 로그 조회
 
 AI 분석에서 수집된 로그를 조회합니다.
 
@@ -728,7 +859,7 @@ Authorization: Bearer {accessToken}
 
 ---
 
-### 3.13 AI 분석 DB 조회 결과
+### 3.17 AI 분석 DB 조회 결과
 
 AI 분석에서 수집된 DB 조회 결과를 조회합니다.
 
@@ -1575,3 +1706,4 @@ Authorization: Bearer {accessToken}
 | 버전 | 일자 | 작성자 | 변경 내용 |
 |------|------|--------|-----------|
 | 1.0 | 2026-01-25 | Claude | 최초 작성 |
+| 1.1 | 2026-01-25 | Claude | Gemini 리뷰 반영: VOC 임시 저장 API(3.4~3.6), VOC 수정 API(3.7) 추가 |
