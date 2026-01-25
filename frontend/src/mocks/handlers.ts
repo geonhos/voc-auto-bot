@@ -295,39 +295,65 @@ export const handlers = [
   }),
 
   // Statistics / Dashboard
-  http.get(`${API_BASE}/statistics/dashboard`, async () => {
+  http.get(`${API_BASE}/statistics/dashboard`, async ({ request }) => {
     await delay(500);
+    const url = new URL(request.url);
+    const fromDate = url.searchParams.get('fromDate');
+    const toDate = url.searchParams.get('toDate');
+
+    // Generate trend data based on date range
+    const generateTrendData = () => {
+      const trends = [];
+      const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const to = toDate ? new Date(toDate) : new Date();
+
+      for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+        trends.push({
+          date: d.toISOString().split('T')[0],
+          received: Math.floor(Math.random() * 20) + 40,
+          resolved: Math.floor(Math.random() * 18) + 35,
+          pending: Math.floor(Math.random() * 8) + 5,
+        });
+      }
+      return trends;
+    };
+
     const dashboard: DashboardData = {
       kpi: {
-        totalVocs: 150,
-        resolvedVocs: 120,
-        pendingVocs: 30,
-        avgResolutionTimeHours: 24.5,
-        resolutionRate: 80.0,
-        todayVocs: 5,
-        weekVocs: 25,
-        monthVocs: 80,
+        totalVocs: 1234,
+        resolvedVocs: 678,
+        pendingVocs: 234,
+        avgResolutionTimeHours: 2.3,
+        resolutionRate: 54.9,
+        todayVocs: 58,
+        weekVocs: 386,
+        monthVocs: 1234,
       },
-      trend: [
-        { date: '2024-01-10', received: 10, resolved: 8, pending: 2 },
-        { date: '2024-01-11', received: 12, resolved: 10, pending: 4 },
-        { date: '2024-01-12', received: 8, resolved: 9, pending: 3 },
-        { date: '2024-01-13', received: 15, resolved: 12, pending: 6 },
-        { date: '2024-01-14', received: 11, resolved: 14, pending: 3 },
-      ],
+      trend: generateTrendData(),
       categoryStats: [
-        { categoryId: 1, categoryName: '제품 문의', count: 50, percentage: 33.3 },
-        { categoryId: 4, categoryName: '불만/개선', count: 40, percentage: 26.7 },
+        { categoryId: 1, categoryName: '오류/버그', count: 456, percentage: 36.95 },
+        { categoryId: 2, categoryName: '문의', count: 389, percentage: 31.52 },
+        { categoryId: 3, categoryName: '개선', count: 234, percentage: 18.96 },
+        { categoryId: 4, categoryName: '불만', count: 78, percentage: 6.32 },
+        { categoryId: 5, categoryName: '칭찬', count: 45, percentage: 3.65 },
+        { categoryId: 6, categoryName: '제안', count: 32, percentage: 2.59 },
+        { categoryId: 7, categoryName: '장애', count: 28, percentage: 2.27 },
+        { categoryId: 8, categoryName: '보안', count: 19, percentage: 1.54 },
+        { categoryId: 9, categoryName: 'UI/UX', count: 15, percentage: 1.22 },
+        { categoryId: 10, categoryName: '기타', count: 12, percentage: 0.97 },
       ],
       statusDistribution: [
-        { status: 'RECEIVED', statusLabel: '접수됨', count: 20, percentage: 13.3 },
-        { status: 'IN_PROGRESS', statusLabel: '처리중', count: 30, percentage: 20.0 },
-        { status: 'RESOLVED', statusLabel: '처리완료', count: 100, percentage: 66.7 },
+        { status: 'RESOLVED', statusLabel: '완료', count: 678, percentage: 54.9 },
+        { status: 'IN_PROGRESS', statusLabel: '처리중', count: 234, percentage: 18.96 },
+        { status: 'ASSIGNED', statusLabel: '분석중', count: 156, percentage: 12.64 },
+        { status: 'RECEIVED', statusLabel: '접수', count: 89, percentage: 7.21 },
+        { status: 'REJECTED', statusLabel: '반려', count: 45, percentage: 3.65 },
+        { status: 'PENDING', statusLabel: '분석실패', count: 32, percentage: 2.59 },
       ],
       channelStats: [
-        { channel: 'WEB', channelLabel: '웹', count: 80, percentage: 53.3 },
-        { channel: 'PHONE', channelLabel: '전화', count: 50, percentage: 33.3 },
-        { channel: 'EMAIL', channelLabel: '이메일', count: 20, percentage: 13.4 },
+        { channel: 'WEB', channelLabel: '웹', count: 658, percentage: 53.3 },
+        { channel: 'PHONE', channelLabel: '전화', count: 411, percentage: 33.3 },
+        { channel: 'EMAIL', channelLabel: '이메일', count: 165, percentage: 13.4 },
       ],
       topAssignees: [
         {
