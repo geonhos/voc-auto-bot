@@ -1,8 +1,8 @@
 package com.geonho.vocautobot.application.category.port.in;
 
-import com.geonho.vocautobot.application.category.port.in.dto.CreateCategoryCommand;
-import com.geonho.vocautobot.application.category.port.in.dto.CategoryResult;
+import com.geonho.vocautobot.domain.category.Category;
 
 public interface CreateCategoryUseCase {
-    CategoryResult createCategory(CreateCategoryCommand command);
+
+    Category createCategory(CreateCategoryCommand command);
 }
