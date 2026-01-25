@@ -9,23 +9,17 @@ public interface CategoryRepository {
 
     Optional<Category> findById(Long id);
 
-    Optional<Category> findByCode(String code);
-
     List<Category> findAll();
+
+    List<Category> findByType(CategoryType type);
 
     List<Category> findByParentId(Long parentId);
 
-    List<Category> findRootCategories();
-
-    List<Category> findByIsActive(boolean isActive);
-
-    boolean existsByCode(String code);
-
-    boolean existsByParentId(Long parentId);
+    List<Category> findActiveCategories();
 
     void deleteById(Long id);
 
-    long count();
+    boolean existsById(Long id);
 
     long countByParentId(Long parentId);
 }
