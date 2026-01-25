@@ -2,6 +2,8 @@ package com.geonho.vocautobot.adapter.out.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.geonho.vocautobot.adapter.out.ai.exception.LlmIntegrationException;
+import com.geonho.vocautobot.adapter.out.ai.exception.LlmIntegrationException.ErrorType;
 import com.geonho.vocautobot.application.analysis.port.in.dto.VocAnalysisResult;
 import com.geonho.vocautobot.application.analysis.port.in.dto.VocAnalysisResult.CategorySuggestion;
 import com.geonho.vocautobot.application.analysis.port.in.dto.VocAnalysisResult.PrioritySuggestion;
@@ -72,15 +74,17 @@ public class OllamaAdapter implements LlmPort {
                     .timeout(Duration.ofMillis(config.getTimeout()))
                     .onErrorResume(e -> {
                         log.error("Failed to call Ollama API", e);
-                        return Mono.error(new RuntimeException("LLM 호출 실패: " + e.getMessage()));
+                        return Mono.error(new LlmIntegrationException(ErrorType.NETWORK_ERROR, e.getMessage(), e));
                     })
                     .block();
 
             return extractResponseText(response);
 
+        } catch (LlmIntegrationException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error sending prompt to Ollama", e);
-            throw new RuntimeException("LLM 통신 오류", e);
+            throw new LlmIntegrationException(ErrorType.NETWORK_ERROR, "LLM 통신 오류", e);
         }
     }
 
@@ -102,11 +106,8 @@ public class OllamaAdapter implements LlmPort {
      */
     private VocAnalysisResult parseAnalysisResponse(String llmResponse) {
         try {
-            // JSON 응답에서 코드 블록 제거 (```json ... ``` 형식)
-            String cleanJson = llmResponse
-                    .replaceAll("```json\\s*", "")
-                    .replaceAll("```\\s*", "")
-                    .trim();
+            // JSON 응답에서 JSON 부분만 추출 (첫 번째 { 와 마지막 } 사이)
+            String cleanJson = extractJsonFromResponse(llmResponse);
 
             JsonNode rootNode = objectMapper.readTree(cleanJson);
 
@@ -156,7 +157,27 @@ public class OllamaAdapter implements LlmPort {
 
         } catch (Exception e) {
             log.error("Failed to parse LLM analysis response: {}", llmResponse, e);
-            throw new RuntimeException("LLM 응답 파싱 실패", e);
+            throw new LlmIntegrationException(ErrorType.PARSING_ERROR, "LLM 응답 파싱 실패", e);
         }
+    }
+
+    /**
+     * LLM 응답에서 JSON 부분만 추출
+     * 첫 번째 '{' 와 마지막 '}' 사이의 내용을 반환
+     */
+    private String extractJsonFromResponse(String response) {
+        if (response == null || response.isEmpty()) {
+            throw new LlmIntegrationException(ErrorType.INVALID_RESPONSE, "빈 응답");
+        }
+
+        int firstBrace = response.indexOf('{');
+        int lastBrace = response.lastIndexOf('}');
+
+        if (firstBrace == -1 || lastBrace == -1 || firstBrace > lastBrace) {
+            log.warn("No valid JSON object found in response: {}", response);
+            throw new LlmIntegrationException(ErrorType.INVALID_RESPONSE, "유효한 JSON을 찾을 수 없음");
+        }
+
+        return response.substring(firstBrace, lastBrace + 1);
     }
 }
