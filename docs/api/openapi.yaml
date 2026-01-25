@@ -1703,6 +1703,7 @@ components:
         lastLoginAt:
           type: string
           format: date-time
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -1911,21 +1912,29 @@ components:
         mainCategory:
           $ref: '#/components/schemas/CategoryRef'
         subCategory:
-          $ref: '#/components/schemas/CategoryRef'
+          allOf:
+            - $ref: '#/components/schemas/CategoryRef'
+          nullable: true
         reporter:
           $ref: '#/components/schemas/UserRef'
         assignee:
-          $ref: '#/components/schemas/UserRef'
+          allOf:
+            - $ref: '#/components/schemas/UserRef'
+          nullable: true
         attachments:
           type: array
           items:
             $ref: '#/components/schemas/Attachment'
         analysis:
-          $ref: '#/components/schemas/VocAnalysis'
+          allOf:
+            - $ref: '#/components/schemas/VocAnalysis'
+          nullable: true
         processingNote:
           type: string
+          nullable: true
         rejectReason:
           type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -1935,12 +1944,15 @@ components:
         analysisCompletedAt:
           type: string
           format: date-time
+          nullable: true
         processingStartedAt:
           type: string
           format: date-time
+          nullable: true
         completedAt:
           type: string
           format: date-time
+          nullable: true
 
     CreateVocRequest:
       type: object
@@ -2567,8 +2579,11 @@ components:
         parentId:
           type: integer
           format: int64
+          nullable: true
         parent:
-          $ref: '#/components/schemas/CategoryRef'
+          allOf:
+            - $ref: '#/components/schemas/CategoryRef'
+          nullable: true
         description:
           type: string
         isActive:
