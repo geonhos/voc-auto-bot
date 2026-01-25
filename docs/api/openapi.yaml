@@ -1,0 +1,2963 @@
+openapi: 3.0.3
+info:
+  title: VOC Auto Bot API
+  description: |
+    VOC Auto Bot 시스템의 REST API 명세입니다.
+
+    ## 인증
+    JWT Bearer 토큰을 사용합니다. 로그인 API를 통해 토큰을 발급받아 Authorization 헤더에 포함시켜 요청합니다.
+
+    ## 에러 처리
+    모든 에러 응답은 동일한 형식을 따릅니다.
+  version: 1.1.0
+  contact:
+    name: VOC Auto Bot Team
+    email: support@voc-auto-bot.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.voc-auto-bot.com/v1
+    description: Production Server
+  - url: https://api-staging.voc-auto-bot.com/v1
+    description: Staging Server
+  - url: http://localhost:8080/v1
+    description: Local Development
+
+tags:
+  - name: Auth
+    description: 인증 관련 API
+  - name: VOC
+    description: VOC 관리 API
+  - name: VOC Draft
+    description: VOC 임시 저장 API
+  - name: Category
+    description: 카테고리 관리 API
+  - name: User
+    description: 사용자 관리 API
+  - name: Email
+    description: 이메일 관련 API
+  - name: Statistics
+    description: 통계 API
+
+paths:
+  # ============================================
+  # Auth APIs
+  # ============================================
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: 로그인
+      description: 사용자 인증 후 액세스 토큰을 발급합니다.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  summary: 잘못된 자격 증명
+                  value:
+                    success: false
+                    error:
+                      code: INVALID_CREDENTIALS
+                      message: 아이디 또는 비밀번호가 일치하지 않습니다
+                accountLocked:
+                  summary: 계정 잠금
+                  value:
+                    success: false
+                    error:
+                      code: ACCOUNT_LOCKED
+                      message: 계정이 잠겼습니다. 관리자에게 문의하세요
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: 토큰 갱신
+      description: 리프레시 토큰으로 새 액세스 토큰을 발급합니다.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: 토큰 갱신 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: 로그아웃
+      description: 토큰을 무효화합니다.
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: 로그아웃 성공
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/password:
+    put:
+      tags:
+        - Auth
+      summary: 비밀번호 변경
+      description: 현재 비밀번호를 변경합니다.
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: 비밀번호 변경 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # VOC APIs
+  # ============================================
+  /vocs:
+    get:
+      tags:
+        - VOC
+      summary: VOC 목록 조회
+      description: VOC 목록을 페이지네이션으로 조회합니다.
+      operationId: getVocs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: status
+          in: query
+          description: 상태 필터
+          schema:
+            $ref: '#/components/schemas/VocStatus'
+        - name: mainCategoryId
+          in: query
+          description: 대분류 카테고리 ID
+          schema:
+            type: integer
+            format: int64
+        - name: subCategoryId
+          in: query
+          description: 중분류 카테고리 ID
+          schema:
+            type: integer
+            format: int64
+        - name: assigneeId
+          in: query
+          description: 담당자 ID
+          schema:
+            type: integer
+            format: int64
+        - name: keyword
+          in: query
+          description: 제목/내용 검색어
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          description: 시작일 (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: 종료일 (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: sort
+          in: query
+          description: 정렬
+          schema:
+            type: string
+            default: createdAt,desc
+            example: createdAt,desc
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - VOC
+      summary: VOC 등록
+      description: 새 VOC를 등록합니다.
+      operationId: createVoc
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateVocRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVocResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /vocs/{id}:
+    get:
+      tags:
+        - VOC
+      summary: VOC 상세 조회
+      description: VOC 상세 정보를 조회합니다.
+      operationId: getVoc
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - VOC
+      summary: VOC 수정
+      description: VOC 정보를 수정합니다. (카테고리, 우선순위 등)
+      operationId: updateVoc
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVocRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateVocResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/{id}/status:
+    patch:
+      tags:
+        - VOC
+      summary: VOC 상태 변경
+      description: VOC 상태를 변경합니다.
+      operationId: updateVocStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVocStatusRequest'
+      responses:
+        '200':
+          description: 상태 변경 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateVocStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/{id}/assignee:
+    patch:
+      tags:
+        - VOC
+      summary: VOC 담당자 배정
+      description: VOC 담당자를 배정/변경합니다.
+      operationId: assignVoc
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignVocRequest'
+      responses:
+        '200':
+          description: 담당자 배정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignVocResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/{vocId}/attachments/{attachmentId}:
+    get:
+      tags:
+        - VOC
+      summary: VOC 첨부파일 다운로드
+      description: 첨부파일을 다운로드합니다.
+      operationId: downloadAttachment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vocId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 파일 다운로드
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/status:
+    get:
+      tags:
+        - VOC
+      summary: VOC 상태 조회 (공개)
+      description: Ticket ID와 이메일로 VOC 상태를 조회합니다. 인증 불필요.
+      operationId: getVocStatusPublic
+      parameters:
+        - name: ticketId
+          in: query
+          required: true
+          description: Ticket ID (VOC-YYYYMMDD-XXXXX)
+          schema:
+            type: string
+            pattern: '^VOC-\d{8}-\d{5}$'
+            example: VOC-20260123-00001
+        - name: email
+          in: query
+          required: true
+          description: 최종 사용자 이메일
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocStatusPublicResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /vocs/{id}/similar:
+    get:
+      tags:
+        - VOC
+      summary: 유사 VOC 조회
+      description: 해당 VOC와 유사한 VOC 목록을 조회합니다.
+      operationId: getSimilarVocs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+        - name: limit
+          in: query
+          description: 조회 개수
+          schema:
+            type: integer
+            default: 5
+            maximum: 20
+        - name: minScore
+          in: query
+          description: 최소 유사도
+          schema:
+            type: number
+            format: float
+            default: 0.7
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimilarVocListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/{id}/memos:
+    get:
+      tags:
+        - VOC
+      summary: VOC 메모 목록 조회
+      description: VOC 메모 목록을 조회합니다.
+      operationId: getVocMemos
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocMemoListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags:
+        - VOC
+      summary: VOC 메모 등록
+      description: VOC에 메모를 추가합니다.
+      operationId: createVocMemo
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVocMemoRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocMemoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/{id}/history:
+    get:
+      tags:
+        - VOC
+      summary: VOC 상태 이력 조회
+      description: VOC 상태 변경 이력을 조회합니다.
+      operationId: getVocHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocHistoryListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/{id}/analysis/logs:
+    get:
+      tags:
+        - VOC
+      summary: AI 분석 로그 조회
+      description: AI 분석에서 수집된 로그를 조회합니다.
+      operationId: getVocAnalysisLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogAnalysisListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/{id}/analysis/queries:
+    get:
+      tags:
+        - VOC
+      summary: AI 분석 DB 조회 결과
+      description: AI 분석에서 수집된 DB 조회 결과를 조회합니다.
+      operationId: getVocAnalysisQueries
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/VocIdParam'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DbQueryResultListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /vocs/{vocId}/emails:
+    get:
+      tags:
+        - Email
+      summary: 이메일 발송 이력 조회
+      description: VOC의 이메일 발송 이력을 조회합니다.
+      operationId: getVocEmails
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vocId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailLogListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags:
+        - Email
+      summary: 이메일 발송
+      description: VOC 관련 이메일을 발송합니다.
+      operationId: sendVocEmail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vocId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendEmailRequest'
+      responses:
+        '200':
+          description: 발송 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendEmailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # VOC Draft APIs
+  # ============================================
+  /vocs/draft:
+    post:
+      tags:
+        - VOC Draft
+      summary: VOC 임시 저장
+      description: 작성 중인 VOC를 임시 저장합니다.
+      operationId: saveVocDraft
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SaveVocDraftRequest'
+      responses:
+        '201':
+          description: 임시 저장 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveVocDraftResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /vocs/drafts:
+    get:
+      tags:
+        - VOC Draft
+      summary: VOC 임시 저장 목록 조회
+      description: 임시 저장된 VOC 목록을 조회합니다.
+      operationId: getVocDrafts
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocDraftListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /vocs/drafts/{draftId}:
+    delete:
+      tags:
+        - VOC Draft
+      summary: VOC 임시 저장 삭제
+      description: 임시 저장된 VOC를 삭제합니다.
+      operationId: deleteVocDraft
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: 삭제 성공
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # Category APIs
+  # ============================================
+  /categories/tree:
+    get:
+      tags:
+        - Category
+      summary: 카테고리 트리 조회
+      description: 전체 카테고리를 트리 구조로 조회합니다.
+      operationId: getCategoryTree
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: includeInactive
+          in: query
+          description: 비활성 포함 여부
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryTreeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /categories:
+    get:
+      tags:
+        - Category
+      summary: 카테고리 목록 조회
+      description: 카테고리 목록을 플랫하게 조회합니다.
+      operationId: getCategories
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: 유형 필터
+          schema:
+            $ref: '#/components/schemas/CategoryType'
+        - name: parentId
+          in: query
+          description: 상위 카테고리 ID
+          schema:
+            type: integer
+            format: int64
+        - name: isActive
+          in: query
+          description: 활성 여부
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Category
+      summary: 카테고리 등록
+      description: 새 카테고리를 등록합니다. (ADMIN 권한)
+      operationId: createCategory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /categories/{id}:
+    get:
+      tags:
+        - Category
+      summary: 카테고리 상세 조회
+      description: 카테고리 상세 정보를 조회합니다.
+      operationId: getCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CategoryIdParam'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Category
+      summary: 카테고리 수정
+      description: 카테고리 정보를 수정합니다. (ADMIN 권한)
+      operationId: updateCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CategoryIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Category
+      summary: 카테고리 삭제
+      description: 카테고리를 삭제합니다. (ADMIN 권한, 사용 중인 경우 불가)
+      operationId: deleteCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CategoryIdParam'
+      responses:
+        '204':
+          description: 삭제 성공
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 사용 중인 카테고리
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ============================================
+  # User APIs
+  # ============================================
+  /users:
+    get:
+      tags:
+        - User
+      summary: 사용자 목록 조회
+      description: 사용자 목록을 조회합니다. (ADMIN 권한)
+      operationId: getUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: role
+          in: query
+          description: 역할 필터
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: status
+          in: query
+          description: 상태 필터
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+        - name: keyword
+          in: query
+          description: 이름/이메일 검색
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - User
+      summary: 사용자 등록
+      description: 새 사용자를 등록합니다. (ADMIN 권한)
+      operationId: createUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: 등록 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: 중복 데이터
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /users/{id}:
+    get:
+      tags:
+        - User
+      summary: 사용자 상세 조회
+      description: 사용자 상세 정보를 조회합니다. (ADMIN 권한)
+      operationId: getUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - User
+      summary: 사용자 수정
+      description: 사용자 정보를 수정합니다. (ADMIN 권한)
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - User
+      summary: 사용자 삭제
+      description: 사용자를 삭제합니다. (ADMIN 권한, 실제로는 비활성화)
+      operationId: deleteUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '204':
+          description: 삭제 성공
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{id}/reset-password:
+    post:
+      tags:
+        - User
+      summary: 비밀번호 초기화
+      description: 사용자 비밀번호를 초기화합니다. (ADMIN 권한)
+      operationId: resetUserPassword
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: 초기화 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{id}/unlock:
+    post:
+      tags:
+        - User
+      summary: 계정 잠금 해제
+      description: 잠긴 계정을 해제합니다. (ADMIN 권한)
+      operationId: unlockUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: 잠금 해제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnlockUserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # Email Template APIs
+  # ============================================
+  /email-templates:
+    get:
+      tags:
+        - Email
+      summary: 이메일 템플릿 목록 조회
+      description: 이메일 템플릿 목록을 조회합니다.
+      operationId: getEmailTemplates
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: isActive
+          in: query
+          description: 활성 여부
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /email-templates/{id}:
+    get:
+      tags:
+        - Email
+      summary: 이메일 템플릿 상세 조회
+      description: 이메일 템플릿 상세를 조회합니다.
+      operationId: getEmailTemplate
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # Statistics APIs
+  # ============================================
+  /statistics/kpi:
+    get:
+      tags:
+        - Statistics
+      summary: 대시보드 KPI 조회
+      description: 대시보드 KPI 데이터를 조회합니다.
+      operationId: getKpi
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          description: 기간
+          schema:
+            type: string
+            enum: [TODAY, WEEK, MONTH]
+            default: WEEK
+        - name: startDate
+          in: query
+          description: 사용자 지정 시작일
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: 사용자 지정 종료일
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KpiResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /statistics/trend:
+    get:
+      tags:
+        - Statistics
+      summary: 기간별 VOC 추이 조회
+      description: 기간별 VOC 접수 추이를 조회합니다.
+      operationId: getTrend
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          description: 기간
+          schema:
+            type: string
+            enum: [WEEK, MONTH]
+            default: WEEK
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /statistics/by-category:
+    get:
+      tags:
+        - Statistics
+      summary: 카테고리별 VOC 현황 조회
+      description: 카테고리별 VOC 현황을 조회합니다.
+      operationId: getStatsByCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [TODAY, WEEK, MONTH]
+        - name: limit
+          in: query
+          description: 조회 개수
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /statistics/by-status:
+    get:
+      tags:
+        - Statistics
+      summary: 상태별 VOC 현황 조회
+      description: 상태별 VOC 현황을 조회합니다.
+      operationId: getStatsByStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [TODAY, WEEK, MONTH]
+      responses:
+        '200':
+          description: 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT 액세스 토큰
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: 페이지 번호
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    SizeParam:
+      name: size
+      in: query
+      description: 페이지 크기
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+    VocIdParam:
+      name: id
+      in: path
+      required: true
+      description: VOC ID
+      schema:
+        type: integer
+        format: int64
+
+    CategoryIdParam:
+      name: id
+      in: path
+      required: true
+      description: 카테고리 ID
+      schema:
+        type: integer
+        format: int64
+
+    UserIdParam:
+      name: id
+      in: path
+      required: true
+      description: 사용자 ID
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    BadRequest:
+      description: 잘못된 요청
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: 인증 실패
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: 권한 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: 리소스 없음
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    TooManyRequests:
+      description: 요청 제한 초과
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    # ============================================
+    # Common Schemas
+    # ============================================
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: 유효성 검증에 실패했습니다
+            details:
+              type: object
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    ResponseMeta:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-01-25T10:30:00Z'
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 5
+        timestamp:
+          type: string
+          format: date-time
+
+    MessageResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # ============================================
+    # Enum Schemas
+    # ============================================
+    VocStatus:
+      type: string
+      enum:
+        - RECEIVED
+        - ANALYZING
+        - ANALYSIS_FAILED
+        - PROCESSING
+        - COMPLETED
+        - REJECTED
+      description: |
+        VOC 상태:
+        * RECEIVED - 접수
+        * ANALYZING - 분석중
+        * ANALYSIS_FAILED - 분석실패
+        * PROCESSING - 처리중
+        * COMPLETED - 완료
+        * REJECTED - 반려
+
+    Priority:
+      type: string
+      enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - URGENT
+      description: 우선순위
+
+    UserRole:
+      type: string
+      enum:
+        - REPORTER
+        - HANDLER
+        - ADMIN
+      description: |
+        사용자 역할:
+        * REPORTER - VOC 접수자
+        * HANDLER - 처리 담당자
+        * ADMIN - 관리자
+
+    UserStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - LOCKED
+        - TEMP_PASSWORD
+      description: 사용자 상태
+
+    CategoryType:
+      type: string
+      enum:
+        - MAIN
+        - SUB
+      description: |
+        카테고리 유형:
+        * MAIN - 대분류
+        * SUB - 중분류
+
+    Sentiment:
+      type: string
+      enum:
+        - POSITIVE
+        - NEUTRAL
+        - NEGATIVE
+      description: 감정 분석 결과
+
+    # ============================================
+    # Auth Schemas
+    # ============================================
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          maxLength: 50
+          example: user01
+        password:
+          type: string
+          maxLength: 100
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            refreshToken:
+              type: string
+            expiresIn:
+              type: integer
+              example: 3600
+            tokenType:
+              type: string
+              example: Bearer
+            user:
+              $ref: '#/components/schemas/UserSummary'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    RefreshTokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            expiresIn:
+              type: integer
+              example: 3600
+            tokenType:
+              type: string
+              example: Bearer
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          description: 대소문자+숫자+특수문자 포함
+
+    # ============================================
+    # User Schemas
+    # ============================================
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        isTemporaryPassword:
+          type: boolean
+
+    UserListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserListItem'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    UserListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          type: string
+        position:
+          type: string
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        lastLoginAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    UserDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/UserDetail'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    UserDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          type: string
+        position:
+          type: string
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        isTemporaryPassword:
+          type: boolean
+        loginFailCount:
+          type: integer
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateUserRequest:
+      type: object
+      required:
+        - username
+        - email
+        - name
+        - role
+      properties:
+        username:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          format: email
+          maxLength: 100
+        name:
+          type: string
+          maxLength: 50
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          type: string
+          maxLength: 100
+        position:
+          type: string
+          maxLength: 50
+
+    CreateUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            username:
+              type: string
+            email:
+              type: string
+            name:
+              type: string
+            role:
+              $ref: '#/components/schemas/UserRole'
+            status:
+              $ref: '#/components/schemas/UserStatus'
+            temporaryPassword:
+              type: string
+            message:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 100
+        name:
+          type: string
+          maxLength: 50
+        role:
+          $ref: '#/components/schemas/UserRole'
+        department:
+          type: string
+          maxLength: 100
+        position:
+          type: string
+          maxLength: 50
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+
+    UserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+            role:
+              $ref: '#/components/schemas/UserRole'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    UnlockUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            status:
+              $ref: '#/components/schemas/UserStatus'
+            message:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # ============================================
+    # VOC Schemas
+    # ============================================
+    VocListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VocListItem'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    VocListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        ticketId:
+          type: string
+          example: VOC-20260123-00001
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/VocStatus'
+        priority:
+          $ref: '#/components/schemas/Priority'
+        mainCategory:
+          $ref: '#/components/schemas/CategoryRef'
+        subCategory:
+          $ref: '#/components/schemas/CategoryRef'
+        assignee:
+          $ref: '#/components/schemas/UserRef'
+        customerEmail:
+          type: string
+          description: 마스킹된 이메일
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VocDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/VocDetail'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    VocDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        ticketId:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        status:
+          $ref: '#/components/schemas/VocStatus'
+        priority:
+          $ref: '#/components/schemas/Priority'
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        customerPhone:
+          type: string
+          description: 마스킹된 연락처
+        mainCategory:
+          $ref: '#/components/schemas/CategoryRef'
+        subCategory:
+          allOf:
+            - $ref: '#/components/schemas/CategoryRef'
+          nullable: true
+        reporter:
+          $ref: '#/components/schemas/UserRef'
+        assignee:
+          allOf:
+            - $ref: '#/components/schemas/UserRef'
+          nullable: true
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        analysis:
+          allOf:
+            - $ref: '#/components/schemas/VocAnalysis'
+          nullable: true
+        processingNote:
+          type: string
+          nullable: true
+        rejectReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        analysisCompletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        processingStartedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateVocRequest:
+      type: object
+      required:
+        - title
+        - content
+        - customerName
+        - customerEmail
+        - mainCategoryId
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+        customerName:
+          type: string
+          maxLength: 50
+        customerEmail:
+          type: string
+          format: email
+        customerPhone:
+          type: string
+        mainCategoryId:
+          type: integer
+          format: int64
+        subCategoryId:
+          type: integer
+          format: int64
+        occurrenceTime:
+          type: string
+          format: date-time
+        attachments:
+          type: array
+          items:
+            type: string
+            format: binary
+          maxItems: 5
+
+    CreateVocResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            ticketId:
+              type: string
+            status:
+              $ref: '#/components/schemas/VocStatus'
+            message:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    UpdateVocRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+        mainCategoryId:
+          type: integer
+          format: int64
+        subCategoryId:
+          type: integer
+          format: int64
+        priority:
+          $ref: '#/components/schemas/Priority'
+
+    UpdateVocResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            ticketId:
+              type: string
+            title:
+              type: string
+            mainCategory:
+              $ref: '#/components/schemas/CategoryRef'
+            priority:
+              $ref: '#/components/schemas/Priority'
+            message:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    UpdateVocStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [COMPLETED, REJECTED, PROCESSING]
+        processingNote:
+          type: string
+          description: COMPLETED 시 필수
+        rejectReason:
+          type: string
+          description: REJECTED 시 필수
+
+    UpdateVocStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            ticketId:
+              type: string
+            previousStatus:
+              $ref: '#/components/schemas/VocStatus'
+            currentStatus:
+              $ref: '#/components/schemas/VocStatus'
+            message:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    AssignVocRequest:
+      type: object
+      required:
+        - assigneeId
+      properties:
+        assigneeId:
+          type: integer
+          format: int64
+
+    AssignVocResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            ticketId:
+              type: string
+            assignee:
+              $ref: '#/components/schemas/UserRef'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    VocStatusPublicResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            ticketId:
+              type: string
+            title:
+              type: string
+            status:
+              $ref: '#/components/schemas/VocStatus'
+            statusHistory:
+              type: array
+              items:
+                type: object
+                properties:
+                  status:
+                    $ref: '#/components/schemas/VocStatus'
+                  changedAt:
+                    type: string
+                    format: date-time
+            category:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # ============================================
+    # VOC Draft Schemas
+    # ============================================
+    SaveVocDraftRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+        customerName:
+          type: string
+          maxLength: 50
+        customerEmail:
+          type: string
+          format: email
+        customerPhone:
+          type: string
+        mainCategoryId:
+          type: integer
+          format: int64
+        subCategoryId:
+          type: integer
+          format: int64
+        occurrenceTime:
+          type: string
+          format: date-time
+        attachments:
+          type: array
+          items:
+            type: string
+            format: binary
+          maxItems: 5
+
+    SaveVocDraftResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            draftId:
+              type: integer
+              format: int64
+            message:
+              type: string
+            savedAt:
+              type: string
+              format: date-time
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    VocDraftListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VocDraftItem'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    VocDraftItem:
+      type: object
+      properties:
+        draftId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        customerEmail:
+          type: string
+        savedAt:
+          type: string
+          format: date-time
+
+    # ============================================
+    # VOC Related Schemas
+    # ============================================
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        originalFilename:
+          type: string
+        fileSize:
+          type: integer
+          format: int64
+        mimeType:
+          type: string
+        downloadUrl:
+          type: string
+
+    VocAnalysis:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        summary:
+          type: string
+        suggestedCategory:
+          $ref: '#/components/schemas/CategoryRef'
+        suggestedPriority:
+          $ref: '#/components/schemas/Priority'
+        sentiment:
+          $ref: '#/components/schemas/Sentiment'
+        keywords:
+          type: array
+          items:
+            type: string
+        confidence:
+          type: number
+          format: float
+        createdAt:
+          type: string
+          format: date-time
+
+    SimilarVocListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimilarVocItem'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    SimilarVocItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        ticketId:
+          type: string
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/VocStatus'
+        similarityScore:
+          type: number
+          format: float
+        matchedKeywords:
+          type: array
+          items:
+            type: string
+        processingNote:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    VocMemoListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VocMemo'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    VocMemo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        content:
+          type: string
+        author:
+          $ref: '#/components/schemas/UserRef'
+        isInternal:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateVocMemoRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+        isInternal:
+          type: boolean
+          default: true
+
+    VocMemoResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/VocMemo'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    VocHistoryListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VocHistoryItem'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    VocHistoryItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        fromStatus:
+          $ref: '#/components/schemas/VocStatus'
+        toStatus:
+          $ref: '#/components/schemas/VocStatus'
+        changedBy:
+          $ref: '#/components/schemas/UserRef'
+        changeReason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    LogAnalysisListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogAnalysisItem'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    LogAnalysisItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        logSource:
+          type: string
+        logPeriod:
+          type: string
+        logContent:
+          type: string
+        analysis:
+          type: string
+        errorCode:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    DbQueryResultListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DbQueryResultItem'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    DbQueryResultItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        queryName:
+          type: string
+        queryDescription:
+          type: string
+        resultData:
+          type: object
+        recordCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    # ============================================
+    # Category Schemas
+    # ============================================
+    CategoryRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+
+    CategoryTreeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryTreeNode'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    CategoryTreeNode:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/CategoryType'
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryTreeNode'
+
+    CategoryListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryListItem'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    CategoryListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/CategoryType'
+        parentId:
+          type: integer
+          format: int64
+        description:
+          type: string
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+        vocCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CategoryDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/CategoryDetail'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    CategoryDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/CategoryType'
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        parent:
+          allOf:
+            - $ref: '#/components/schemas/CategoryRef'
+          nullable: true
+        description:
+          type: string
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+        vocCount:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryRef'
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          $ref: '#/components/schemas/UserRef'
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: '#/components/schemas/UserRef'
+
+    CreateCategoryRequest:
+      type: object
+      required:
+        - name
+        - type
+        - sortOrder
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        type:
+          $ref: '#/components/schemas/CategoryType'
+        parentId:
+          type: integer
+          format: int64
+          description: SUB인 경우 필수
+        description:
+          type: string
+          maxLength: 200
+        sortOrder:
+          type: integer
+          minimum: 1
+
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 200
+        isActive:
+          type: boolean
+        sortOrder:
+          type: integer
+          minimum: 1
+
+    CategoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            name:
+              type: string
+            type:
+              $ref: '#/components/schemas/CategoryType'
+            isActive:
+              type: boolean
+            sortOrder:
+              type: integer
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # ============================================
+    # Email Schemas
+    # ============================================
+    EmailTemplateListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailTemplateItem'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    EmailTemplateItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        code:
+          type: string
+        isActive:
+          type: boolean
+        isSystem:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    EmailTemplateDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/EmailTemplateDetail'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    EmailTemplateDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        code:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+        isActive:
+          type: boolean
+        isSystem:
+          type: boolean
+        availableVariables:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SendEmailRequest:
+      type: object
+      required:
+        - subject
+        - body
+      properties:
+        templateId:
+          type: integer
+          format: int64
+        subject:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+          maxLength: 2000
+
+    SendEmailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            recipient:
+              type: string
+            subject:
+              type: string
+            status:
+              type: string
+              enum: [PENDING, SENT, FAILED]
+            sentAt:
+              type: string
+              format: date-time
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    EmailLogListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailLogItem'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    EmailLogItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        recipient:
+          type: string
+        subject:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, SENT, FAILED]
+        sentBy:
+          $ref: '#/components/schemas/UserRef'
+        sentAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    # ============================================
+    # Statistics Schemas
+    # ============================================
+    KpiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            period:
+              type: object
+              properties:
+                type:
+                  type: string
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+            totalCount:
+              type: integer
+            totalCountChange:
+              type: number
+              format: float
+            avgProcessingTimeHours:
+              type: number
+              format: float
+            avgProcessingTimeChange:
+              type: number
+              format: float
+            completionRate:
+              type: number
+              format: float
+            completionRateChange:
+              type: number
+              format: float
+            inProgressCount:
+              type: integer
+            inProgressPercentage:
+              type: number
+              format: float
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    TrendResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            labels:
+              type: array
+              items:
+                type: string
+            datasets:
+              type: array
+              items:
+                type: object
+                properties:
+                  label:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: integer
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    CategoryStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            labels:
+              type: array
+              items:
+                type: string
+            datasets:
+              type: array
+              items:
+                type: object
+                properties:
+                  label:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: integer
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    StatusStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            labels:
+              type: array
+              items:
+                type: string
+            datasets:
+              type: array
+              items:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: integer
+                  percentages:
+                    type: array
+                    items:
+                      type: number
+                      format: float
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # ============================================
+    # Reference Schemas
+    # ============================================
+    UserRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
