@@ -1,0 +1,6 @@
+rootProject.name = 'voc-auto-bot'
+
+include 'voc-domain'
+include 'voc-application'
+include 'voc-adapter'
+include 'voc-bootstrap'

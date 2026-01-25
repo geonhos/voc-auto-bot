@@ -1,0 +1,183 @@
+# =========================
+# VOC Auto Bot - .gitignore
+# =========================
+
+# =========================
+# IDE & Editor
+# =========================
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# =========================
+# macOS
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# =========================
+# Windows
+# =========================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =========================
+# Linux
+# =========================
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =========================
+# Backend - Java/Gradle
+# =========================
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+**/build/
+**/out/
+
+# Maven (if used)
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Logs
+*.log
+logs/
+**/logs/
+
+# =========================
+# Frontend - Node.js/Next.js
+# =========================
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Next.js
+.next/
+out/
+.vercel/
+
+# Build
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+coverage/
+.nyc_output/
+
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+*.pem
+*.key
+*.crt
+*.p12
+credentials.json
+secrets.json
+secrets/
+
+# =========================
+# Docker
+# =========================
+docker-compose.override.yml
+.docker/
+
+# =========================
+# Database
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+*.h2.db
+
+# =========================
+# Cache
+# =========================
+.cache/
+*.cache
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# =========================
+# Misc
+# =========================
+*.bak
+*.tmp
+*.temp
+*.orig
+*.pid
+*.seed
+
+# =========================
+# Test & Coverage Reports
+# =========================
+test-results/
+junit.xml
+coverage/
+*.lcov
+.coverage
+htmlcov/
+
+# =========================
+# Generated
+# =========================
+generated/
+gen/
+.generated/
+
+# =========================
+# Documentation (optional)
+# =========================
+# Uncomment if you don't want to track docs
+# docs/
+
+# =========================
+# Claude Code
+# =========================
+.claude/

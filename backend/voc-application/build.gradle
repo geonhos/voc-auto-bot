@@ -1,0 +1,31 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'VOC Auto Bot - Application Layer (Use Cases)'
+
+dependencies {
+    // Depend on domain module
+    implementation project(':voc-domain')
+
+    // Spring for transaction management and dependency injection
+    implementation 'org.springframework:spring-context'
+    implementation 'org.springframework:spring-tx'
+
+    // Validation
+    implementation 'jakarta.validation:jakarta.validation-api'
+
+    // For ApplicationEventPublisher
+    implementation 'org.springframework:spring-context'
+}
+
+// Application layer coverage requirement
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.85
+            }
+        }
+    }
+}

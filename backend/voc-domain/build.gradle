@@ -1,0 +1,27 @@
+plugins {
+    id 'java-library'
+}
+
+description = 'VOC Auto Bot - Domain Layer'
+
+dependencies {
+    // Domain layer should have minimal dependencies
+    // Only pure Java and validation annotations
+
+    // Jakarta Validation (for domain validation rules)
+    implementation 'jakarta.validation:jakarta.validation-api'
+
+    // Optional: Add if using event publishing
+    // implementation 'org.springframework:spring-context'
+}
+
+// Domain layer has stricter coverage requirements
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.90
+            }
+        }
+    }
+}
