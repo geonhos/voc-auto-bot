@@ -1,17 +1,15 @@
 package com.geonho.vocautobot.application.user.port.in;
 
-import com.geonho.vocautobot.application.user.port.in.dto.UserListQuery;
-import com.geonho.vocautobot.application.user.port.in.dto.UserResult;
+import com.geonho.vocautobot.domain.user.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
+/**
+ * Use case for retrieving user information
+ */
 public interface GetUserUseCase {
 
-    UserResult getUserById(Long userId);
+    User getUserById(Long id);
 
-    UserResult getUserByUsername(String username);
-
-    List<UserResult> getUsers(UserListQuery query);
-
-    List<UserResult> getAllUsers();
+    Page<User> getAllUsers(Pageable pageable);
 }
