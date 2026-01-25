@@ -1,5 +1,7 @@
 package com.geonho.vocautobot.application.voc.usecase;
 
+import com.geonho.vocautobot.application.voc.exception.TicketIdGenerationException;
+import com.geonho.vocautobot.application.voc.exception.VocNotFoundException;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.application.voc.port.in.dto.*;
 import com.geonho.vocautobot.application.voc.port.out.GenerateTicketIdPort;
@@ -26,6 +28,8 @@ public class VocService implements
         GetVocListUseCase,
         GetVocDetailUseCase {
 
+    private static final int MAX_TICKET_ID_RETRIES = 10;
+
     private final LoadVocPort loadVocPort;
     private final SaveVocPort saveVocPort;
     private final GenerateTicketIdPort generateTicketIdPort;
@@ -33,13 +37,8 @@ public class VocService implements
     @Override
     @Transactional
     public Voc createVoc(CreateVocCommand command) {
-        // Generate unique ticket ID
-        String ticketId = generateTicketIdPort.generateTicketId();
-
-        // Ensure ticket ID is unique
-        while (loadVocPort.existsByTicketId(ticketId)) {
-            ticketId = generateTicketIdPort.generateTicketId();
-        }
+        // Generate unique ticket ID with retry limit
+        String ticketId = generateUniqueTicketId();
 
         // Create VOC entity
         Voc voc = Voc.builder()
@@ -60,7 +59,7 @@ public class VocService implements
     @Transactional
     public Voc updateVoc(UpdateVocCommand command) {
         Voc voc = loadVocPort.loadVocById(command.vocId())
-                .orElseThrow(() -> new IllegalArgumentException("VOC를 찾을 수 없습니다: " + command.vocId()));
+                .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
         // Update basic information
         voc.updateInfo(command.title(), command.content());
@@ -77,7 +76,7 @@ public class VocService implements
     @Transactional
     public Voc changeStatus(ChangeStatusCommand command) {
         Voc voc = loadVocPort.loadVocById(command.vocId())
-                .orElseThrow(() -> new IllegalArgumentException("VOC를 찾을 수 없습니다: " + command.vocId()));
+                .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
         // Change status (domain logic validates state transition)
         voc.updateStatus(command.newStatus());
@@ -89,7 +88,7 @@ public class VocService implements
     @Transactional
     public Voc assignVoc(AssignVocCommand command) {
         Voc voc = loadVocPort.loadVocById(command.vocId())
-                .orElseThrow(() -> new IllegalArgumentException("VOC를 찾을 수 없습니다: " + command.vocId()));
+                .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
         // Assign to user (domain logic handles status change if needed)
         voc.assign(command.assigneeId());
@@ -101,7 +100,7 @@ public class VocService implements
     @Transactional
     public Voc unassignVoc(Long vocId) {
         Voc voc = loadVocPort.loadVocById(vocId)
-                .orElseThrow(() -> new IllegalArgumentException("VOC를 찾을 수 없습니다: " + vocId));
+                .orElseThrow(() -> new VocNotFoundException(vocId));
 
         // Unassign from user
         voc.unassign();
@@ -125,12 +124,27 @@ public class VocService implements
     @Override
     public Voc getVocById(Long id) {
         return loadVocPort.loadVocById(id)
-                .orElseThrow(() -> new IllegalArgumentException("VOC를 찾을 수 없습니다: " + id));
+                .orElseThrow(() -> new VocNotFoundException(id));
     }
 
     @Override
     public Voc getVocByTicketId(String ticketId) {
         return loadVocPort.loadVocByTicketId(ticketId)
-                .orElseThrow(() -> new IllegalArgumentException("VOC를 찾을 수 없습니다: " + ticketId));
+                .orElseThrow(() -> new VocNotFoundException(ticketId));
+    }
+
+    /**
+     * Generate a unique ticket ID with retry limit to prevent infinite loop
+     * @return unique ticket ID
+     * @throws TicketIdGenerationException if max retries exceeded
+     */
+    private String generateUniqueTicketId() {
+        for (int attempt = 0; attempt < MAX_TICKET_ID_RETRIES; attempt++) {
+            String ticketId = generateTicketIdPort.generateTicketId();
+            if (!loadVocPort.existsByTicketId(ticketId)) {
+                return ticketId;
+            }
+        }
+        throw new TicketIdGenerationException(MAX_TICKET_ID_RETRIES);
     }
 }
