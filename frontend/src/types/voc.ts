@@ -117,8 +117,8 @@ export interface AddMemoRequest {
 export interface VocListParams {
   page?: number;
   size?: number;
-  status?: VocStatus;
-  priority?: VocPriority;
+  status?: VocStatus | VocStatus[];
+  priority?: VocPriority | VocPriority[];
   channel?: VocChannel;
   categoryId?: number;
   assigneeId?: number;
@@ -127,6 +127,16 @@ export interface VocListParams {
   toDate?: string;
   sortBy?: string;
   sortDirection?: 'ASC' | 'DESC';
+}
+
+export interface VocFilterState {
+  status: VocStatus[];
+  priority: VocPriority[];
+  categoryId?: number;
+  assigneeId?: number;
+  fromDate?: string;
+  toDate?: string;
+  search?: string;
 }
 
 export interface VocStatusLookupRequest {
