@@ -1,7 +1,15 @@
 package com.geonho.vocautobot.application.user.port.in;
 
-import com.geonho.vocautobot.application.user.port.in.dto.ChangePasswordCommand;
-
+/**
+ * Use case for changing user password
+ */
 public interface ChangePasswordUseCase {
-    void changePassword(Long userId, ChangePasswordCommand command);
+
+    void changePassword(ChangePasswordCommand command);
+
+    record ChangePasswordCommand(
+            Long userId,
+            String currentPassword,
+            String newPassword
+    ) {}
 }
