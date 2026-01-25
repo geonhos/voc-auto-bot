@@ -2,6 +2,7 @@ export * from './auth';
 export * from './user';
 export * from './category';
 export * from './voc';
+export * from './vocForm';
 export * from './email';
 export * from './statistics';
 
