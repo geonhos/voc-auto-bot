@@ -4,6 +4,11 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api/client';
 import { useAuthStore } from '@/store/authStore';
+import {
+  isTokenExpired,
+  isTokenExpiring,
+  getTokenRemainingMinutes,
+} from '@/lib/utils/tokenUtils';
 import type { LoginRequest, LoginResponse, RefreshTokenRequest, RefreshTokenResponse } from '@/types';
 
 // Login mutation
@@ -71,4 +76,15 @@ export function useRefreshToken() {
       setTokens(data.accessToken, data.refreshToken);
     },
   });
+}
+
+// Token validation utilities
+export function useTokenStatus() {
+  const { accessToken } = useAuthStore();
+
+  return {
+    isExpired: accessToken ? isTokenExpired(accessToken) : true,
+    isExpiring: accessToken ? isTokenExpiring(accessToken, 5) : true,
+    remainingMinutes: accessToken ? getTokenRemainingMinutes(accessToken) : 0,
+  };
 }
