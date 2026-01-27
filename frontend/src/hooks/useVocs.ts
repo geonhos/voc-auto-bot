@@ -69,7 +69,7 @@ export function useAssignVoc() {
 
   return useMutation({
     mutationFn: async ({ vocId, data }: { vocId: number; data: AssignVocRequest }) => {
-      const response = await api.post<Voc>(`/vocs/${vocId}/assign`, data);
+      const response = await api.patch<Voc>(`/vocs/${vocId}/assign`, data);
       return response.data;
     },
     onSuccess: () => {
@@ -83,7 +83,7 @@ export function useChangeVocStatus() {
 
   return useMutation({
     mutationFn: async ({ vocId, data }: { vocId: number; data: ChangeStatusRequest }) => {
-      const response = await api.post<Voc>(`/vocs/${vocId}/status`, data);
+      const response = await api.patch<Voc>(`/vocs/${vocId}/status`, data);
       return response.data;
     },
     onSuccess: () => {

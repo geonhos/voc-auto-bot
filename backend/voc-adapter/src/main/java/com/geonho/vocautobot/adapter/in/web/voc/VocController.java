@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.adapter.in.web.voc;
 
+import com.geonho.vocautobot.adapter.in.security.SecurityUser;
 import com.geonho.vocautobot.adapter.in.web.voc.dto.*;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.domain.voc.Voc;
@@ -11,6 +12,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +34,7 @@ public class VocController {
     private final GetVocDetailUseCase getVocDetailUseCase;
     private final ChangeVocStatusUseCase changeVocStatusUseCase;
     private final AssignVocUseCase assignVocUseCase;
+    private final AddMemoUseCase addMemoUseCase;
 
     @Operation(summary = "VOC 생성", description = "새로운 VOC를 생성합니다")
     @PostMapping
@@ -132,6 +137,41 @@ public class VocController {
     @PatchMapping("/{id}/unassign")
     public ApiResponse<VocResponse> unassignVoc(@PathVariable Long id) {
         Voc voc = assignVocUseCase.unassignVoc(id);
+        VocResponse response = VocResponse.from(voc);
+
+        return ApiResponse.success(response);
+    }
+
+    @Operation(summary = "VOC 메모 추가", description = "VOC에 메모를 추가합니다")
+    @PostMapping("/{id}/memos")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<VocResponse> addMemo(
+            @PathVariable Long id,
+            @Valid @RequestBody AddMemoRequest request
+    ) {
+        // Get authenticated user from SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
+        Long authenticatedUserId = securityUser.getUserId();
+
+        // Determine internal flag based on user role
+        boolean isInternal = false;
+        if (request.isInternal() != null && request.isInternal()) {
+            // Only ADMIN and MANAGER can create internal memos
+            boolean hasPrivilegedRole = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_MANAGER"));
+
+            if (hasPrivilegedRole) {
+                isInternal = true;
+            }
+            // OPERATOR's request for internal memo is silently ignored (isInternal remains false)
+        }
+
+        Voc voc = addMemoUseCase.addMemo(
+                request.toCommand(id, authenticatedUserId, isInternal),
+                authenticatedUserId
+        );
         VocResponse response = VocResponse.from(voc);
 
         return ApiResponse.success(response);
