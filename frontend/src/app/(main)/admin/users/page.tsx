@@ -19,7 +19,7 @@ export default function UsersPage() {
     isActive: statusFilter === 'active' ? true : statusFilter === 'inactive' ? false : undefined,
   });
 
-  const users = data?.data || [];
+  const users = data?.data?.content || [];
 
   const handleEdit = (user: User) => {
     setEditingUser(user);

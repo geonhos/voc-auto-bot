@@ -21,22 +21,34 @@ interface CategorySelectProps {
 export function CategorySelect({ value, error, register, setValue, watch }: CategorySelectProps) {
   const { data: categories = [], isLoading } = useCategories();
 
-  // 대분류 카테고리 (level 1)
+  // 대분류 카테고리 (type: MAIN 또는 level: 0/1, parentId가 없는 것)
   const parentCategories = useMemo(
-    () => categories.filter((cat: Category) => cat.level === 1 && cat.isActive),
+    () => categories.filter((cat: Category) => {
+      // type 기반 필터링 (API 응답이 type을 반환하는 경우)
+      if (cat.type) {
+        return cat.type === 'MAIN' && cat.isActive;
+      }
+      // level 기반 필터링 (기존 방식)
+      return (cat.level === 0 || cat.level === 1 || cat.parentId === null) && cat.isActive && !cat.parentId;
+    }),
     [categories]
   );
 
   // 선택된 대분류 ID
   const selectedParentId = watch('parentCategoryId');
 
-  // 중분류 카테고리 (level 2)
+  // 중분류 카테고리 (type: SUB 또는 level: 1/2, 선택된 parentId를 가진 것)
   const childCategories = useMemo(
     () =>
       selectedParentId
-        ? categories.filter(
-            (cat: Category) => cat.parentId === selectedParentId && cat.level === 2 && cat.isActive
-          )
+        ? categories.filter((cat: Category) => {
+            // type 기반 필터링
+            if (cat.type) {
+              return cat.parentId === selectedParentId && cat.type === 'SUB' && cat.isActive;
+            }
+            // level 기반 필터링
+            return cat.parentId === selectedParentId && (cat.level === 1 || cat.level === 2) && cat.isActive;
+          })
         : [],
     [categories, selectedParentId]
   );

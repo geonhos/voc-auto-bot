@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useCategoryTree, useDeleteCategory } from '@/hooks/useCategories';
+import { useCategoryTree, useDeleteCategory, useUpdateCategory } from '@/hooks/useCategories';
 import { CategoryTree } from '@/components/category/CategoryTree';
 import { CategoryForm } from '@/components/category/CategoryForm';
 import type { CategoryTree as CategoryTreeType } from '@/types';
@@ -14,6 +14,7 @@ export default function CategoriesPage() {
 
   const { data: categories = [], isLoading, refetch } = useCategoryTree();
   const deleteMutation = useDeleteCategory();
+  const updateMutation = useUpdateCategory();
 
   const handleSelect = (category: CategoryTreeType) => {
     setSelectedCategory(category);
@@ -63,6 +64,26 @@ export default function CategoriesPage() {
     setShowForm(false);
     setParentCategory(null);
     setIsEditing(false);
+  };
+
+  const handleToggleActive = async () => {
+    if (!selectedCategory) return;
+    try {
+      await updateMutation.mutateAsync({
+        categoryId: selectedCategory.id,
+        data: { isActive: !selectedCategory.isActive },
+      });
+      // Update local state to reflect the change
+      setSelectedCategory({
+        ...selectedCategory,
+        isActive: !selectedCategory.isActive,
+      });
+    } catch (error) {
+      const errorMessage =
+        (error as { response?: { data?: { error?: { message?: string } } } }).response?.data?.error
+          ?.message || '상태 변경에 실패했습니다';
+      alert(errorMessage);
+    }
   };
 
   return (
@@ -143,15 +164,32 @@ export default function CategoriesPage() {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">상태</label>
-                  <span
-                    className={`px-2 py-0.5 text-xs rounded-full ${
-                      selectedCategory.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {selectedCategory.isActive ? '활성' : '비활성'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-0.5 text-xs rounded-full ${
+                        selectedCategory.isActive
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {selectedCategory.isActive ? '활성' : '비활성'}
+                    </span>
+                    <button
+                      onClick={handleToggleActive}
+                      disabled={updateMutation.isPending}
+                      className={`px-2 py-0.5 text-xs rounded ${
+                        selectedCategory.isActive
+                          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          : 'bg-green-600 text-white hover:bg-green-700'
+                      }`}
+                    >
+                      {updateMutation.isPending
+                        ? '변경 중...'
+                        : selectedCategory.isActive
+                        ? '비활성화'
+                        : '활성화'}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-200 space-y-2">

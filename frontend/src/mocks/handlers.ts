@@ -113,7 +113,7 @@ export const handlers = [
     await delay(500);
     const body = (await request.json()) as LoginRequest;
 
-    if (body.username === 'admin' && body.password === 'admin123') {
+    if (body.email === 'admin@voc-auto-bot.com' && body.password === 'Admin123!') {
       const response: LoginResponse = {
         accessToken: 'mock-access-token',
         refreshToken: 'mock-refresh-token',
@@ -199,11 +199,16 @@ export const handlers = [
 
     return HttpResponse.json({
       success: true,
-      data: filteredVocs,
-      page: 1,
-      size: 20,
-      totalElements: filteredVocs.length,
-      totalPages: 1,
+      data: {
+        content: filteredVocs,
+        page: 0,
+        size: 20,
+        totalElements: filteredVocs.length,
+        totalPages: 1,
+        first: true,
+        last: true,
+        empty: filteredVocs.length === 0,
+      },
     });
   }),
 

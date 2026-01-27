@@ -1,10 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/store/authStore';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
 export const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api/v1`,
+  baseURL: `${API_BASE_URL}/v1`,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ apiClient.interceptors.response.use(
       const refreshToken = useAuthStore.getState().refreshToken;
       if (refreshToken) {
         try {
-          const response = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, {
+          const response = await axios.post(`${API_BASE_URL}/v1/auth/refresh`, {
             refreshToken,
           });
 

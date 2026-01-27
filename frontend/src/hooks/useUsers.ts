@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
-import type { User, CreateUserRequest, UpdateUserRequest, UserListParams } from '@/types';
+import type { User, CreateUserRequest, UpdateUserRequest, UserListParams, PageResponse } from '@/types';
 
 const USERS_QUERY_KEY = 'users';
 
@@ -10,7 +10,7 @@ export function useUsers(params?: UserListParams) {
   return useQuery({
     queryKey: [USERS_QUERY_KEY, params],
     queryFn: async () => {
-      const response = await api.get<User[]>('/users', params as Record<string, unknown>);
+      const response = await api.get<PageResponse<User>>('/users', params as Record<string, unknown>);
       return response;
     },
   });
