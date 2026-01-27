@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   BarChart3Icon,
   ClockIcon,
@@ -13,6 +14,7 @@ import { KpiCard } from '@/components/dashboard/KpiCard';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
 import { StatusChart } from '@/components/dashboard/StatusChart';
+import { DatePicker } from '@/components/dashboard/DatePicker';
 import {
   DashboardLayout,
   DashboardSection,
@@ -22,11 +24,20 @@ import {
 import type { PeriodType } from '@/hooks/useDashboardViewModel';
 
 export default function DashboardPage() {
-  const { period, isLoading, data, setPeriod, refetch, dateRangeLabel } =
+  const { period, isLoading, data, setPeriod, setCustomDateRange, refetch, dateRangeLabel, customDateRange } =
     useDashboardViewModel();
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const handlePeriodChange = (newPeriod: PeriodType) => {
-    setPeriod(newPeriod);
+    if (newPeriod === 'custom') {
+      setIsDatePickerOpen(true);
+    } else {
+      setPeriod(newPeriod);
+    }
+  };
+
+  const handleDateRangeApply = (startDate: string, endDate: string) => {
+    setCustomDateRange(startDate, endDate);
   };
 
   if (isLoading) {
@@ -124,10 +135,18 @@ export default function DashboardPage() {
                       : 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                   aria-pressed={period === 'custom'}
+                  aria-label="사용자 지정 날짜 범위"
                 >
                   <CalendarIcon className="h-4 w-4" />
                   <span>사용자 지정</span>
                 </button>
+                <DatePicker
+                  isOpen={isDatePickerOpen}
+                  onOpenChange={setIsDatePickerOpen}
+                  onApply={handleDateRangeApply}
+                  initialStartDate={customDateRange.fromDate}
+                  initialEndDate={customDateRange.toDate}
+                />
               </div>
               <div className="ml-auto">
                 <button
@@ -149,19 +168,19 @@ export default function DashboardPage() {
               title="총 접수 건수"
               value={`${safeKpi.totalVocs.toLocaleString()}건`}
               icon={<BarChart3Icon className="h-6 w-6" />}
-              change={{ value: 12, type: 'increase', label: '전 기간 대비 12% 증가' }}
+              change={{ value: 12, type: 'increase', label: '전일 대비 12% 증가' }}
             />
             <KpiCard
               title="평균 처리 시간"
               value={`${safeKpi.avgResolutionTimeHours.toFixed(1)}시간`}
               icon={<ClockIcon className="h-6 w-6" />}
-              change={{ value: 5, type: 'decrease', label: '전 기간 대비 5% 감소' }}
+              change={{ value: 5, type: 'decrease', label: '전일 대비 5% 감소' }}
             />
             <KpiCard
               title="완료율"
               value={`${safeKpi.resolutionRate.toFixed(1)}%`}
               icon={<CheckCircleIcon className="h-6 w-6" />}
-              change={{ value: 3, type: 'increase', label: '전 기간 대비 3% 증가' }}
+              change={{ value: 3, type: 'increase', label: '전일 대비 3% 증가' }}
             />
             <KpiCard
               title="처리 중"

@@ -65,10 +65,11 @@ export function KpiCard({ title, value, icon, change, className }: KpiCardProps)
           {change && (
             <p
               className={cn('text-sm mt-1 flex items-center gap-1', getChangeColor())}
-              aria-label={change.label || `전 기간 대비 ${formatChangeValue()}`}
+              aria-label={change.label || `전일 대비 ${formatChangeValue()}`}
             >
               <span className="font-medium">{formatChangeValue()}</span>
               {getChangeIcon()}
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">전일 대비</span>
             </p>
           )}
         </div>
