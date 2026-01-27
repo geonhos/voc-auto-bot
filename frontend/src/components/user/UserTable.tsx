@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { User, UserRole } from '@/types';
 import { useToggleUserStatus, useUnlockUser, useResetPassword } from '@/hooks/useUsers';
 import { cn } from '@/lib/utils';
@@ -25,9 +25,25 @@ const roleBadgeColors: Record<UserRole, string> = {
 
 export function UserTable({ users, onEdit, isLoading }: UserTableProps) {
   const [actionUserId, setActionUserId] = useState<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const toggleStatusMutation = useToggleUserStatus();
   const unlockMutation = useUnlockUser();
   const resetPasswordMutation = useResetPassword();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setActionUserId(null);
+      }
+    };
+
+    if (actionUserId !== null) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [actionUserId]);
 
   const handleToggleStatus = async (user: User) => {
     if (confirm(`${user.name}님을 ${user.isActive ? '비활성화' : '활성화'} 하시겠습니까?`)) {
@@ -65,7 +81,7 @@ export function UserTable({ users, onEdit, isLoading }: UserTableProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto overflow-y-visible">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
@@ -128,11 +144,13 @@ export function UserTable({ users, onEdit, isLoading }: UserTableProps) {
                   </span>
                 )}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div className="relative inline-block text-left">
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium overflow-visible">
+                <div className="relative inline-block text-left" ref={actionUserId === user.id ? dropdownRef : null}>
                   <button
                     onClick={() => setActionUserId(actionUserId === user.id ? null : user.id)}
                     className="text-gray-400 hover:text-gray-600"
+                    aria-label="액션 메뉴"
+                    aria-expanded={actionUserId === user.id}
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -140,7 +158,7 @@ export function UserTable({ users, onEdit, isLoading }: UserTableProps) {
                   </button>
 
                   {actionUserId === user.id && (
-                    <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                       <div className="py-1">
                         <button
                           onClick={() => {

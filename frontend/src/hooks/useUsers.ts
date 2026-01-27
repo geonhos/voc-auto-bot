@@ -10,7 +10,10 @@ export function useUsers(params?: UserListParams) {
   return useQuery({
     queryKey: [USERS_QUERY_KEY, params],
     queryFn: async () => {
-      const response = await api.get<PageResponse<User>>('/users', params as Record<string, unknown>);
+      const cleanParams = params ? Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined)
+      ) : undefined;
+      const response = await api.get<PageResponse<User>>('/users', cleanParams as Record<string, unknown>);
       return response;
     },
   });
