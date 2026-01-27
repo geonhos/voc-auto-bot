@@ -142,7 +142,7 @@ export function VocForm() {
 
         {/* 고객 정보 */}
         <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">고객 정보 (선택)</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-4">고객 정보</h3>
 
           <div className="space-y-4">
             {/* 고객명 */}
@@ -173,7 +173,7 @@ export function VocForm() {
             {/* 고객 이메일 */}
             <div>
               <label htmlFor="customerEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                이메일
+                이메일 <span className="text-red-500">*</span>
               </label>
               <input
                 id="customerEmail"

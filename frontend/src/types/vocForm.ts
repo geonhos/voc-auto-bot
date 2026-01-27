@@ -10,7 +10,7 @@ export interface VocFormData {
   categoryId: number | null;
   priority: VocPriority;
   customerName?: string;
-  customerEmail?: string;
+  customerEmail: string;
   files?: File[];
 }
 
@@ -40,10 +40,9 @@ export const vocFormSchema = z.object({
     .or(z.literal('')),
   customerEmail: z
     .string()
+    .min(1, '이메일을 입력해주세요')
     .email('올바른 이메일 형식이 아닙니다')
-    .max(100, '이메일은 100자 이하여야 합니다')
-    .optional()
-    .or(z.literal('')),
+    .max(100, '이메일은 100자 이하여야 합니다'),
 });
 
 export type VocFormSchemaType = z.infer<typeof vocFormSchema>;

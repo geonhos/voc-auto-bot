@@ -70,9 +70,8 @@ export function useVocFormViewModel({
       categoryId: values.categoryId!,
       priority: values.priority,
       channel: 'WEB' as const,
-      status: 'RECEIVED' as const,
       customerName: values.customerName || 'Anonymous',
-      customerEmail: values.customerEmail || 'customer@example.com',
+      customerEmail: values.customerEmail!,
       files: values.files || [],
     };
 
