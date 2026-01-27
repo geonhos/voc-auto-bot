@@ -11,6 +11,10 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "사용자 생성 요청")
 public record CreateUserRequest(
 
+        @Schema(description = "사용자 아이디", example = "user123")
+        @NotBlank(message = "사용자 아이디는 필수입니다")
+        String username,
+
         @Schema(description = "이메일", example = "user@example.com")
         @NotBlank(message = "이메일은 필수입니다")
         @Email(message = "올바른 이메일 형식이 아닙니다")
@@ -30,6 +34,6 @@ public record CreateUserRequest(
         UserRole role
 ) {
     public CreateUserCommand toCommand() {
-        return new CreateUserCommand(email, password, name, role);
+        return new CreateUserCommand(username, email, password, name, role);
     }
 }

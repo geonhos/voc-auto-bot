@@ -16,14 +16,10 @@ public class ChangeStatusRequest {
     @NotNull(message = "상태를 선택해주세요")
     private VocStatus status;
 
-    @Schema(description = "변경 사유", example = "고객 요청으로 처리 중")
-    private String reason;
-
     public ChangeStatusCommand toCommand(Long vocId) {
         return new ChangeStatusCommand(
                 vocId,
-                status,
-                reason
+                status
         );
     }
 }

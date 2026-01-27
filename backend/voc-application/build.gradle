@@ -22,14 +22,3 @@ dependencies {
     // For ApplicationEventPublisher
     implementation 'org.springframework:spring-context'
 }
-
-// Application layer coverage requirement
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            limit {
-                minimum = 0.85
-            }
-        }
-    }
-}

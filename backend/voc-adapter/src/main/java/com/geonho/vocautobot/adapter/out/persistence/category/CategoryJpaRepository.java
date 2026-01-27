@@ -15,7 +15,15 @@ public interface CategoryJpaRepository extends JpaRepository<CategoryJpaEntity, 
 
     List<CategoryJpaEntity> findByIsActiveTrue();
 
+    List<CategoryJpaEntity> findByIsActive(boolean isActive);
+
     long countByParentId(Long parentId);
+
+    boolean existsByCode(String code);
+
+    boolean existsByParentId(Long parentId);
+
+    java.util.Optional<CategoryJpaEntity> findByCode(String code);
 
     @Query("SELECT c FROM CategoryJpaEntity c WHERE c.parentId IS NULL ORDER BY c.sortOrder")
     List<CategoryJpaEntity> findMainCategories();

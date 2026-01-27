@@ -27,43 +27,58 @@ public class CategoryPersistenceAdapter implements
     }
 
     @Override
-    public Optional<Category> loadCategoryById(Long id) {
+    public Optional<Category> loadById(Long id) {
         return categoryJpaRepository.findById(id)
                 .map(categoryMapper::toDomain);
     }
 
     @Override
-    public List<Category> loadAllCategories() {
+    public Optional<Category> loadByCode(String code) {
+        return categoryJpaRepository.findByCode(code)
+                .map(categoryMapper::toDomain);
+    }
+
+    @Override
+    public List<Category> loadAll() {
         List<CategoryJpaEntity> entities = categoryJpaRepository.findAll();
         return categoryMapper.toDomainList(entities);
     }
 
     @Override
-    public List<Category> loadCategoriesByType(CategoryType type) {
-        List<CategoryJpaEntity> entities = categoryJpaRepository.findByType(type);
-        return categoryMapper.toDomainList(entities);
-    }
-
-    @Override
-    public List<Category> loadCategoriesByParentId(Long parentId) {
+    public List<Category> loadByParentId(Long parentId) {
         List<CategoryJpaEntity> entities = categoryJpaRepository.findByParentId(parentId);
         return categoryMapper.toDomainList(entities);
     }
 
     @Override
-    public List<Category> loadActiveCategories() {
-        List<CategoryJpaEntity> entities = categoryJpaRepository.findByIsActiveTrue();
-        return categoryMapper.toDomainList(entities);
-    }
-
-    @Override
-    public List<Category> loadCategoryTree() {
+    public List<Category> loadRootCategories() {
         List<CategoryJpaEntity> mainCategories = categoryJpaRepository.findCategoryTreeWithChildren();
         return categoryMapper.toDomainList(mainCategories);
     }
 
     @Override
-    public Category saveCategory(Category category) {
+    public List<Category> loadByIsActive(boolean isActive) {
+        List<CategoryJpaEntity> entities = categoryJpaRepository.findByIsActive(isActive);
+        return categoryMapper.toDomainList(entities);
+    }
+
+    @Override
+    public boolean existsByCode(String code) {
+        return categoryJpaRepository.existsByCode(code);
+    }
+
+    @Override
+    public boolean existsByParentId(Long parentId) {
+        return categoryJpaRepository.existsByParentId(parentId);
+    }
+
+    @Override
+    public long countByParentId(Long parentId) {
+        return categoryJpaRepository.countByParentId(parentId);
+    }
+
+    @Override
+    public Category save(Category category) {
         CategoryJpaEntity entity;
 
         if (category.getId() != null) {
@@ -84,7 +99,7 @@ public class CategoryPersistenceAdapter implements
     }
 
     @Override
-    public void deleteCategory(Long id) {
+    public void deleteById(Long id) {
         categoryJpaRepository.deleteById(id);
     }
 
@@ -93,12 +108,6 @@ public class CategoryPersistenceAdapter implements
         // VOC에서 사용 중인지 확인하는 로직은 추후 VOC 엔티티 구현 후 추가
         // 현재는 간단히 false 반환
         return false;
-    }
-
-    @Override
-    public long countVocsByCategory(Long categoryId) {
-        // VOC 엔티티 구현 후 실제 카운트 로직 추가
-        return 0L;
     }
 
     @Override

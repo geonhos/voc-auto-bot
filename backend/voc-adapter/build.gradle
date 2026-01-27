@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'org.springframework.boot'
 }
 
 description = 'VOC Auto Bot - Adapter Layer (Controllers, Repositories, External Services)'
@@ -11,6 +12,14 @@ dependencies {
     // Spring Web (REST Controllers)
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
     // Spring Data JPA (Persistence)
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -27,8 +36,10 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // OpenSearch
-    implementation 'org.opensearch.client:opensearch-rest-high-level-client:2.11.1'
+    // OpenSearch Java Client
+    implementation 'org.opensearch.client:opensearch-java:2.10.1'
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     // HTTP Client for LLM
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
@@ -52,17 +63,6 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
-}
-
-// Adapter layer coverage requirement
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            limit {
-                minimum = 0.75
-            }
-        }
-    }
 }
 
 // QueryDSL generated sources

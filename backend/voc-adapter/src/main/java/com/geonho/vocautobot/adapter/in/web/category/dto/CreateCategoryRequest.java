@@ -17,6 +17,10 @@ public class CreateCategoryRequest {
     @Size(max = 100, message = "카테고리 이름은 최대 100자까지 입력 가능합니다")
     private String name;
 
+    @NotBlank(message = "카테고리 코드는 필수입니다")
+    @Size(max = 50, message = "카테고리 코드는 최대 50자까지 입력 가능합니다")
+    private String code;
+
     @NotNull(message = "카테고리 유형은 필수입니다")
     private CategoryType type;
 
@@ -32,6 +36,7 @@ public class CreateCategoryRequest {
     public CreateCategoryCommand toCommand() {
         return new CreateCategoryCommand(
                 name,
+                code,
                 type,
                 parentId,
                 description,

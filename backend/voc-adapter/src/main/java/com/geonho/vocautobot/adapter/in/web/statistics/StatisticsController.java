@@ -12,7 +12,7 @@ import com.geonho.vocautobot.application.statistics.port.in.dto.CategoryStatsRes
 import com.geonho.vocautobot.application.statistics.port.in.dto.KpiResult;
 import com.geonho.vocautobot.application.statistics.port.in.dto.PriorityStatsResult;
 import com.geonho.vocautobot.application.statistics.port.in.dto.TrendResult;
-import com.geonho.vocautobot.global.common.ApiResponse;
+import com.geonho.vocautobot.adapter.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
