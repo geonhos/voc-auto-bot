@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Tag(name = "Category", description = "카테고리 관리 API")
 @RestController
-@RequestMapping("/v1/categories")
+@RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
 public class CategoryController {
 
