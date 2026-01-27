@@ -3,8 +3,9 @@ export interface Category {
   name: string;
   code: string;
   description?: string;
-  parentId?: number;
-  level: number;
+  parentId?: number | null;
+  level: number | null;
+  type?: 'MAIN' | 'SUB';
   sortOrder: number;
   isActive: boolean;
   children?: Category[];

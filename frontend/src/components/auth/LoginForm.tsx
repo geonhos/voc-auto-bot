@@ -8,7 +8,7 @@ import { useLogin } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
-  username: z.string().min(1, '아이디를 입력해주세요'),
+  email: z.string().min(1, '이메일을 입력해주세요').email('올바른 이메일 형식이 아닙니다'),
   password: z.string().min(1, '비밀번호를 입력해주세요'),
 });
 
@@ -25,7 +25,7 @@ export function LoginForm() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
   });
@@ -67,28 +67,28 @@ export function LoginForm() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-              아이디
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              이메일
             </label>
             <input
-              id="username"
-              type="text"
-              autoComplete="username"
-              aria-label="아이디"
+              id="email"
+              type="email"
+              autoComplete="email"
+              aria-label="이메일"
               aria-required="true"
-              aria-invalid={!!errors.username}
-              maxLength={50}
-              placeholder="아이디 입력"
+              aria-invalid={!!errors.email}
+              maxLength={100}
+              placeholder="이메일 입력"
               className={cn(
                 'w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
-                errors.username
+                errors.email
                   ? 'border-red-500 focus:ring-red-200'
                   : 'border-gray-300 focus:ring-blue-200 focus:border-blue-500'
               )}
-              {...register('username')}
+              {...register('email')}
             />
-            {errors.username && (
-              <p className="mt-2 text-sm text-red-600">{errors.username.message}</p>
+            {errors.email && (
+              <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
             )}
           </div>
 
