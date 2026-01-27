@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { api } from '@/lib/api/client';
 import type { Voc, CreateVocRequest } from '@/types';
 

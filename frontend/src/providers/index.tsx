@@ -1,10 +1,12 @@
 'use client';
 
 import { type ReactNode } from 'react';
-import { QueryProvider } from './QueryProvider';
-import { MSWProvider } from './MSWProvider';
-import { ToastContextProvider } from '@/hooks/useToast';
+
 import { Toaster } from '@/components/ui/Toaster';
+import { ToastContextProvider } from '@/hooks/useToast';
+
+import { MSWProvider } from './MSWProvider';
+import { QueryProvider } from './QueryProvider';
 
 interface ProvidersProps {
   children: ReactNode;

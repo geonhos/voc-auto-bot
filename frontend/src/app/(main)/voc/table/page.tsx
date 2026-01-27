@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { VocTable } from '@/components/voc/VocTable';
+
 import { VocSearchFilter } from '@/components/voc/VocSearchFilter';
+import { VocTable } from '@/components/voc/VocTable';
 import { useVocs } from '@/hooks/useVocs';
 import type { VocFilterState, VocListParams } from '@/types';
 

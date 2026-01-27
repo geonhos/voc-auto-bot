@@ -1,12 +1,13 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { User, UserRole } from '@/types';
+
 import { useCreateUser, useUpdateUser } from '@/hooks/useUsers';
 import { cn } from '@/lib/utils';
+import type { User, UserRole } from '@/types';
 
 const createUserSchema = z.object({
   username: z

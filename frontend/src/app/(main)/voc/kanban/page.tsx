@@ -1,9 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
+
 import { useVocs, useChangeVocStatus } from '@/hooks/useVocs';
 import { VocStatus } from '@/types';
-import Link from 'next/link';
 
 const STATUS_COLUMNS: { status: VocStatus; label: string; color: string }[] = [
   { status: 'RECEIVED', label: '접수', color: 'bg-blue-500' },

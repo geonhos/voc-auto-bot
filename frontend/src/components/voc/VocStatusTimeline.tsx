@@ -2,8 +2,9 @@
 
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import type { VocStatusHistoryItem, VocStatus } from '@/types';
+
 import { cn } from '@/lib/utils';
+import type { VocStatusHistoryItem, VocStatus } from '@/types';
 
 interface VocStatusTimelineProps {
   statusHistory: VocStatusHistoryItem[];

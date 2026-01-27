@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import { PriorityChart } from '../PriorityChart';
+
 import type { PriorityStats } from '@/types/statistics';
+
+import { PriorityChart } from '../PriorityChart';
 
 const mockPriorityData: PriorityStats[] = [
   {

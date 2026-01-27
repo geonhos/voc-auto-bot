@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import {
   BarChart3Icon,
   ClockIcon,
@@ -9,18 +8,20 @@ import {
   RefreshCwIcon,
   CalendarIcon,
 } from 'lucide-react';
-import { useDashboardViewModel } from '@/hooks/useDashboardViewModel';
-import { KpiCard } from '@/components/dashboard/KpiCard';
-import { TrendChart } from '@/components/dashboard/TrendChart';
+import { useState, useCallback } from 'react';
+
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
-import { StatusChart } from '@/components/dashboard/StatusChart';
-import { DatePicker } from '@/components/dashboard/DatePicker';
 import {
   DashboardLayout,
   DashboardSection,
   KpiGrid,
   ChartGrid,
 } from '@/components/dashboard/DashboardLayout';
+import { DatePicker } from '@/components/dashboard/DatePicker';
+import { KpiCard } from '@/components/dashboard/KpiCard';
+import { StatusChart } from '@/components/dashboard/StatusChart';
+import { TrendChart } from '@/components/dashboard/TrendChart';
+import { useDashboardViewModel } from '@/hooks/useDashboardViewModel';
 import type { PeriodType } from '@/hooks/useDashboardViewModel';
 
 export default function DashboardPage() {

@@ -2,9 +2,10 @@
 
 import { useMemo } from 'react';
 import { UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form';
+
 import { useCategories } from '@/hooks/useCategories';
-import type { Category } from '@/types';
 import { cn } from '@/lib/utils';
+import type { Category } from '@/types';
 
 interface CategorySelectProps {
   value: number | null;

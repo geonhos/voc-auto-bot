@@ -1,9 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { LogOutIcon, UserIcon, BellIcon } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
+
+import { useAuthStore } from '@/store/authStore';
+
 
 export function Header() {
   const router = useRouter();

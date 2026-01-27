@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
   LayoutDashboardIcon,
   InboxIcon,
@@ -13,8 +11,11 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-react';
-import { useSidebarStore } from '@/store/sidebarStore';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
 import { cn } from '@/lib/utils';
+import { useSidebarStore } from '@/store/sidebarStore';
 
 interface NavItem {
   label: string;

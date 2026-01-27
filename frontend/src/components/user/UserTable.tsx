@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import type { User, UserRole } from '@/types';
-import { useToggleUserStatus, useUnlockUser, useResetPassword } from '@/hooks/useUsers';
+
 import { useToast } from '@/hooks/useToast';
+import { useToggleUserStatus, useUnlockUser, useResetPassword } from '@/hooks/useUsers';
 import { cn } from '@/lib/utils';
+import type { User, UserRole } from '@/types';
 
 interface UserTableProps {
   users: User[];
@@ -33,6 +34,10 @@ export function UserTable({ users, onEdit, isLoading }: UserTableProps) {
   const toast = useToast();
 
   useEffect(() => {
+    if (actionUserId === null) {
+      return;
+    }
+
     const handleClickOutside = (event: MouseEvent) => {
       if (
         event.target instanceof Node &&
@@ -43,12 +48,10 @@ export function UserTable({ users, onEdit, isLoading }: UserTableProps) {
       }
     };
 
-    if (actionUserId !== null) {
-      document.addEventListener('click', handleClickOutside);
-      return () => {
-        document.removeEventListener('click', handleClickOutside);
-      };
-    }
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, [actionUserId]);
 
   const handleToggleStatus = async (user: User) => {

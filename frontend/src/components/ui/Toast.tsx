@@ -1,7 +1,8 @@
 'use client';
 
-import * as React from 'react';
 import * as ToastPrimitives from '@radix-ui/react-toast';
+import * as React from 'react';
+
 import { cn } from '@/lib/utils';
 
 const ToastProvider = ToastPrimitives.Provider;

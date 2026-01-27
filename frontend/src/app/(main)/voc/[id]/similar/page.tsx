@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
+
 import { SimilarVocList } from '@/components/voc/SimilarVocList';
 import { useSimilarVocsPaginated } from '@/hooks/useSimilarVocs';
 import { useVoc } from '@/hooks/useVocs';

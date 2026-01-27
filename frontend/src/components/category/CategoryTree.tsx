@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import type { CategoryTree as CategoryTreeType } from '@/types';
+
 import { cn } from '@/lib/utils';
+import type { CategoryTree as CategoryTreeType } from '@/types';
 
 interface CategoryTreeProps {
   categories: CategoryTreeType[];

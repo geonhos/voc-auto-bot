@@ -1,6 +1,7 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+
 import { CategoryStats } from '@/types/statistics';
 
 interface CategoryChartProps {

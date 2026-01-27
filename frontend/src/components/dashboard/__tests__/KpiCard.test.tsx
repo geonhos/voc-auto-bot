@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { KpiCard } from '../KpiCard';
 import { BarChart3Icon } from 'lucide-react';
+
+import { KpiCard } from '../KpiCard';
 
 describe('KpiCard', () => {
   it('renders title and value correctly', () => {

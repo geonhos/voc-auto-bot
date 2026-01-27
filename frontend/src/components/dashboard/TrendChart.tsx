@@ -1,8 +1,9 @@
 'use client';
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendData } from '@/types/statistics';
 import { format, parseISO } from 'date-fns';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+import { TrendData } from '@/types/statistics';
 
 interface TrendChartProps {
   data: TrendData[];

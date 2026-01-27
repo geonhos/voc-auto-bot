@@ -1,12 +1,13 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { CategoryTree } from '@/types';
+
 import { useCreateCategory, useUpdateCategory } from '@/hooks/useCategories';
 import { cn } from '@/lib/utils';
+import type { CategoryTree } from '@/types';
 
 const createCategorySchema = z.object({
   name: z.string().min(2, '카테고리명은 2자 이상이어야 합니다').max(50, '50자 이하여야 합니다'),

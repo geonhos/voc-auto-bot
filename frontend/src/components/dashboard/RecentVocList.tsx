@@ -3,9 +3,10 @@
 import { format, parseISO } from 'date-fns';
 import { ArrowRightIcon } from 'lucide-react';
 import Link from 'next/link';
-import { Voc } from '@/types/voc';
-import { VocStatusBadge } from '@/components/voc/VocStatusBadge';
+
 import { VocPriorityBadge } from '@/components/voc/VocPriorityBadge';
+import { VocStatusBadge } from '@/components/voc/VocStatusBadge';
+import { Voc } from '@/types/voc';
 
 interface RecentVocListProps {
   data: Voc[];

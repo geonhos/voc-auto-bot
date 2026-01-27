@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+
 import type { VocStatus, VocPriority, VocFilterState } from '@/types';
 
 interface VocSearchFilterProps {

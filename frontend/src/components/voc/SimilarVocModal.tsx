@@ -1,7 +1,8 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { useSimilarVocModalViewModel } from '@/hooks/useSimilarVocModalViewModel';
+import { cn } from '@/lib/utils';
+
 import { SimilarVocCard } from './SimilarVocCard';
 
 interface SimilarVocModalProps {

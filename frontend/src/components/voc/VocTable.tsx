@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Voc, PageResponse } from '@/types';
-import { VocStatusBadge } from './VocStatusBadge';
-import { VocPriorityBadge } from './VocPriorityBadge';
+import { useState } from 'react';
+
 import { cn } from '@/lib/utils';
+import type { Voc, PageResponse } from '@/types';
+
+import { VocPriorityBadge } from './VocPriorityBadge';
+import { VocStatusBadge } from './VocStatusBadge';
 
 interface VocTableProps {
   vocs: PageResponse<Voc>;

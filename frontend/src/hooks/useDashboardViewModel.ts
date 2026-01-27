@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useDashboardData } from './useStatistics';
+
 import type { StatisticsParams } from '@/types/statistics';
+
+import { useDashboardData } from './useStatistics';
 
 export type PeriodType = 'today' | '7days' | '30days' | 'custom';
 

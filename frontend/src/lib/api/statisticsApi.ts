@@ -1,4 +1,3 @@
-import { api } from './client';
 import type {
   DashboardData,
   KpiData,
@@ -8,6 +7,8 @@ import type {
   StatisticsParams,
 } from '@/types/statistics';
 import type { Voc } from '@/types/voc';
+
+import { api } from './client';
 
 export const statisticsApi = {
   /**

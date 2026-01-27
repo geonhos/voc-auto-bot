@@ -1,4 +1,5 @@
 import { ArrowUpIcon, ArrowDownIcon, MinusIcon } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 
 export interface KpiCardProps {

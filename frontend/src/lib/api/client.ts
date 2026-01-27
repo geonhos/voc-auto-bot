@@ -1,6 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { useAuthStore } from '@/store/authStore';
+
 import { isTokenExpiring, isTokenExpired } from '@/lib/utils/tokenUtils';
+import { useAuthStore } from '@/store/authStore';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 

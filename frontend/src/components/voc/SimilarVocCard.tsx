@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import type { SimilarVoc } from '@/types';
+
 import { VocStatusBadge } from './VocStatusBadge';
 
 interface SimilarVocCardProps {

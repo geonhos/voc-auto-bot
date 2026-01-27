@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+
 import { statisticsApi } from '@/lib/api/statisticsApi';
 import type { StatisticsParams } from '@/types/statistics';
 

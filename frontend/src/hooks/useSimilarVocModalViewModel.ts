@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+
 import { useSimilarVocs } from './useSimilarVocs';
 
 export interface UseSimilarVocModalViewModelProps {

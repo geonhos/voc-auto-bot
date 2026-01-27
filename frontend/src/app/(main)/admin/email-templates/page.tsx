@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { MailIcon, PlusIcon, EditIcon, TrashIcon } from 'lucide-react';
+import { useState } from 'react';
 
 interface EmailTemplate {
   id: number;

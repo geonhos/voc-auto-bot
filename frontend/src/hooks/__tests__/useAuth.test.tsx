@@ -1,7 +1,10 @@
-import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useTokenStatus, useRefreshToken } from '../useAuth';
+import { renderHook, waitFor } from '@testing-library/react';
+
 import { useAuthStore } from '@/store/authStore';
+
+import { useTokenStatus, useRefreshToken } from '../useAuth';
+
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({

@@ -3,10 +3,12 @@
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useState } from 'react';
+
 import type { VocStatusLookupResponse } from '@/types';
+
+import { VocPriorityBadge } from './VocPriorityBadge';
 import { VocStatusBadge } from './VocStatusBadge';
 import { VocStatusTimeline } from './VocStatusTimeline';
-import { VocPriorityBadge } from './VocPriorityBadge';
 
 interface VocStatusResultProps {
   vocStatus: VocStatusLookupResponse;

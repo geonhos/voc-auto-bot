@@ -1,6 +1,9 @@
-import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
 import { ReactNode } from 'react';
+
+import { statisticsApi } from '@/lib/api/statisticsApi';
+
 import {
   useDashboardData,
   useKpi,
@@ -9,7 +12,6 @@ import {
   usePriorityStats,
   useRecentVocs,
 } from '../useStatistics';
-import { statisticsApi } from '@/lib/api/statisticsApi';
 
 jest.mock('@/lib/api/statisticsApi');
 

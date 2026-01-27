@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import { RecentVocList } from '../RecentVocList';
+
 import type { Voc } from '@/types/voc';
+
+import { RecentVocList } from '../RecentVocList';
 
 const mockVocs: Voc[] = [
   {

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+
+import { Sidebar, Header } from '@/components/layout';
+import { useRefreshToken, useTokenStatus } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
 import { useSidebarStore } from '@/store/sidebarStore';
-import { useRefreshToken, useTokenStatus } from '@/hooks/useAuth';
-import { Sidebar, Header } from '@/components/layout';
 
 export default function MainLayout({
   children,

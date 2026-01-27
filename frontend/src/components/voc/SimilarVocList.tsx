@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { PageResponse, SimilarVoc } from '@/types';
-import { SimilarVocCard } from './SimilarVocCard';
+
 import { cn } from '@/lib/utils';
+import type { PageResponse, SimilarVoc } from '@/types';
+
+import { SimilarVocCard } from './SimilarVocCard';
 
 interface SimilarVocListProps {
   vocs: PageResponse<SimilarVoc>;
