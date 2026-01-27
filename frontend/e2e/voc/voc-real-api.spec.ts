@@ -21,25 +21,25 @@ const TEST_ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'Test123!';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 /**
- * Utility function to wait for select options to load
+ * Utility function to wait for select options to load using Playwright's polling
  */
 async function waitForSelectOptions(
   locator: Locator,
   minOptions: number = 2,
   timeout: number = 10000
 ): Promise<boolean> {
-  const startTime = Date.now();
-  while (Date.now() - startTime < timeout) {
-    const options = await locator.locator('option').allTextContents();
-    if (options.length >= minOptions) {
-      const hasValidOption = options.some(
+  try {
+    await expect(async () => {
+      const options = await locator.locator('option').allTextContents();
+      const hasValidOptions = options.length >= minOptions && options.some(
         (opt, idx) => idx > 0 && !opt.includes('선택') && !opt.includes('없습니다')
       );
-      if (hasValidOption) return true;
-    }
-    await locator.page().waitForTimeout(200);
+      expect(hasValidOptions).toBe(true);
+    }).toPass({ timeout, intervals: [200, 500, 1000] });
+    return true;
+  } catch {
+    return false;
   }
-  return false;
 }
 
 /**
