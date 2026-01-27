@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { User, UserRole } from '@/types';
 import { useToggleUserStatus, useUnlockUser, useResetPassword } from '@/hooks/useUsers';
+import { useToast } from '@/hooks/useToast';
 import { cn } from '@/lib/utils';
 
 interface UserTableProps {
@@ -29,18 +30,23 @@ export function UserTable({ users, onEdit, isLoading }: UserTableProps) {
   const toggleStatusMutation = useToggleUserStatus();
   const unlockMutation = useUnlockUser();
   const resetPasswordMutation = useResetPassword();
+  const toast = useToast();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        event.target instanceof Node &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setActionUserId(null);
       }
     };
 
     if (actionUserId !== null) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('click', handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('click', handleClickOutside);
       };
     }
   }, [actionUserId]);
@@ -59,8 +65,16 @@ export function UserTable({ users, onEdit, isLoading }: UserTableProps) {
 
   const handleResetPassword = async (user: User) => {
     if (confirm(`${user.name}님에게 임시 비밀번호를 발급하시겠습니까?`)) {
-      const result = await resetPasswordMutation.mutateAsync(user.id);
-      alert(`임시 비밀번호: ${result.temporaryPassword}\n\n사용자에게 전달해주세요.`);
+      try {
+        const result = await resetPasswordMutation.mutateAsync(user.id);
+        await navigator.clipboard.writeText(result.temporaryPassword);
+        toast.success(
+          '임시 비밀번호가 클립보드에 복사되었습니다. 사용자에게 안전하게 전달하세요.',
+          '비밀번호 발급 완료'
+        );
+      } catch (error) {
+        toast.error('클립보드 복사에 실패했습니다. 브라우저 권한을 확인해주세요.', '복사 실패');
+      }
     }
   };
 
