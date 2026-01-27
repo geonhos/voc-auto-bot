@@ -10,7 +10,10 @@ public interface AddMemoUseCase {
     /**
      * Add a memo to the VOC
      * @param command memo information
+     * @param requestingUserId ID of the user making the request (for access control)
      * @return updated VOC with new memo
+     * @throws com.geonho.vocautobot.application.voc.exception.VocNotFoundException if VOC not found
+     * @throws com.geonho.vocautobot.application.voc.exception.VocAccessDeniedException if user has no access
      */
-    Voc addMemo(AddMemoCommand command);
+    Voc addMemo(AddMemoCommand command, Long requestingUserId);
 }

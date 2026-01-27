@@ -1,12 +1,16 @@
 package com.geonho.vocautobot.application.voc.usecase;
 
+import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.voc.exception.TicketIdGenerationException;
+import com.geonho.vocautobot.application.voc.exception.VocAccessDeniedException;
 import com.geonho.vocautobot.application.voc.exception.VocNotFoundException;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.application.voc.port.in.dto.*;
 import com.geonho.vocautobot.application.voc.port.out.GenerateTicketIdPort;
 import com.geonho.vocautobot.application.voc.port.out.LoadVocPort;
 import com.geonho.vocautobot.application.voc.port.out.SaveVocPort;
+import com.geonho.vocautobot.domain.user.User;
+import com.geonho.vocautobot.domain.user.UserRole;
 import com.geonho.vocautobot.domain.voc.Voc;
 import com.geonho.vocautobot.domain.voc.VocMemo;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +39,7 @@ public class VocService implements
     private final LoadVocPort loadVocPort;
     private final SaveVocPort saveVocPort;
     private final GenerateTicketIdPort generateTicketIdPort;
+    private final LoadUserPort loadUserPort;
 
     @Override
     @Transactional
@@ -137,9 +142,12 @@ public class VocService implements
 
     @Override
     @Transactional
-    public Voc addMemo(AddMemoCommand command) {
+    public Voc addMemo(AddMemoCommand command, Long requestingUserId) {
         Voc voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
+
+        // Verify access control
+        validateVocAccess(voc, requestingUserId);
 
         // Create and add memo
         VocMemo memo = VocMemo.builder()
@@ -166,5 +174,33 @@ public class VocService implements
             }
         }
         throw new TicketIdGenerationException(MAX_TICKET_ID_RETRIES);
+    }
+
+    /**
+     * Validate if the user has access to the VOC
+     * - ADMIN and MANAGER: can access all VOCs
+     * - OPERATOR: can only access VOCs assigned to them
+     *
+     * @param voc VOC to check access for
+     * @param userId ID of the user requesting access
+     * @throws VocAccessDeniedException if user has no access to the VOC
+     */
+    private void validateVocAccess(Voc voc, Long userId) {
+        User user = loadUserPort.loadById(userId)
+                .orElseThrow(() -> new VocAccessDeniedException(
+                        String.format("사용자(ID: %d)를 찾을 수 없습니다.", userId)
+                ));
+
+        // ADMIN and MANAGER have access to all VOCs
+        if (user.getRole() == UserRole.ADMIN || user.getRole() == UserRole.MANAGER) {
+            return;
+        }
+
+        // OPERATOR can only access VOCs assigned to them
+        if (user.getRole() == UserRole.OPERATOR) {
+            if (voc.getAssigneeId() == null || !voc.getAssigneeId().equals(userId)) {
+                throw new VocAccessDeniedException(voc.getId(), userId);
+            }
+        }
     }
 }

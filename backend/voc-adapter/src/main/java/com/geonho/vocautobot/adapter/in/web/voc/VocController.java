@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.adapter.in.web.voc;
 
+import com.geonho.vocautobot.adapter.in.security.SecurityUser;
 import com.geonho.vocautobot.adapter.in.web.voc.dto.*;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.domain.voc.Voc;
@@ -11,6 +12,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -145,7 +149,29 @@ public class VocController {
             @PathVariable Long id,
             @Valid @RequestBody AddMemoRequest request
     ) {
-        Voc voc = addMemoUseCase.addMemo(request.toCommand(id));
+        // Get authenticated user from SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
+        Long authenticatedUserId = securityUser.getUserId();
+
+        // Determine internal flag based on user role
+        boolean isInternal = false;
+        if (request.isInternal() != null && request.isInternal()) {
+            // Only ADMIN and MANAGER can create internal memos
+            boolean hasPrivilegedRole = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_MANAGER"));
+
+            if (hasPrivilegedRole) {
+                isInternal = true;
+            }
+            // OPERATOR's request for internal memo is silently ignored (isInternal remains false)
+        }
+
+        Voc voc = addMemoUseCase.addMemo(
+                request.toCommand(id, authenticatedUserId, isInternal),
+                authenticatedUserId
+        );
         VocResponse response = VocResponse.from(voc);
 
         return ApiResponse.success(response);
