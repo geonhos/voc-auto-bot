@@ -10,17 +10,61 @@ import path from 'path';
 const authFile = path.join(__dirname, '../.auth/user.json');
 
 /**
+ * Mock user data for tests
+ */
+const mockUser = {
+  id: 1,
+  username: 'admin',
+  name: '관리자',
+  email: 'admin@example.com',
+  role: 'ADMIN',
+};
+
+/**
  * Setup authenticated state for tests
  * This runs once before all tests and saves the authentication state
  */
 setup('authenticate', async ({ page, context }) => {
-  // Test credentials - these should match your test database
+  // Test credentials
   const testCredentials = {
-    username: process.env.TEST_USERNAME || 'admin',
+    email: process.env.TEST_EMAIL || 'admin@example.com',
     password: process.env.TEST_PASSWORD || 'admin123',
   };
 
   console.log('Setting up authentication...');
+
+  // Mock the login API to always succeed for test credentials
+  await page.route('**/auth/login', async (route) => {
+    const request = route.request();
+    const body = JSON.parse(request.postData() || '{}');
+
+    if (body.email === testCredentials.email && body.password === testCredentials.password) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: true,
+          data: {
+            accessToken: 'mock-access-token-for-e2e-tests',
+            refreshToken: 'mock-refresh-token-for-e2e-tests',
+            user: mockUser,
+          },
+        }),
+      });
+    } else {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          error: {
+            code: 'INVALID_CREDENTIALS',
+            message: '이메일 또는 비밀번호가 올바르지 않습니다',
+          },
+        }),
+      });
+    }
+  });
 
   // Navigate to login page
   await page.goto('/login');
@@ -29,7 +73,7 @@ setup('authenticate', async ({ page, context }) => {
   await expect(page.locator('h2:has-text("로그인")')).toBeVisible();
 
   // Fill in login form
-  await page.getByLabel('아이디').fill(testCredentials.username);
+  await page.getByLabel('이메일').fill(testCredentials.email);
   await page.locator('#password').fill(testCredentials.password);
 
   // Click login button

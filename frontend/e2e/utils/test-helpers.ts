@@ -110,15 +110,15 @@ export async function mockApiError(
 export async function login(
   page: Page,
   credentials: {
-    username: string;
+    email: string;
     password: string;
   }
 ): Promise<void> {
   await page.goto('/login');
-  await page.getByLabel('아이디').fill(credentials.username);
-  await page.getByLabel('비밀번호').fill(credentials.password);
+  await page.getByLabel('이메일').fill(credentials.email);
+  await page.locator('#password').fill(credentials.password);
   await page.getByRole('button', { name: '로그인' }).click();
-  
+
   // Wait for redirect after successful login
   await page.waitForURL(/\/(dashboard|voc)/, { timeout: 10000 });
 }
@@ -393,20 +393,20 @@ export function createTestUser(overrides?: Partial<{
  * @param role - User role
  */
 export function getTestCredentials(role: 'ADMIN' | 'MANAGER' | 'OPERATOR'): {
-  username: string;
+  email: string;
   password: string;
 } {
   const credentials = {
     ADMIN: {
-      username: process.env.TEST_ADMIN_USERNAME || 'admin',
+      email: process.env.TEST_ADMIN_EMAIL || 'admin@example.com',
       password: process.env.TEST_ADMIN_PASSWORD || 'admin123',
     },
     MANAGER: {
-      username: process.env.TEST_MANAGER_USERNAME || 'manager',
+      email: process.env.TEST_MANAGER_EMAIL || 'manager@example.com',
       password: process.env.TEST_MANAGER_PASSWORD || 'manager123',
     },
     OPERATOR: {
-      username: process.env.TEST_OPERATOR_USERNAME || 'operator',
+      email: process.env.TEST_OPERATOR_EMAIL || 'operator@example.com',
       password: process.env.TEST_OPERATOR_PASSWORD || 'operator123',
     },
   };
