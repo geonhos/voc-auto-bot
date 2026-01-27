@@ -176,7 +176,7 @@ test.describe('VOC Input Form', () => {
   test.describe('Category Selection', () => {
     test('should load categories from API', async ({ page }) => {
       // Mock categories API
-      await page.route('**/api/categories', async (route) => {
+      await page.route('**/api/v1/categories', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -195,7 +195,7 @@ test.describe('VOC Input Form', () => {
 
     test('should select a category', async ({ page }) => {
       // Mock categories API
-      await page.route('**/api/categories', async (route) => {
+      await page.route('**/api/v1/categories', async (route) => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',

@@ -23,9 +23,10 @@ export class CategoryPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.categoryTree = page.getByRole('tree', { name: /category/i });
-    this.categoryNode = page.getByRole('treeitem');
-    this.createButton = page.getByRole('button', { name: /create|추가|생성/i });
+    this.categoryTree = page.locator('.space-y-1');
+    // Category nodes are clickable divs with cursor-pointer containing category name and code
+    this.categoryNode = page.locator('[class*="cursor-pointer"][class*="rounded-lg"]');
+    this.createButton = page.getByRole('button', { name: /create|추가|생성|루트 카테고리/i });
     this.editButton = page.getByRole('button', { name: /edit|수정/i });
     this.deleteButton = page.getByRole('button', { name: /delete|삭제/i });
     this.categoryForm = page.getByRole('form', { name: /category/i });
@@ -44,7 +45,10 @@ export class CategoryPage {
    */
   async goto() {
     await this.page.goto('/admin/categories');
-    await waitForNetworkIdle(this.page);
+    // Wait for page content to be visible instead of network idle
+    await this.page.waitForSelector('h1:has-text("카테고리 관리")', { timeout: 10000 });
+    // Wait for loading to complete
+    await this.page.waitForTimeout(500);
   }
 
   /**
