@@ -15,10 +15,12 @@ test.describe('Category Management - SC-09', () => {
     // Mock categories API
     await mockApi(
       page,
-      /\/api\/categories\/tree/,
+      /\/api\/v1\/categories\/tree/,
       {
         status: 200,
-        body: [
+        body: {
+          success: true,
+          data: [
           {
             id: 1,
             name: '제품 문의',
@@ -82,6 +84,7 @@ test.describe('Category Management - SC-09', () => {
             children: [],
           },
         ],
+        },
       },
       { method: 'GET' }
     );

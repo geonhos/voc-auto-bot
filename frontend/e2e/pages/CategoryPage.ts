@@ -23,9 +23,10 @@ export class CategoryPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.categoryTree = page.getByRole('tree', { name: /category/i });
-    this.categoryNode = page.getByRole('treeitem');
-    this.createButton = page.getByRole('button', { name: /create|추가|생성/i });
+    this.categoryTree = page.locator('.space-y-1');
+    // Category nodes are clickable divs with cursor-pointer containing category name and code
+    this.categoryNode = page.locator('[class*="cursor-pointer"][class*="rounded-lg"]');
+    this.createButton = page.getByRole('button', { name: /create|추가|생성|루트 카테고리/i });
     this.editButton = page.getByRole('button', { name: /edit|수정/i });
     this.deleteButton = page.getByRole('button', { name: /delete|삭제/i });
     this.categoryForm = page.getByRole('form', { name: /category/i });
@@ -44,7 +45,13 @@ export class CategoryPage {
    */
   async goto() {
     await this.page.goto('/admin/categories');
-    await waitForNetworkIdle(this.page);
+    // Wait for page content to be visible
+    await this.page.waitForSelector('h1:has-text("카테고리 관리")', { timeout: 10000 });
+    // Wait for category tree or empty state to be visible
+    await Promise.race([
+      this.categoryNode.first().waitFor({ state: 'visible', timeout: 5000 }),
+      this.page.waitForSelector('text=카테고리가 없습니다', { timeout: 5000 }),
+    ]).catch(() => {});
   }
 
   /**
@@ -60,7 +67,8 @@ export class CategoryPage {
   async selectCategory(categoryName: string | RegExp) {
     const category = this.categoryNode.filter({ hasText: categoryName });
     await category.click();
-    await this.page.waitForTimeout(300);
+    // Wait for selection state to update
+    await expect(category).toHaveClass(/bg-blue|selected|active/i, { timeout: 2000 }).catch(() => {});
   }
 
   /**
@@ -72,7 +80,8 @@ export class CategoryPage {
 
     if (await expandButton.isVisible()) {
       await expandButton.click();
-      await this.page.waitForTimeout(300);
+      // Wait for children to become visible
+      await category.locator('[role="group"]').waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
     }
   }
 
@@ -85,7 +94,8 @@ export class CategoryPage {
 
     if (await collapseButton.isVisible()) {
       await collapseButton.click();
-      await this.page.waitForTimeout(300);
+      // Wait for children to be hidden
+      await category.locator('[role="group"]').waitFor({ state: 'hidden', timeout: 2000 }).catch(() => {});
     }
   }
 
@@ -189,7 +199,7 @@ export class CategoryPage {
     const target = this.categoryNode.filter({ hasText: targetName });
 
     await source.dragTo(target);
-    await this.page.waitForTimeout(500);
+    // Wait for toast to appear indicating success
     await waitForToast(this.page, /success|성공|순서|변경/i);
   }
 
