@@ -45,8 +45,9 @@ export function CategoryChart({ data, limit, isLoading }: CategoryChartProps) {
     percentage: item.percentage,
   }));
 
-  const renderLabel = (entry: { name: string; percentage: number }) => {
-    return `${entry.name} (${entry.percentage.toFixed(1)}%)`;
+  const renderLabel = (entry: { name: string; percentage?: number }) => {
+    const percentage = entry.percentage ?? 0;
+    return `${entry.name} (${percentage.toFixed(1)}%)`;
   };
 
   return (

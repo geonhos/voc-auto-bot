@@ -57,6 +57,14 @@ export default function DashboardPage() {
 
   const { kpi, trend, categoryStats, statusDistribution } = data;
 
+  // KPI 데이터 기본값 설정
+  const safeKpi = {
+    totalVocs: kpi?.totalVocs ?? 0,
+    avgResolutionTimeHours: kpi?.avgResolutionTimeHours ?? 0,
+    resolutionRate: kpi?.resolutionRate ?? 0,
+    pendingVocs: kpi?.pendingVocs ?? 0,
+  };
+
   return (
     <div className="p-4 md:p-6">
       <div className="mb-6">
@@ -139,30 +147,30 @@ export default function DashboardPage() {
           <KpiGrid>
             <KpiCard
               title="총 접수 건수"
-              value={`${kpi.totalVocs.toLocaleString()}건`}
+              value={`${safeKpi.totalVocs.toLocaleString()}건`}
               icon={<BarChart3Icon className="h-6 w-6" />}
               change={{ value: 12, type: 'increase', label: '전 기간 대비 12% 증가' }}
             />
             <KpiCard
               title="평균 처리 시간"
-              value={`${kpi.avgResolutionTimeHours.toFixed(1)}시간`}
+              value={`${safeKpi.avgResolutionTimeHours.toFixed(1)}시간`}
               icon={<ClockIcon className="h-6 w-6" />}
               change={{ value: 5, type: 'decrease', label: '전 기간 대비 5% 감소' }}
             />
             <KpiCard
               title="완료율"
-              value={`${kpi.resolutionRate.toFixed(1)}%`}
+              value={`${safeKpi.resolutionRate.toFixed(1)}%`}
               icon={<CheckCircleIcon className="h-6 w-6" />}
               change={{ value: 3, type: 'increase', label: '전 기간 대비 3% 증가' }}
             />
             <KpiCard
               title="처리 중"
-              value={`${kpi.pendingVocs.toLocaleString()}건`}
+              value={`${safeKpi.pendingVocs.toLocaleString()}건`}
               icon={<ActivityIcon className="h-6 w-6" />}
               change={{
-                value: parseFloat(((kpi.pendingVocs / kpi.totalVocs) * 100).toFixed(2)),
+                value: safeKpi.totalVocs > 0 ? parseFloat(((safeKpi.pendingVocs / safeKpi.totalVocs) * 100).toFixed(2)) : 0,
                 type: 'neutral',
-                label: `전체 VOC의 ${((kpi.pendingVocs / kpi.totalVocs) * 100).toFixed(1)}%`,
+                label: safeKpi.totalVocs > 0 ? `전체 VOC의 ${((safeKpi.pendingVocs / safeKpi.totalVocs) * 100).toFixed(1)}%` : '전체 VOC의 0%',
               }}
             />
           </KpiGrid>
