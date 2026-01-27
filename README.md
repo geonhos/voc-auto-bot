@@ -47,62 +47,69 @@
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │                         Frontend                                  │
-│                   React + TypeScript                              │
-│                    (대시보드 UI)                                   │
+│              React + TypeScript + Next.js                         │
+│              (대시보드 UI, Zustand 상태관리)                        │
 └─────────────────────────┬────────────────────────────────────────┘
                           │
                           ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                      API Gateway                                  │
-│                 Java Spring Boot                                  │
+│                     Backend (Monolith)                            │
+│                    Java Spring Boot                               │
 │                                                                   │
-│  • VOC CRUD API          • 사용자 인증/인가                        │
-│  • 비즈니스 로직          • AI 서비스 연동                          │
-└─────────────────────────┬────────────────────────────────────────┘
-                          │ HTTP (Internal)
-                          ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                      AI Service                                   │
-│                   Python FastAPI                                  │
-│                                                                   │
-│  • LLM 연동 (Ollama)     • VOC 자동 분류                           │
-│  • 유사 VOC 검색          • 로그 분석                               │
-│  • 응대 가이드 생성       • 임베딩 생성                             │
+│  • VOC CRUD API          • 사용자 인증/인가 (Spring Security)      │
+│  • 비즈니스 로직          • AI/RAG 기능 통합                        │
 └─────────────────────────┬────────────────────────────────────────┘
                           │
-                          ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                       Database                                    │
-│              PostgreSQL + pgvector                                │
-│                                                                   │
-│  • VOC 데이터 저장        • 벡터 임베딩 저장                        │
-│  • 유사도 검색            • 히스토리 관리                           │
-└──────────────────────────────────────────────────────────────────┘
+          ┌───────────────┴───────────────┐
+          │                               │
+          ▼                               ▼
+┌─────────────────────────┐   ┌─────────────────────────────────────┐
+│      Ollama Server       │   │          Database                   │
+│   (Local LLM Server)     │   │     PostgreSQL + pgvector           │
+│                          │   │                                     │
+│  • /api/embed 임베딩     │   │  • VOC 데이터 저장                   │
+│  • /api/generate LLM    │   │  • 벡터 임베딩 저장 (768차원)         │
+│  • nomic-embed-text      │   │  • 코사인 유사도 검색                │
+└─────────────────────────┘   └─────────────────────────────────────┘
 ```
+
+### RAG (Retrieval-Augmented Generation) 구현
+
+유사 VOC 검색을 위한 RAG 파이프라인이 Java 백엔드에 통합되어 있습니다:
+
+| 구성요소 | 파일 | 설명 |
+|----------|------|------|
+| 임베딩 생성 | `EmbeddingService.java` | Ollama API (`/api/embed`)를 통한 텍스트 임베딩 생성 |
+| 벡터 검색 | `VectorSearchAdapter.java` | pgvector 코사인 유사도 검색 (`<=>` 연산자) |
+| 벡터 저장소 | `VectorEmbeddingRepository.java` | 벡터 임베딩 CRUD 및 유사도 쿼리 |
+| 프론트엔드 | `useSimilarVocs.ts` | 유사 VOC 조회 React Hook |
 
 ## 기술 스택
 
 ### Backend
 | 구분 | 기술 | 설명 |
 |------|------|------|
-| API Gateway | Java 17+ / Spring Boot 3.x | 메인 API 서버, 인증, 비즈니스 로직 |
-| AI Service | Python 3.11+ / FastAPI | LLM 연동, 벡터 검색, AI 분석 |
-| LLM | Ollama (Llama, Mistral 등) | 로컬 LLM 서버, 비용 절감 및 프라이버시 확보 |
+| API Server | Java 17+ / Spring Boot 3.x | 메인 API 서버, 인증, 비즈니스 로직, AI 기능 통합 |
+| Security | Spring Security + JWT | 인증/인가 처리 |
+| LLM | Ollama (nomic-embed-text) | 로컬 LLM 서버, 임베딩 생성 |
+| Vector Search | pgvector | 코사인 유사도 기반 유사 VOC 검색 |
 
 ### Frontend
 | 구분 | 기술 | 설명 |
 |------|------|------|
-| Framework | React 18 | SPA 기반 대시보드 |
+| Framework | React 18 + Next.js | SSR 지원 대시보드 |
 | Language | TypeScript | 타입 안정성 확보 |
-| 상태관리 | (추후 결정) | Redux Toolkit 또는 Zustand |
+| 상태관리 | Zustand | 경량 상태관리 라이브러리 |
+| 스타일링 | Tailwind CSS | 유틸리티 기반 CSS |
+| 테스트 | Jest + Playwright | 단위 테스트 및 E2E 테스트 |
 
 ### Database
 | 구분 | 기술 | 설명 |
 |------|------|------|
 | RDBMS | PostgreSQL 15+ | 메인 데이터 저장소 |
-| Vector DB | pgvector | 유사 VOC 검색을 위한 벡터 유사도 검색 |
+| Vector DB | pgvector | 768차원 벡터 임베딩 저장 및 유사도 검색 |
 
-### Infrastructure (예정)
+### Infrastructure
 | 구분 | 기술 | 설명 |
 |------|------|------|
 | Container | Docker / Docker Compose | 로컬 개발 환경 구성 |
@@ -112,11 +119,22 @@
 
 ```
 voc-auto-bot/
-├── api-gateway/          # Spring Boot 메인 API 서버
-├── ai-service/           # Python FastAPI AI 서비스
-├── frontend/             # React 프론트엔드
-├── docker/               # Docker 설정 파일
-└── docs/                 # 프로젝트 문서
+├── backend/                          # Spring Boot 백엔드 (멀티모듈)
+│   ├── voc-bootstrap/                # 애플리케이션 진입점
+│   ├── voc-domain/                   # 도메인 모델
+│   ├── voc-application/              # 비즈니스 로직
+│   └── voc-adapter/                  # 외부 연동 어댑터
+│       └── src/main/java/.../adapter/out/
+│           ├── ai/                   # AI/LLM 연동 (EmbeddingService)
+│           └── persistence/vector/   # 벡터 검색 (VectorSearchAdapter)
+├── frontend/                         # Next.js 프론트엔드
+│   ├── src/
+│   │   ├── hooks/                    # React Hooks (useSimilarVocs 등)
+│   │   └── ...
+│   └── e2e/                          # Playwright E2E 테스트
+├── infra/                            # 인프라 설정
+├── docs/                             # 프로젝트 문서
+└── docker-compose.yml                # Docker 개발 환경
 ```
 
 ## 시작하기
