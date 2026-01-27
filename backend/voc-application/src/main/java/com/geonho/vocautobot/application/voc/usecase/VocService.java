@@ -8,6 +8,7 @@ import com.geonho.vocautobot.application.voc.port.out.GenerateTicketIdPort;
 import com.geonho.vocautobot.application.voc.port.out.LoadVocPort;
 import com.geonho.vocautobot.application.voc.port.out.SaveVocPort;
 import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocMemo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,8 @@ public class VocService implements
         ChangeVocStatusUseCase,
         AssignVocUseCase,
         GetVocListUseCase,
-        GetVocDetailUseCase {
+        GetVocDetailUseCase,
+        AddMemoUseCase {
 
     private static final int MAX_TICKET_ID_RETRIES = 10;
 
@@ -131,6 +133,24 @@ public class VocService implements
     public Voc getVocByTicketId(String ticketId) {
         return loadVocPort.loadVocByTicketId(ticketId)
                 .orElseThrow(() -> new VocNotFoundException(ticketId));
+    }
+
+    @Override
+    @Transactional
+    public Voc addMemo(AddMemoCommand command) {
+        Voc voc = loadVocPort.loadVocById(command.vocId())
+                .orElseThrow(() -> new VocNotFoundException(command.vocId()));
+
+        // Create and add memo
+        VocMemo memo = VocMemo.builder()
+                .content(command.content())
+                .internal(command.internal())
+                .authorId(command.authorId())
+                .build();
+
+        voc.addMemo(memo);
+
+        return saveVocPort.saveVoc(voc);
     }
 
     /**

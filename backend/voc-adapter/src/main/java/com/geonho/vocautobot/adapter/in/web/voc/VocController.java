@@ -30,6 +30,7 @@ public class VocController {
     private final GetVocDetailUseCase getVocDetailUseCase;
     private final ChangeVocStatusUseCase changeVocStatusUseCase;
     private final AssignVocUseCase assignVocUseCase;
+    private final AddMemoUseCase addMemoUseCase;
 
     @Operation(summary = "VOC 생성", description = "새로운 VOC를 생성합니다")
     @PostMapping
@@ -132,6 +133,19 @@ public class VocController {
     @PatchMapping("/{id}/unassign")
     public ApiResponse<VocResponse> unassignVoc(@PathVariable Long id) {
         Voc voc = assignVocUseCase.unassignVoc(id);
+        VocResponse response = VocResponse.from(voc);
+
+        return ApiResponse.success(response);
+    }
+
+    @Operation(summary = "VOC 메모 추가", description = "VOC에 메모를 추가합니다")
+    @PostMapping("/{id}/memos")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<VocResponse> addMemo(
+            @PathVariable Long id,
+            @Valid @RequestBody AddMemoRequest request
+    ) {
+        Voc voc = addMemoUseCase.addMemo(request.toCommand(id));
         VocResponse response = VocResponse.from(voc);
 
         return ApiResponse.success(response);
