@@ -22,10 +22,11 @@ test.describe('VOC Workflow - Complete Process', () => {
   let vocTablePage: VocTablePage;
   let vocDetailPage: VocDetailPage;
 
-  // Generated ticket ID for tracking
+  // Generated ticket ID for tracking with dynamic date
   const timestamp = Date.now();
   const uniqueTitle = `E2E 테스트 VOC ${timestamp}`;
-  const mockTicketId = `VOC-20260127-${timestamp.toString().slice(-4)}`;
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const mockTicketId = `VOC-${today}-${timestamp.toString().slice(-4)}`;
 
   test.describe('Full VOC Lifecycle', () => {
     test('Step 1: Should register a new VOC', async ({ page }) => {
@@ -105,7 +106,7 @@ test.describe('VOC Workflow - Complete Process', () => {
       await vocInputPage.clickSubmit();
 
       // Wait for success modal to appear (check for ticket ID text)
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Check if success modal appeared with ticket ID
       const successText = page.locator('text=VOC 등록 완료');
@@ -189,7 +190,7 @@ test.describe('VOC Workflow - Complete Process', () => {
       await vocTablePage.goto();
 
       // Wait for page to load
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Check if table is visible or empty state
       const tableVisible = await vocTablePage.table.isVisible().catch(() => false);
@@ -281,7 +282,7 @@ test.describe('VOC Workflow - Complete Process', () => {
 
       // Navigate to VOC detail page
       await vocDetailPage.goto(vocId);
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Verify page loaded - check for any content
       const bodyVisible = await page.locator('body').isVisible();
@@ -385,7 +386,7 @@ test.describe('VOC Workflow - Complete Process', () => {
 
       // Navigate to VOC detail page
       await vocDetailPage.goto(vocId);
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Try to find and interact with status change UI
       const statusSelect = page.locator('#status-select');
@@ -485,7 +486,7 @@ test.describe('VOC Workflow - Complete Process', () => {
 
       // Navigate to VOC detail page
       await vocDetailPage.goto(vocId);
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Try to resolve VOC
       const statusSelect = page.locator('#status-select');
@@ -584,7 +585,7 @@ test.describe('VOC Workflow - Complete Process', () => {
 
       // Navigate to VOC detail page
       await vocDetailPage.goto(vocId);
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Add memo if input is available
       const memoInput = page.locator('#memo-input');
@@ -685,7 +686,7 @@ test.describe('VOC Registration and Verification (Real API)', () => {
     await vocInputPage.clickSubmit();
 
     // Wait for response
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
     // Check for success modal or success indicator
     const successText = page.locator('text=VOC 등록 완료');
@@ -707,7 +708,7 @@ test.describe('VOC Registration and Verification (Real API)', () => {
 
       // Step 2: Verify in table
       await vocTablePage.goto();
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
       // Wait for table to load
       await vocTablePage.waitForTableLoad().catch(() => {});
@@ -722,7 +723,7 @@ test.describe('VOC Registration and Verification (Real API)', () => {
         }
       }
 
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Verify the VOC exists in table
       const vocRow = page.locator(`text=${testTitle}`).first();
