@@ -10,7 +10,7 @@ export interface VocFormData {
   categoryId: number | null;
   priority: VocPriority;
   customerName?: string;
-  customerPhone?: string;
+  customerEmail?: string;
   files?: File[];
 }
 
@@ -38,10 +38,10 @@ export const vocFormSchema = z.object({
     .max(100, '고객명은 100자 이하여야 합니다')
     .optional()
     .or(z.literal('')),
-  customerPhone: z
+  customerEmail: z
     .string()
-    .max(20, '연락처는 20자 이하여야 합니다')
-    .regex(/^[0-9-+() ]*$/, '올바른 연락처 형식이 아닙니다')
+    .email('올바른 이메일 형식이 아닙니다')
+    .max(100, '이메일은 100자 이하여야 합니다')
     .optional()
     .or(z.literal('')),
 });
