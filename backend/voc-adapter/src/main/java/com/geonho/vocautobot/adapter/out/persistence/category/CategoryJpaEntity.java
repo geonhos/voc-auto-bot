@@ -1,7 +1,7 @@
 package com.geonho.vocautobot.adapter.out.persistence.category;
 
 import com.geonho.vocautobot.domain.category.CategoryType;
-import com.geonho.vocautobot.domain.common.BaseEntity;
+import com.geonho.vocautobot.adapter.out.persistence.common.BaseJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,7 +14,7 @@ import java.util.List;
 @Table(name = "categories")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CategoryJpaEntity extends BaseEntity {
+public class CategoryJpaEntity extends BaseJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +22,9 @@ public class CategoryJpaEntity extends BaseEntity {
 
     @Column(name = "name", nullable = false, length = 100)
     private String name;
+
+    @Column(name = "code", nullable = false, unique = true, length = 50)
+    private String code;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 10)
@@ -46,14 +49,19 @@ public class CategoryJpaEntity extends BaseEntity {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
-    public CategoryJpaEntity(String name, CategoryType type, Long parentId, String description,
-                             boolean isActive, int sortOrder) {
+    @Column(name = "level", nullable = false)
+    private Integer level;
+
+    public CategoryJpaEntity(String name, String code, CategoryType type, Long parentId, String description,
+                             boolean isActive, int sortOrder, Integer level) {
         this.name = name;
+        this.code = code;
         this.type = type;
         this.parentId = parentId;
         this.description = description;
         this.isActive = isActive;
         this.sortOrder = sortOrder;
+        this.level = level != null ? level : (type == CategoryType.MAIN ? 1 : 2);
     }
 
     public void update(String name, String description, boolean isActive, int sortOrder) {

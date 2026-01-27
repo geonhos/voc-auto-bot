@@ -1,6 +1,6 @@
 package com.geonho.vocautobot.adapter.out.persistence.voc;
 
-import com.geonho.vocautobot.domain.common.BaseEntity;
+import com.geonho.vocautobot.adapter.out.persistence.common.BaseJpaEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,7 +14,7 @@ import lombok.Setter;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class VocMemoJpaEntity extends BaseEntity {
+public class VocMemoJpaEntity extends BaseJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

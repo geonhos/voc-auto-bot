@@ -3,7 +3,7 @@ package com.geonho.vocautobot.adapter.in.web.voc;
 import com.geonho.vocautobot.adapter.in.web.voc.dto.VocStatusResponse;
 import com.geonho.vocautobot.application.voc.port.in.GetVocDetailUseCase;
 import com.geonho.vocautobot.domain.voc.Voc;
-import com.geonho.vocautobot.global.common.ApiResponse;
+import com.geonho.vocautobot.adapter.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

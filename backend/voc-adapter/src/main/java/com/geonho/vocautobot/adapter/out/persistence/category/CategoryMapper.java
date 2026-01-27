@@ -17,11 +17,13 @@ public class CategoryMapper {
         Category category = new Category(
                 entity.getId(),
                 entity.getName(),
+                entity.getCode(),
                 entity.getType(),
                 entity.getParentId(),
                 entity.getDescription(),
                 entity.isActive(),
                 entity.getSortOrder(),
+                entity.getLevel(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
@@ -47,11 +49,13 @@ public class CategoryMapper {
 
         CategoryJpaEntity entity = new CategoryJpaEntity(
                 category.getName(),
+                category.getCode(),
                 category.getType(),
                 category.getParentId(),
                 category.getDescription(),
                 category.isActive(),
-                category.getSortOrder()
+                category.getSortOrder(),
+                category.getLevel()
         );
 
         return entity;

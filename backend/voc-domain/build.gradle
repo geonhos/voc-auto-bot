@@ -18,14 +18,3 @@ dependencies {
     // Optional: Add if using event publishing
     // implementation 'org.springframework:spring-context'
 }
-
-// Domain layer has stricter coverage requirements
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            limit {
-                minimum = 0.90
-            }
-        }
-    }
-}

@@ -9,7 +9,7 @@ import com.geonho.vocautobot.application.category.port.in.DeleteCategoryUseCase;
 import com.geonho.vocautobot.application.category.port.in.GetCategoryQuery;
 import com.geonho.vocautobot.application.category.port.in.UpdateCategoryUseCase;
 import com.geonho.vocautobot.domain.category.Category;
-import com.geonho.vocautobot.global.common.ApiResponse;
+import com.geonho.vocautobot.adapter.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
