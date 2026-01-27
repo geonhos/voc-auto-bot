@@ -7,17 +7,18 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: voc-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: vocautobot
-      POSTGRES_USER: voc_user
-      POSTGRES_PASSWORD: voc_password
+      POSTGRES_DB: ${POSTGRES_DB:-vocautobot}
+      POSTGRES_USER: ${POSTGRES_USER:-voc_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voc_password}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U voc_user -d vocautobot"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-voc_user} -d ${POSTGRES_DB:-vocautobot}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,8 +31,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: voc-redis
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
@@ -49,6 +51,7 @@ services:
   opensearch:
     image: opensearchproject/opensearch:2.11.1
     container_name: voc-opensearch
+    restart: unless-stopped
     environment:
       - cluster.name=voc-cluster
       - node.name=voc-node
@@ -64,7 +67,7 @@ services:
         soft: 65536
         hard: 65536
     ports:
-      - "9200:9200"
+      - "${OPENSEARCH_PORT:-9200}:9200"
       - "9600:9600"
     volumes:
       - opensearch_data:/usr/share/opensearch/data
@@ -75,10 +78,13 @@ services:
       retries: 5
     networks:
       - voc-network
+    profiles:
+      - full
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:2.11.1
     container_name: voc-opensearch-dashboards
+    restart: unless-stopped
     environment:
       - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
       - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
@@ -89,6 +95,8 @@ services:
         condition: service_healthy
     networks:
       - voc-network
+    profiles:
+      - full
 
   # =========================
   # Ollama (LLM)
@@ -96,19 +104,16 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: voc-ollama
+    restart: unless-stopped
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     networks:
       - voc-network
+    profiles:
+      - full
+      - llm
 
   # =========================
   # MailHog (Email Testing)
@@ -116,6 +121,7 @@ services:
   mailhog:
     image: mailhog/mailhog:latest
     container_name: voc-mailhog
+    restart: unless-stopped
     ports:
       - "1025:1025"   # SMTP
       - "8025:8025"   # Web UI
@@ -128,10 +134,11 @@ services:
   minio:
     image: minio/minio:latest
     container_name: voc-minio
+    restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minio_admin
-      MINIO_ROOT_PASSWORD: minio_password
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
     ports:
       - "9000:9000"   # API
       - "9001:9001"   # Console
@@ -144,6 +151,81 @@ services:
       retries: 3
     networks:
       - voc-network
+
+  # =========================
+  # Backend (Spring Boot)
+  # =========================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: voc-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-vocautobot}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-voc_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-voc_password}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      JWT_SECRET: ${JWT_SECRET:-my-super-secret-jwt-key-for-voc-auto-bot-application}
+      OPENSEARCH_HOST: opensearch
+      OPENSEARCH_PORT: 9200
+      LLM_API_URL: ${LLM_API_URL:-http://ollama:11434/api/generate}
+      LLM_MODEL: ${LLM_MODEL:-llama2}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minio_admin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio_password}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+    networks:
+      - voc-network
+    profiles:
+      - app
+      - full
+
+  # =========================
+  # Frontend (Next.js)
+  # =========================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
+    container_name: voc-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    networks:
+      - voc-network
+    profiles:
+      - app
+      - full
 
 volumes:
   postgres_data:
