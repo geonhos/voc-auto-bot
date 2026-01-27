@@ -15,6 +15,9 @@ const createCategorySchema = z.object({
     .min(2, '코드는 2자 이상이어야 합니다')
     .max(30, '30자 이하여야 합니다')
     .regex(/^[A-Z0-9_]+$/, '대문자, 숫자, 언더스코어만 사용 가능합니다'),
+  type: z.enum(['MAIN', 'SUB'], {
+    required_error: '타입을 선택해주세요',
+  }),
   description: z.string().max(200, '200자 이하여야 합니다').optional(),
   parentId: z.number().nullable().optional(),
   sortOrder: z.number().min(0).optional(),
@@ -58,6 +61,7 @@ export function CategoryForm({ category, parentCategory, onClose }: CategoryForm
       : {
           name: '',
           code: '',
+          type: 'MAIN' as const,
           description: '',
           parentId: parentCategory?.id || null,
           sortOrder: 0,
@@ -132,25 +136,48 @@ export function CategoryForm({ category, parentCategory, onClose }: CategoryForm
           </div>
 
           {!isEdit && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">코드</label>
-              <input
-                type="text"
-                {...register('code' as keyof CreateCategoryFormData)}
-                placeholder="예: PRODUCT_INQUIRY"
-                className={cn(
-                  'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 uppercase',
-                  (errors as { code?: { message?: string } }).code
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-gray-300 focus:ring-blue-200'
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">코드</label>
+                <input
+                  type="text"
+                  {...register('code' as keyof CreateCategoryFormData)}
+                  placeholder="예: PRODUCT_INQUIRY"
+                  className={cn(
+                    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 uppercase',
+                    (errors as { code?: { message?: string } }).code
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-blue-200'
+                  )}
+                />
+                {(errors as { code?: { message?: string } }).code && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {(errors as { code?: { message?: string } }).code?.message}
+                  </p>
                 )}
-              />
-              {(errors as { code?: { message?: string } }).code && (
-                <p className="mt-1 text-sm text-red-600">
-                  {(errors as { code?: { message?: string } }).code?.message}
-                </p>
-              )}
-            </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">타입</label>
+                <select
+                  {...register('type' as keyof CreateCategoryFormData)}
+                  className={cn(
+                    'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
+                    (errors as { type?: { message?: string } }).type
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-blue-200'
+                  )}
+                >
+                  <option value="MAIN">대분류</option>
+                  <option value="SUB">중분류</option>
+                </select>
+                {(errors as { type?: { message?: string } }).type && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {(errors as { type?: { message?: string } }).type?.message}
+                  </p>
+                )}
+              </div>
+            </>
           )}
 
           <div>

@@ -20,6 +20,7 @@ export interface CategoryTree extends Category {
 export interface CreateCategoryRequest {
   name: string;
   code: string;
+  type: 'MAIN' | 'SUB';
   description?: string;
   parentId?: number | null;
   sortOrder?: number;
