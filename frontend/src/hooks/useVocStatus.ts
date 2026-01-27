@@ -2,7 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
-import type { VocStatusLookupRequest, VocStatusDetail } from '@/types';
+import type { VocStatusLookupRequest, VocStatusLookupResponse } from '@/types';
 
 /**
  * @description Hook for looking up VOC status by ticket ID and email
@@ -11,7 +11,7 @@ import type { VocStatusLookupRequest, VocStatusDetail } from '@/types';
 export function useVocStatusLookup() {
   return useMutation({
     mutationFn: async (data: VocStatusLookupRequest) => {
-      const response = await api.post<VocStatusDetail>('/vocs/public/status', data);
+      const response = await api.post<VocStatusLookupResponse>('/vocs/public/status', data);
       return response.data;
     },
   });

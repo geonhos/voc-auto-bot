@@ -131,13 +131,13 @@ export function UserForm({ user, onClose }: UserFormProps) {
                   {...register('username' as keyof CreateUserFormData)}
                   className={cn(
                     'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-                    errors.username
+                    (errors as Record<string, { message?: string }>).username
                       ? 'border-red-500 focus:ring-red-200'
                       : 'border-gray-300 focus:ring-blue-200'
                   )}
                 />
-                {errors.username && (
-                  <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
+                {(errors as Record<string, { message?: string }>).username && (
+                  <p className="mt-1 text-sm text-red-600">{(errors as Record<string, { message?: string }>).username?.message}</p>
                 )}
               </div>
 
@@ -148,13 +148,13 @@ export function UserForm({ user, onClose }: UserFormProps) {
                   {...register('password' as keyof CreateUserFormData)}
                   className={cn(
                     'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-                    errors.password
+                    (errors as Record<string, { message?: string }>).password
                       ? 'border-red-500 focus:ring-red-200'
                       : 'border-gray-300 focus:ring-blue-200'
                   )}
                 />
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                {(errors as Record<string, { message?: string }>).password && (
+                  <p className="mt-1 text-sm text-red-600">{(errors as Record<string, { message?: string }>).password?.message}</p>
                 )}
               </div>
             </>

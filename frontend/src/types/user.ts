@@ -32,9 +32,9 @@ export interface ChangePasswordRequest {
 }
 
 export interface UserListParams {
-  page?: number;
-  size?: number;
-  role?: UserRole;
-  isActive?: boolean;
-  search?: string;
+  page?: number | undefined;
+  size?: number | undefined;
+  role?: UserRole | undefined;
+  isActive?: boolean | undefined;
+  search?: string | undefined;
 }

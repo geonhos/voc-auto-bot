@@ -1,0 +1,69 @@
+# OpenSearch Configuration Example
+# application.yml 또는 application-{profile}.yml에 추가
+
+opensearch:
+  # OpenSearch 활성화 여부
+  enabled: true
+
+  # 연결 정보
+  host: localhost
+  port: 9200
+  scheme: http  # http 또는 https
+
+  # 인덱스 설정
+  index-prefix: logs-  # 로그 인덱스 접두사
+
+  # 인증 정보 (선택사항)
+  username: admin
+  password: admin123
+
+  # 타임아웃 설정
+  connection-timeout: 5000      # 연결 타임아웃 (밀리초)
+  socket-timeout: 60000         # 소켓 타임아웃 (밀리초)
+
+  # 재시도 설정
+  max-retries: 3
+
+  # 배치 설정
+  batch-size: 1000
+
+  # SSL 설정
+  use-ssl: false
+  verify-ssl-certificate: true
+
+# 프로필별 설정 예시
+
+---
+# 개발 환경
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+opensearch:
+  enabled: true
+  host: localhost
+  port: 9200
+  scheme: http
+  index-prefix: logs-dev-
+  use-ssl: false
+
+---
+# 운영 환경
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+opensearch:
+  enabled: true
+  host: opensearch.prod.example.com
+  port: 443
+  scheme: https
+  index-prefix: logs-prod-
+  username: ${OPENSEARCH_USERNAME}
+  password: ${OPENSEARCH_PASSWORD}
+  use-ssl: true
+  verify-ssl-certificate: true
+  connection-timeout: 10000
+  socket-timeout: 120000

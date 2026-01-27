@@ -1,6 +1,6 @@
 package com.geonho.vocautobot.adapter.in.web.user.dto;
 
-import com.geonho.vocautobot.domain.user.entity.User;
+import com.geonho.vocautobot.domain.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.domain.Page;
 

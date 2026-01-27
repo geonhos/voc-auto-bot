@@ -1,6 +1,7 @@
 package com.geonho.vocautobot.application.email.usecase;
 
 import com.geonho.vocautobot.application.common.UseCase;
+import com.geonho.vocautobot.application.email.event.EmailSentEvent;
 import com.geonho.vocautobot.application.email.port.in.SendEmailUseCase;
 import com.geonho.vocautobot.application.email.port.in.dto.SendEmailCommand;
 import com.geonho.vocautobot.application.email.port.out.EmailPort;
@@ -8,6 +9,7 @@ import com.geonho.vocautobot.application.email.port.out.LoadEmailTemplatePort;
 import com.geonho.vocautobot.application.email.port.out.SaveEmailLogPort;
 import com.geonho.vocautobot.domain.email.EmailLog;
 import com.geonho.vocautobot.domain.email.EmailTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +24,16 @@ public class SendEmailService implements SendEmailUseCase {
     private final EmailPort emailPort;
     private final LoadEmailTemplatePort loadEmailTemplatePort;
     private final SaveEmailLogPort saveEmailLogPort;
+    private final ApplicationEventPublisher eventPublisher;
 
     public SendEmailService(EmailPort emailPort,
                            LoadEmailTemplatePort loadEmailTemplatePort,
-                           SaveEmailLogPort saveEmailLogPort) {
+                           SaveEmailLogPort saveEmailLogPort,
+                           ApplicationEventPublisher eventPublisher) {
         this.emailPort = emailPort;
         this.loadEmailTemplatePort = loadEmailTemplatePort;
         this.saveEmailLogPort = saveEmailLogPort;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -78,12 +83,35 @@ public class SendEmailService implements SendEmailUseCase {
 
             // 발송 성공 처리
             emailLog.markAsSent();
+
+            // 최종 상태 저장
+            emailLog = saveEmailLogPort.saveEmailLog(emailLog);
+
+            // 발송 성공 이벤트 발행
+            eventPublisher.publishEvent(EmailSentEvent.success(
+                    emailLog.getId(),
+                    templateId,
+                    command.getRecipientEmail(),
+                    command.getRecipientName(),
+                    emailLog.getSentAt()
+            ));
         } catch (EmailPort.EmailSendException e) {
             // 발송 실패 처리
             emailLog.markAsFailed(e.getMessage());
+
+            // 최종 상태 저장
+            emailLog = saveEmailLogPort.saveEmailLog(emailLog);
+
+            // 발송 실패 이벤트 발행
+            eventPublisher.publishEvent(EmailSentEvent.failure(
+                    emailLog.getId(),
+                    templateId,
+                    command.getRecipientEmail(),
+                    command.getRecipientName(),
+                    e.getMessage()
+            ));
         }
 
-        // 최종 상태 저장
-        return saveEmailLogPort.saveEmailLog(emailLog);
+        return emailLog;
     }
 }

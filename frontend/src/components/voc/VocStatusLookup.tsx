@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { cn } from '@/lib/utils';
 import { useVocStatusLookup } from '@/hooks/useVocStatus';
 import { VocStatusResult } from './VocStatusResult';
-import type { VocStatusDetail } from '@/types';
+import type { VocStatusLookupResponse } from '@/types';
 
 const vocStatusLookupSchema = z.object({
   ticketId: z
@@ -26,7 +26,7 @@ type VocStatusLookupFormData = z.infer<typeof vocStatusLookupSchema>;
  * @description Component for VOC status lookup form
  */
 export function VocStatusLookup() {
-  const [vocStatus, setVocStatus] = useState<VocStatusDetail | null>(null);
+  const [vocStatus, setVocStatus] = useState<VocStatusLookupResponse | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   const {

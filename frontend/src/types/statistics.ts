@@ -45,12 +45,20 @@ export interface AssigneeStats {
   avgResolutionTimeHours: number;
 }
 
+export interface PriorityStats {
+  priority: string;
+  priorityLabel: string;
+  count: number;
+  percentage: number;
+}
+
 export interface DashboardData {
   kpi: KpiData;
   trend: TrendData[];
   categoryStats: CategoryStats[];
   statusDistribution: StatusDistribution[];
   channelStats: ChannelStats[];
+  priorityStats: PriorityStats[];
   topAssignees: AssigneeStats[];
 }
 
@@ -58,4 +66,5 @@ export interface StatisticsParams {
   fromDate?: string;
   toDate?: string;
   categoryId?: number;
+  [key: string]: string | number | undefined;
 }

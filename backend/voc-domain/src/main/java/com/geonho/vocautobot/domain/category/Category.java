@@ -8,6 +8,7 @@ public class Category {
 
     private Long id;
     private String name;
+    private String code;
     private CategoryType type;
     private Long parentId;
     private Category parent;
@@ -15,29 +16,56 @@ public class Category {
     private String description;
     private boolean isActive;
     private int sortOrder;
+    private Integer level;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Category(Long id, String name, CategoryType type, Long parentId, String description,
-                    boolean isActive, int sortOrder, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Category(Long id, String name, String code, CategoryType type, Long parentId, String description,
+                    boolean isActive, int sortOrder, Integer level, LocalDateTime createdAt, LocalDateTime updatedAt) {
         validateName(name);
+        validateCode(code);
         validateType(type, parentId);
         validateSortOrder(sortOrder);
 
         this.id = id;
         this.name = name;
+        this.code = code;
         this.type = type;
         this.parentId = parentId;
         this.description = description;
         this.isActive = isActive;
         this.sortOrder = sortOrder;
+        this.level = level != null ? level : (type == CategoryType.MAIN ? 1 : 2);
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.children = new ArrayList<>();
     }
 
+    private void validateCode(String code) {
+        if (code == null || code.trim().isEmpty()) {
+            throw new IllegalArgumentException("카테고리 코드는 필수입니다");
+        }
+        if (!code.matches("^[A-Z0-9_]+$")) {
+            throw new IllegalArgumentException("카테고리 코드는 대문자, 숫자, 언더스코어만 사용 가능합니다");
+        }
+    }
+
     public static Category create(String name, CategoryType type, Long parentId, String description, int sortOrder) {
-        return new Category(null, name, type, parentId, description, true, sortOrder, null, null);
+        return new Category(null, name, null, type, parentId, description, true, sortOrder, null, null, null);
+    }
+
+    public static Category createRoot(String name, String code, String description, Integer sortOrder) {
+        Integer level = 1;
+        return new Category(null, name, code, CategoryType.MAIN, null, description, true,
+                          sortOrder != null ? sortOrder : 0, level, null, null);
+    }
+
+    public static Category createChild(String name, String code, String description, Long parentId,
+                                       Integer parentLevel, Integer sortOrder) {
+        Integer level = parentLevel != null ? parentLevel + 1 : 2;
+        CategoryType type = level == 2 ? CategoryType.SUB : CategoryType.SUB;
+        return new Category(null, name, code, type, parentId, description, true,
+                          sortOrder != null ? sortOrder : 0, level, null, null);
     }
 
     public void update(String name, String description, boolean isActive, int sortOrder) {
@@ -108,6 +136,10 @@ public class Category {
         return name;
     }
 
+    public String getCode() {
+        return code;
+    }
+
     public CategoryType getType() {
         return type;
     }
@@ -134,6 +166,10 @@ public class Category {
 
     public int getSortOrder() {
         return sortOrder;
+    }
+
+    public Integer getLevel() {
+        return level;
     }
 
     public LocalDateTime getCreatedAt() {

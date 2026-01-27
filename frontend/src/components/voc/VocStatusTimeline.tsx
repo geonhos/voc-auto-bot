@@ -2,11 +2,11 @@
 
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import type { VocStatusHistory, VocStatus } from '@/types';
+import type { VocStatusHistoryItem, VocStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface VocStatusTimelineProps {
-  statusHistory: VocStatusHistory[];
+  statusHistory: VocStatusHistoryItem[];
   currentStatus: VocStatus;
 }
 
@@ -46,7 +46,7 @@ export function VocStatusTimeline({ statusHistory, currentStatus }: VocStatusTim
 
           return (
             <li
-              key={history.id}
+              key={history.id ?? index}
               className={cn('relative pl-8', !isLast && 'after:absolute after:left-[0.6875rem] after:top-8 after:bottom-[-1.5rem] after:w-[2px] after:bg-gray-200 dark:after:bg-gray-700')}
             >
               <div
@@ -72,11 +72,8 @@ export function VocStatusTimeline({ statusHistory, currentStatus }: VocStatusTim
                   {history.statusLabel}
                 </p>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  {format(new Date(history.createdAt), 'yyyy-MM-dd HH:mm:ss', { locale: ko })}
+                  {format(new Date(history.changedAt), 'yyyy-MM-dd HH:mm:ss', { locale: ko })}
                 </p>
-                {history.note && (
-                  <p className="text-xs text-blue-600 mt-1">{history.note}</p>
-                )}
                 {history.changedBy && (
                   <p className="text-xs text-slate-400 mt-1">담당자: {history.changedBy}</p>
                 )}

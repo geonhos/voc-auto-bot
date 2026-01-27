@@ -3,7 +3,7 @@ package com.geonho.vocautobot.application.user.service;
 import com.geonho.vocautobot.application.user.port.in.*;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.user.port.out.SaveUserPort;
-import com.geonho.vocautobot.domain.user.entity.User;
+import com.geonho.vocautobot.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,11 +37,14 @@ public class UserService implements
 
         // Create user with encoded password
         User user = User.builder()
+                .username(command.username())
                 .email(command.email())
                 .password(passwordEncoder.encode(command.password()))
                 .name(command.name())
                 .role(command.role())
-                .active(true)
+                .isActive(true)
+                .isLocked(false)
+                .failedLoginAttempts(0)
                 .build();
 
         return saveUserPort.save(user);
@@ -50,7 +53,7 @@ public class UserService implements
     @Override
     @Transactional
     public User updateUser(UpdateUserCommand command) {
-        User user = loadUserPort.findById(command.id())
+        User user = loadUserPort.loadById(command.id())
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + command.id()));
 
         // Check email uniqueness if email is being changed
@@ -58,8 +61,8 @@ public class UserService implements
             throw new IllegalArgumentException("Email already exists: " + command.email());
         }
 
-        user.updateInfo(command.name(), command.email());
-        user.updateRole(command.role());
+        user.updateProfile(command.name(), command.email());
+        user.changeRole(command.role());
 
         return saveUserPort.save(user);
     }
@@ -67,7 +70,7 @@ public class UserService implements
     @Override
     @Transactional
     public void changePassword(ChangePasswordCommand command) {
-        User user = loadUserPort.findById(command.userId())
+        User user = loadUserPort.loadById(command.userId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + command.userId()));
 
         // Verify current password
@@ -75,25 +78,25 @@ public class UserService implements
             throw new IllegalArgumentException("Current password is incorrect");
         }
 
-        user.updatePassword(passwordEncoder.encode(command.newPassword()));
+        user.changePassword(passwordEncoder.encode(command.newPassword()));
         saveUserPort.save(user);
     }
 
     @Override
     public User getUserById(Long id) {
-        return loadUserPort.findById(id)
+        return loadUserPort.loadById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + id));
     }
 
     @Override
     public Page<User> getAllUsers(Pageable pageable) {
-        return loadUserPort.findAll(pageable);
+        return loadUserPort.loadAll(pageable);
     }
 
     @Override
     @Transactional
     public User activateUser(Long userId) {
-        User user = loadUserPort.findById(userId)
+        User user = loadUserPort.loadById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
         user.activate();
@@ -103,7 +106,7 @@ public class UserService implements
     @Override
     @Transactional
     public User deactivateUser(Long userId) {
-        User user = loadUserPort.findById(userId)
+        User user = loadUserPort.loadById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
         user.deactivate();

@@ -3,13 +3,13 @@
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { useState } from 'react';
-import type { VocStatusDetail } from '@/types';
+import type { VocStatusLookupResponse } from '@/types';
 import { VocStatusBadge } from './VocStatusBadge';
 import { VocStatusTimeline } from './VocStatusTimeline';
 import { VocPriorityBadge } from './VocPriorityBadge';
 
 interface VocStatusResultProps {
-  vocStatus: VocStatusDetail;
+  vocStatus: VocStatusLookupResponse;
 }
 
 /**
@@ -76,10 +76,12 @@ export function VocStatusResult({ vocStatus }: VocStatusResultProps) {
             </div>
           )}
 
-          <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">우선순위</p>
-            <VocPriorityBadge priority={vocStatus.priority} />
-          </div>
+          {vocStatus.priority && (
+            <div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">우선순위</p>
+              <VocPriorityBadge priority={vocStatus.priority} />
+            </div>
+          )}
 
           <div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">최종 수정일시</p>

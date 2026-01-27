@@ -355,6 +355,12 @@ export const handlers = [
         { channel: 'PHONE', channelLabel: '전화', count: 411, percentage: 33.3 },
         { channel: 'EMAIL', channelLabel: '이메일', count: 165, percentage: 13.4 },
       ],
+      priorityStats: [
+        { priority: 'URGENT', priorityLabel: '긴급', count: 45, percentage: 3.65 },
+        { priority: 'HIGH', priorityLabel: '높음', count: 289, percentage: 23.42 },
+        { priority: 'MEDIUM', priorityLabel: '보통', count: 567, percentage: 45.95 },
+        { priority: 'LOW', priorityLabel: '낮음', count: 333, percentage: 26.98 },
+      ],
       topAssignees: [
         {
           userId: 1,

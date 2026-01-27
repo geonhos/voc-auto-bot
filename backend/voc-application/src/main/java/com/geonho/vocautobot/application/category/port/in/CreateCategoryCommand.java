@@ -5,13 +5,15 @@ import com.geonho.vocautobot.domain.category.CategoryType;
 public class CreateCategoryCommand {
 
     private final String name;
+    private final String code;
     private final CategoryType type;
     private final Long parentId;
     private final String description;
     private final int sortOrder;
 
-    public CreateCategoryCommand(String name, CategoryType type, Long parentId, String description, int sortOrder) {
+    public CreateCategoryCommand(String name, String code, CategoryType type, Long parentId, String description, int sortOrder) {
         this.name = name;
+        this.code = code;
         this.type = type;
         this.parentId = parentId;
         this.description = description;
@@ -20,6 +22,10 @@ public class CreateCategoryCommand {
 
     public String getName() {
         return name;
+    }
+
+    public String getCode() {
+        return code;
     }
 
     public CategoryType getType() {

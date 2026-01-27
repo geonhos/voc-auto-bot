@@ -1,6 +1,6 @@
 package com.geonho.vocautobot.application.user.port.in;
 
-import com.geonho.vocautobot.domain.user.entity.User;
+import com.geonho.vocautobot.domain.user.User;
 
 /**
  * Use case for managing user activation status

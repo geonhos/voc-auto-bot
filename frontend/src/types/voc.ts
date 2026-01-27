@@ -22,8 +22,8 @@ export interface Voc {
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
-  category?: Category;
-  suggestedCategory?: Category;
+  category?: VocCategory;
+  suggestedCategory?: VocCategory;
   assignee?: Assignee;
   dueDate?: string;
   resolvedAt?: string;
@@ -37,7 +37,9 @@ export interface Voc {
   updatedAt: string;
 }
 
-export interface Category {
+// Use Category from category.ts
+// This simplified VocCategory is used in VOC responses
+export interface VocCategory {
   id: number;
   name: string;
   code: string;
@@ -144,11 +146,22 @@ export interface VocStatusLookupRequest {
   customerEmail: string;
 }
 
+export interface VocStatusHistoryItem {
+  id?: number;
+  status: VocStatus;
+  statusLabel: string;
+  changedAt: string;
+  changedBy?: string;
+}
+
 export interface VocStatusLookupResponse {
   ticketId: string;
   title: string;
   status: VocStatus;
   statusLabel: string;
+  priority?: VocPriority;
+  category?: string;
+  statusHistory?: VocStatusHistoryItem[];
   createdAt: string;
   updatedAt: string;
 }

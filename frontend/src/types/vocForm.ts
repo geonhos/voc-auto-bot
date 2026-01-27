@@ -29,7 +29,7 @@ export const vocFormSchema = z.object({
   categoryId: z.number({
     required_error: '카테고리를 선택해주세요',
     invalid_type_error: '카테고리를 선택해주세요',
-  }),
+  }).nullable(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT'], {
     required_error: '우선순위를 선택해주세요',
   }),

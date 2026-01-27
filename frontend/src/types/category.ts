@@ -20,7 +20,7 @@ export interface CreateCategoryRequest {
   name: string;
   code: string;
   description?: string;
-  parentId?: number;
+  parentId?: number | null;
   sortOrder?: number;
 }
 

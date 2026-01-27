@@ -1,8 +1,7 @@
 package com.geonho.vocautobot.application.category.usecase;
 
 import com.geonho.vocautobot.application.category.port.in.CreateCategoryUseCase;
-import com.geonho.vocautobot.application.category.port.in.dto.CategoryResult;
-import com.geonho.vocautobot.application.category.port.in.dto.CreateCategoryCommand;
+import com.geonho.vocautobot.application.category.port.in.CreateCategoryCommand;
 import com.geonho.vocautobot.application.category.port.out.LoadCategoryPort;
 import com.geonho.vocautobot.application.category.port.out.SaveCategoryPort;
 import com.geonho.vocautobot.application.common.UseCase;
@@ -20,21 +19,21 @@ public class CreateCategoryService implements CreateCategoryUseCase {
     private final SaveCategoryPort saveCategoryPort;
 
     @Override
-    public CategoryResult createCategory(CreateCategoryCommand command) {
-        validateDuplicateCode(command.code());
+    public Category createCategory(CreateCategoryCommand command) {
+        validateDuplicateCode(command.getCode());
 
         Category category;
-        if (command.parentId() == null) {
+        if (command.getParentId() == null) {
             // Create root category
             category = Category.createRoot(
-                    command.name(),
-                    command.code(),
-                    command.description(),
-                    command.sortOrder()
+                    command.getName(),
+                    command.getCode(),
+                    command.getDescription(),
+                    command.getSortOrder()
             );
         } else {
             // Create child category
-            Category parent = loadCategoryPort.loadById(command.parentId())
+            Category parent = loadCategoryPort.loadById(command.getParentId())
                     .orElseThrow(() -> new BusinessException("CATEGORY_NOT_FOUND", "상위 카테고리를 찾을 수 없습니다"));
 
             if (!parent.isActive()) {
@@ -42,17 +41,16 @@ public class CreateCategoryService implements CreateCategoryUseCase {
             }
 
             category = Category.createChild(
-                    command.name(),
-                    command.code(),
-                    command.description(),
-                    command.parentId(),
+                    command.getName(),
+                    command.getCode(),
+                    command.getDescription(),
+                    command.getParentId(),
                     parent.getLevel(),
-                    command.sortOrder()
+                    command.getSortOrder()
             );
         }
 
-        Category savedCategory = saveCategoryPort.save(category);
-        return CategoryResult.from(savedCategory);
+        return saveCategoryPort.save(category);
     }
 
     private void validateDuplicateCode(String code) {

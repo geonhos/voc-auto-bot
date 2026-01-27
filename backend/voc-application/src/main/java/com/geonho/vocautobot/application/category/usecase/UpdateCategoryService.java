@@ -1,8 +1,7 @@
 package com.geonho.vocautobot.application.category.usecase;
 
 import com.geonho.vocautobot.application.category.port.in.UpdateCategoryUseCase;
-import com.geonho.vocautobot.application.category.port.in.dto.CategoryResult;
-import com.geonho.vocautobot.application.category.port.in.dto.UpdateCategoryCommand;
+import com.geonho.vocautobot.application.category.port.in.UpdateCategoryCommand;
 import com.geonho.vocautobot.application.category.port.out.LoadCategoryPort;
 import com.geonho.vocautobot.application.category.port.out.SaveCategoryPort;
 import com.geonho.vocautobot.application.common.UseCase;
@@ -20,21 +19,21 @@ public class UpdateCategoryService implements UpdateCategoryUseCase {
     private final SaveCategoryPort saveCategoryPort;
 
     @Override
-    public CategoryResult updateCategory(Long categoryId, UpdateCategoryCommand command) {
-        Category category = loadCategoryPort.loadById(categoryId)
+    public Category updateCategory(UpdateCategoryCommand command) {
+        Category category = loadCategoryPort.loadById(command.getId())
                 .orElseThrow(() -> new BusinessException("CATEGORY_NOT_FOUND", "카테고리를 찾을 수 없습니다"));
 
-        if (command.name() != null || command.description() != null) {
-            String name = command.name() != null ? command.name() : category.getName();
-            String description = command.description() != null ? command.description() : category.getDescription();
-            category.updateInfo(name, description);
+        if (command.getName() != null || command.getDescription() != null) {
+            String name = command.getName() != null ? command.getName() : category.getName();
+            String description = command.getDescription() != null ? command.getDescription() : category.getDescription();
+            category.update(name, description, category.isActive(), category.getSortOrder());
         }
 
-        if (command.sortOrder() != null) {
-            category.updateSortOrder(command.sortOrder());
+        if (command.getSortOrder() > 0) {
+            category.update(category.getName(), category.getDescription(), category.isActive(), command.getSortOrder());
         }
 
-        if (command.isActive() != null) {
+        if (command.isActive() != category.isActive()) {
             if (command.isActive()) {
                 // When activating, check if parent is active
                 if (category.getParentId() != null) {
@@ -50,7 +49,6 @@ public class UpdateCategoryService implements UpdateCategoryUseCase {
             }
         }
 
-        Category savedCategory = saveCategoryPort.save(category);
-        return CategoryResult.from(savedCategory);
+        return saveCategoryPort.save(category);
     }
 }

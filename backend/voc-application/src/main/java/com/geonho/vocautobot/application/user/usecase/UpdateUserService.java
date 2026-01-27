@@ -3,12 +3,10 @@ package com.geonho.vocautobot.application.user.usecase;
 import com.geonho.vocautobot.application.common.UseCase;
 import com.geonho.vocautobot.application.common.exception.BusinessException;
 import com.geonho.vocautobot.application.user.port.in.UpdateUserUseCase;
-import com.geonho.vocautobot.application.user.port.in.dto.UpdateUserCommand;
-import com.geonho.vocautobot.application.user.port.in.dto.UserResult;
+import com.geonho.vocautobot.application.user.port.in.UpdateUserUseCase.UpdateUserCommand;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.user.port.out.SaveUserPort;
 import com.geonho.vocautobot.domain.user.User;
-import com.geonho.vocautobot.domain.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +19,8 @@ public class UpdateUserService implements UpdateUserUseCase {
     private final SaveUserPort saveUserPort;
 
     @Override
-    public UserResult updateUser(Long userId, UpdateUserCommand command) {
-        User user = loadUserPort.loadById(userId)
+    public User updateUser(UpdateUserCommand command) {
+        User user = loadUserPort.loadById(command.id())
                 .orElseThrow(() -> new BusinessException("USER_NOT_FOUND", "사용자를 찾을 수 없습니다"));
 
         if (command.name() != null || command.email() != null) {
@@ -37,19 +35,10 @@ public class UpdateUserService implements UpdateUserUseCase {
         }
 
         if (command.role() != null) {
-            user.changeRole(UserRole.valueOf(command.role()));
+            user.changeRole(command.role());
         }
 
-        if (command.isActive() != null) {
-            if (command.isActive()) {
-                user.activate();
-            } else {
-                user.deactivate();
-            }
-        }
-
-        User savedUser = saveUserPort.save(user);
-        return UserResult.from(savedUser);
+        return saveUserPort.save(user);
     }
 
     private void validateDuplicateEmail(String email) {

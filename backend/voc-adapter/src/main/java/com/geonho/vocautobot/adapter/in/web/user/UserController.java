@@ -2,7 +2,7 @@ package com.geonho.vocautobot.adapter.in.web.user;
 
 import com.geonho.vocautobot.adapter.in.web.user.dto.*;
 import com.geonho.vocautobot.application.user.port.in.*;
-import com.geonho.vocautobot.domain.user.entity.User;
+import com.geonho.vocautobot.domain.user.User;
 import com.geonho.vocautobot.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

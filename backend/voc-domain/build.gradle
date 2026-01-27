@@ -11,6 +11,10 @@ dependencies {
     // Jakarta Validation (for domain validation rules)
     implementation 'jakarta.validation:jakarta.validation-api'
 
+    // JPA and Spring Data (required for entity annotations and repositories)
+    implementation 'jakarta.persistence:jakarta.persistence-api'
+    implementation 'org.springframework.data:spring-data-jpa'
+
     // Optional: Add if using event publishing
     // implementation 'org.springframework:spring-context'
 }

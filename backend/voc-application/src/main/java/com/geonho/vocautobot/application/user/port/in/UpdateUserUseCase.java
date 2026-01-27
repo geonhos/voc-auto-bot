@@ -1,7 +1,7 @@
 package com.geonho.vocautobot.application.user.port.in;
 
-import com.geonho.vocautobot.domain.user.entity.User;
-import com.geonho.vocautobot.domain.user.entity.UserRole;
+import com.geonho.vocautobot.domain.user.User;
+import com.geonho.vocautobot.domain.user.UserRole;
 
 /**
  * Use case for updating user information

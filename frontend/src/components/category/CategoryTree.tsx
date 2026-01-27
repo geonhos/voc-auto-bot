@@ -7,13 +7,13 @@ import { cn } from '@/lib/utils';
 interface CategoryTreeProps {
   categories: CategoryTreeType[];
   onSelect: (category: CategoryTreeType) => void;
-  selectedId?: number;
+  selectedId?: number | undefined;
 }
 
 interface CategoryNodeProps {
   category: CategoryTreeType;
   onSelect: (category: CategoryTreeType) => void;
-  selectedId?: number;
+  selectedId?: number | undefined;
   level: number;
 }
 

@@ -18,31 +18,17 @@ public class ManageUserStatusService implements ManageUserStatusUseCase {
     private final SaveUserPort saveUserPort;
 
     @Override
-    public void activateUser(Long userId) {
+    public User activateUser(Long userId) {
         User user = findUser(userId);
         user.activate();
-        saveUserPort.save(user);
+        return saveUserPort.save(user);
     }
 
     @Override
-    public void deactivateUser(Long userId) {
+    public User deactivateUser(Long userId) {
         User user = findUser(userId);
         user.deactivate();
-        saveUserPort.save(user);
-    }
-
-    @Override
-    public void lockUser(Long userId) {
-        User user = findUser(userId);
-        user.lock();
-        saveUserPort.save(user);
-    }
-
-    @Override
-    public void unlockUser(Long userId) {
-        User user = findUser(userId);
-        user.unlock();
-        saveUserPort.save(user);
+        return saveUserPort.save(user);
     }
 
     private User findUser(Long userId) {

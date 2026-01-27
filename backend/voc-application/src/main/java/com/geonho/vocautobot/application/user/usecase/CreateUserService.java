@@ -4,8 +4,7 @@ import com.geonho.vocautobot.application.auth.port.out.PasswordEncoderPort;
 import com.geonho.vocautobot.application.common.UseCase;
 import com.geonho.vocautobot.application.common.exception.BusinessException;
 import com.geonho.vocautobot.application.user.port.in.CreateUserUseCase;
-import com.geonho.vocautobot.application.user.port.in.dto.CreateUserCommand;
-import com.geonho.vocautobot.application.user.port.in.dto.UserResult;
+import com.geonho.vocautobot.application.user.port.in.CreateUserUseCase.CreateUserCommand;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.user.port.out.SaveUserPort;
 import com.geonho.vocautobot.domain.user.User;
@@ -23,7 +22,7 @@ public class CreateUserService implements CreateUserUseCase {
     private final PasswordEncoderPort passwordEncoderPort;
 
     @Override
-    public UserResult createUser(CreateUserCommand command) {
+    public User createUser(CreateUserCommand command) {
         validateDuplicateUsername(command.username());
         validateDuplicateEmail(command.email());
 
@@ -32,14 +31,13 @@ public class CreateUserService implements CreateUserUseCase {
                 .password(passwordEncoderPort.encode(command.password()))
                 .name(command.name())
                 .email(command.email())
-                .role(UserRole.valueOf(command.role()))
+                .role(command.role())
                 .isActive(true)
                 .isLocked(false)
                 .failedLoginAttempts(0)
                 .build();
 
-        User savedUser = saveUserPort.save(user);
-        return UserResult.from(savedUser);
+        return saveUserPort.save(user);
     }
 
     private void validateDuplicateUsername(String username) {

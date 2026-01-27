@@ -5,15 +5,19 @@ plugins {
 description = 'VOC Auto Bot - Application Layer (Use Cases)'
 
 dependencies {
-    // Depend on domain module
-    implementation project(':voc-domain')
+    // Depend on domain module (api to expose to dependent modules)
+    api project(':voc-domain')
 
     // Spring for transaction management and dependency injection
     implementation 'org.springframework:spring-context'
     implementation 'org.springframework:spring-tx'
+    implementation 'org.springframework.data:spring-data-jpa'
 
     // Validation
     implementation 'jakarta.validation:jakarta.validation-api'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-api'
 
     // For ApplicationEventPublisher
     implementation 'org.springframework:spring-context'

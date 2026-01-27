@@ -5,8 +5,8 @@ import com.geonho.vocautobot.application.user.port.in.UpdateUserUseCase.UpdateUs
 import com.geonho.vocautobot.application.user.port.in.ChangePasswordUseCase.ChangePasswordCommand;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.user.port.out.SaveUserPort;
-import com.geonho.vocautobot.domain.user.entity.User;
-import com.geonho.vocautobot.domain.user.entity.UserRole;
+import com.geonho.vocautobot.domain.user.User;
+import com.geonho.vocautobot.domain.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,11 +47,12 @@ class UserServiceTest {
     void setUp() {
         testUser = User.builder()
                 .id(1L)
+                .username("testuser")
                 .email("test@example.com")
                 .password("encodedPassword")
                 .name("Test User")
-                .role(UserRole.AGENT)
-                .active(true)
+                .role(UserRole.OPERATOR)
+                .isActive(true)
                 .build();
     }
 
@@ -60,10 +61,11 @@ class UserServiceTest {
     void createUser_shouldSucceed() {
         // given
         CreateUserCommand command = new CreateUserCommand(
+                "newuser",
                 "new@example.com",
                 "password123",
                 "New User",
-                UserRole.AGENT
+                UserRole.OPERATOR
         );
 
         when(loadUserPort.existsByEmail(command.email())).thenReturn(false);
@@ -85,10 +87,11 @@ class UserServiceTest {
     void createUser_withDuplicateEmail_shouldThrowException() {
         // given
         CreateUserCommand command = new CreateUserCommand(
+                "existinguser",
                 "existing@example.com",
                 "password123",
                 "New User",
-                UserRole.AGENT
+                UserRole.OPERATOR
         );
 
         when(loadUserPort.existsByEmail(command.email())).thenReturn(true);
@@ -112,7 +115,7 @@ class UserServiceTest {
                 UserRole.MANAGER
         );
 
-        when(loadUserPort.findById(1L)).thenReturn(Optional.of(testUser));
+        when(loadUserPort.loadById(1L)).thenReturn(Optional.of(testUser));
         when(loadUserPort.existsByEmail(command.email())).thenReturn(false);
         when(saveUserPort.save(any(User.class))).thenReturn(testUser);
 
@@ -121,7 +124,7 @@ class UserServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        verify(loadUserPort).findById(1L);
+        verify(loadUserPort).loadById(1L);
         verify(saveUserPort).save(any(User.class));
     }
 
@@ -136,7 +139,7 @@ class UserServiceTest {
                 UserRole.MANAGER
         );
 
-        when(loadUserPort.findById(999L)).thenReturn(Optional.empty());
+        when(loadUserPort.loadById(999L)).thenReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> userService.updateUser(command))
@@ -154,7 +157,7 @@ class UserServiceTest {
                 "newPassword"
         );
 
-        when(loadUserPort.findById(1L)).thenReturn(Optional.of(testUser));
+        when(loadUserPort.loadById(1L)).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(command.currentPassword(), testUser.getPassword())).thenReturn(true);
         when(passwordEncoder.encode(command.newPassword())).thenReturn("newEncodedPassword");
 
@@ -162,8 +165,9 @@ class UserServiceTest {
         userService.changePassword(command);
 
         // then
-        verify(loadUserPort).findById(1L);
-        verify(passwordEncoder).matches(command.currentPassword(), testUser.getPassword());
+        verify(loadUserPort).loadById(1L);
+        // Use literal value since testUser.password is mutated during changePassword
+        verify(passwordEncoder).matches(command.currentPassword(), "encodedPassword");
         verify(passwordEncoder).encode(command.newPassword());
         verify(saveUserPort).save(any(User.class));
     }
@@ -178,7 +182,7 @@ class UserServiceTest {
                 "newPassword"
         );
 
-        when(loadUserPort.findById(1L)).thenReturn(Optional.of(testUser));
+        when(loadUserPort.loadById(1L)).thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(command.currentPassword(), testUser.getPassword())).thenReturn(false);
 
         // when & then
@@ -193,7 +197,7 @@ class UserServiceTest {
     @DisplayName("ID로 사용자 조회 성공")
     void getUserById_shouldSucceed() {
         // given
-        when(loadUserPort.findById(1L)).thenReturn(Optional.of(testUser));
+        when(loadUserPort.loadById(1L)).thenReturn(Optional.of(testUser));
 
         // when
         User result = userService.getUserById(1L);
@@ -201,14 +205,14 @@ class UserServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
-        verify(loadUserPort).findById(1L);
+        verify(loadUserPort).loadById(1L);
     }
 
     @Test
     @DisplayName("존재하지 않는 사용자 조회 시 예외 발생")
     void getUserById_withNonExistentUser_shouldThrowException() {
         // given
-        when(loadUserPort.findById(999L)).thenReturn(Optional.empty());
+        when(loadUserPort.loadById(999L)).thenReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> userService.getUserById(999L))
@@ -222,7 +226,7 @@ class UserServiceTest {
         // given
         Pageable pageable = PageRequest.of(0, 20);
         Page<User> userPage = new PageImpl<>(List.of(testUser), pageable, 1);
-        when(loadUserPort.findAll(pageable)).thenReturn(userPage);
+        when(loadUserPort.loadAll(pageable)).thenReturn(userPage);
 
         // when
         Page<User> result = userService.getAllUsers(pageable);
@@ -230,7 +234,7 @@ class UserServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
-        verify(loadUserPort).findAll(pageable);
+        verify(loadUserPort).loadAll(pageable);
     }
 
     @Test
@@ -239,14 +243,15 @@ class UserServiceTest {
         // given
         User inactiveUser = User.builder()
                 .id(1L)
+                .username("testuser")
                 .email("test@example.com")
                 .password("encodedPassword")
                 .name("Test User")
-                .role(UserRole.AGENT)
-                .active(false)
+                .role(UserRole.OPERATOR)
+                .isActive(false)
                 .build();
 
-        when(loadUserPort.findById(1L)).thenReturn(Optional.of(inactiveUser));
+        when(loadUserPort.loadById(1L)).thenReturn(Optional.of(inactiveUser));
         when(saveUserPort.save(any(User.class))).thenReturn(inactiveUser);
 
         // when
@@ -254,7 +259,7 @@ class UserServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        verify(loadUserPort).findById(1L);
+        verify(loadUserPort).loadById(1L);
         verify(saveUserPort).save(any(User.class));
     }
 
@@ -262,7 +267,7 @@ class UserServiceTest {
     @DisplayName("사용자 비활성화 성공")
     void deactivateUser_shouldSucceed() {
         // given
-        when(loadUserPort.findById(1L)).thenReturn(Optional.of(testUser));
+        when(loadUserPort.loadById(1L)).thenReturn(Optional.of(testUser));
         when(saveUserPort.save(any(User.class))).thenReturn(testUser);
 
         // when
@@ -270,7 +275,7 @@ class UserServiceTest {
 
         // then
         assertThat(result).isNotNull();
-        verify(loadUserPort).findById(1L);
+        verify(loadUserPort).loadById(1L);
         verify(saveUserPort).save(any(User.class));
     }
 }

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { Category, CategoryTree } from '@/types';
+import type { CategoryTree } from '@/types';
 import { useCreateCategory, useUpdateCategory } from '@/hooks/useCategories';
 import { cn } from '@/lib/utils';
 

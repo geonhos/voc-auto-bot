@@ -63,7 +63,7 @@ export function useDashboardViewModel(): UseDashboardViewModelReturn {
     if (!params.fromDate || !params.toDate) return '';
     const from = new Date(params.fromDate);
     const to = new Date(params.toDate);
-    return \`\${from.getFullYear()}.\${String(from.getMonth() + 1).padStart(2, '0')}.\${String(from.getDate()).padStart(2, '0')} - \${to.getFullYear()}.\${String(to.getMonth() + 1).padStart(2, '0')}.\${String(to.getDate()).padStart(2, '0')}\`;
+    return `${from.getFullYear()}.${String(from.getMonth() + 1).padStart(2, '0')}.${String(from.getDate()).padStart(2, '0')} - ${to.getFullYear()}.${String(to.getMonth() + 1).padStart(2, '0')}.${String(to.getDate()).padStart(2, '0')}`;
   }, [params]);
 
   const setCustomDateRange = (fromDate: string, toDate: string) => {

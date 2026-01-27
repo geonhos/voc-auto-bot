@@ -1,7 +1,7 @@
 package com.geonho.vocautobot.adapter.in.web.user.dto;
 
 import com.geonho.vocautobot.application.user.port.in.UpdateUserUseCase.UpdateUserCommand;
-import com.geonho.vocautobot.domain.user.entity.UserRole;
+import com.geonho.vocautobot.domain.user.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
