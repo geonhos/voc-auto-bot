@@ -1,6 +1,8 @@
 package com.geonho.vocautobot.application.category.usecase;
 
+import com.geonho.vocautobot.application.category.port.in.GetCategoryQuery;
 import com.geonho.vocautobot.application.category.port.in.GetCategoryUseCase;
+import com.geonho.vocautobot.domain.category.CategoryType;
 import com.geonho.vocautobot.application.category.port.in.dto.CategoryResult;
 import com.geonho.vocautobot.application.category.port.out.LoadCategoryPort;
 import com.geonho.vocautobot.application.common.UseCase;

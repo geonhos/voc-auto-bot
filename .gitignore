@@ -54,7 +54,9 @@ $RECYCLE.BIN/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 **/build/
-**/out/
+# IntelliJ output directories (not port/out adapters)
+**/out/*.class
+**/out/*.jar
 
 # Maven (if used)
 target/
@@ -92,7 +94,7 @@ pnpm-debug.log*
 
 # Next.js
 .next/
-out/
+frontend/out/
 .vercel/
 
 # Build
