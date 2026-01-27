@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useSidebarStore } from '@/store/sidebarStore';
 import { Sidebar, Header } from '@/components/layout';
 
 export default function MainLayout({
@@ -12,6 +13,7 @@ export default function MainLayout({
 }) {
   const router = useRouter();
   const { isAuthenticated, accessToken } = useAuthStore();
+  const { isCollapsed } = useSidebarStore();
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
@@ -31,7 +33,7 @@ export default function MainLayout({
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Sidebar />
       <Header />
-      <main className="ml-64 pt-16">
+      <main className={`pt-16 transition-all duration-300 ${isCollapsed ? 'ml-16' : 'ml-64'}`}>
         {children}
       </main>
     </div>

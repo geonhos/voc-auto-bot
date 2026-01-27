@@ -13,7 +13,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useSidebarStore } from '@/store/sidebarStore';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -63,7 +63,7 @@ const navItems: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const { isCollapsed: collapsed, toggle: toggleCollapsed } = useSidebarStore();
 
   return (
     <aside
@@ -80,7 +80,7 @@ export function Sidebar() {
           </Link>
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={toggleCollapsed}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           aria-label={collapsed ? '사이드바 펼치기' : '사이드바 접기'}
         >
