@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "VOC Public", description = "VOC 공개 조회 API (인증 불필요)")
 @RestController
-@RequestMapping("/api/v1/public/vocs")
+@RequestMapping("/v1/public/vocs")
 @RequiredArgsConstructor
 @Validated
 public class VocPublicController {

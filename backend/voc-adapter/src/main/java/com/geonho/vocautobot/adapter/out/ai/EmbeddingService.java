@@ -23,7 +23,6 @@ public class EmbeddingService {
 
     private static final Logger log = LoggerFactory.getLogger(EmbeddingService.class);
     private static final String EMBED_ENDPOINT = "/api/embed";
-    private static final String DEFAULT_EMBEDDING_MODEL = "nomic-embed-text";
 
     private final WebClient webClient;
     private final OllamaConfig config;
@@ -49,7 +48,7 @@ public class EmbeddingService {
 
         try {
             Map<String, Object> requestBody = Map.of(
-                    "model", DEFAULT_EMBEDDING_MODEL,
+                    "model", config.getEmbeddingModel(),
                     "input", text
             );
 
@@ -156,7 +155,7 @@ public class EmbeddingService {
      * @return 임베딩 모델명
      */
     public String getEmbeddingModel() {
-        return DEFAULT_EMBEDDING_MODEL;
+        return config.getEmbeddingModel();
     }
 
     /**

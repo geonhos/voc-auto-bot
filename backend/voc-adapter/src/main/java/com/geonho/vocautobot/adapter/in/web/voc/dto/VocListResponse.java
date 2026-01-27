@@ -10,7 +10,7 @@ import java.util.List;
 public record VocListResponse(
 
         @Schema(description = "VOC 목록")
-        List<VocResponse> vocs,
+        List<VocResponse> content,
 
         @Schema(description = "현재 페이지", example = "0")
         int page,
@@ -22,19 +22,31 @@ public record VocListResponse(
         long totalElements,
 
         @Schema(description = "전체 페이지 수", example = "5")
-        int totalPages
+        int totalPages,
+
+        @Schema(description = "첫 페이지 여부")
+        boolean first,
+
+        @Schema(description = "마지막 페이지 여부")
+        boolean last,
+
+        @Schema(description = "빈 페이지 여부")
+        boolean empty
 ) {
     public static VocListResponse from(Page<Voc> vocPage) {
-        List<VocResponse> vocs = vocPage.getContent().stream()
+        List<VocResponse> content = vocPage.getContent().stream()
                 .map(VocResponse::from)
                 .toList();
 
         return new VocListResponse(
-                vocs,
+                content,
                 vocPage.getNumber(),
                 vocPage.getSize(),
                 vocPage.getTotalElements(),
-                vocPage.getTotalPages()
+                vocPage.getTotalPages(),
+                vocPage.isFirst(),
+                vocPage.isLast(),
+                vocPage.isEmpty()
         );
     }
 }

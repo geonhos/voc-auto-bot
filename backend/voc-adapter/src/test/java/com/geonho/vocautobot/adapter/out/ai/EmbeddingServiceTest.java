@@ -53,7 +53,7 @@ class EmbeddingServiceTest {
         String text = "테스트 VOC 내용입니다";
         String mockResponse = """
             {
-                "model": "nomic-embed-text",
+                "model": "nomic-embed-text:latest",
                 "embeddings": [[0.1, 0.2, 0.3, 0.4, 0.5]]
             }
             """;
@@ -83,7 +83,7 @@ class EmbeddingServiceTest {
         String text = "테스트 VOC 내용입니다";
         String invalidResponse = """
             {
-                "model": "nomic-embed-text"
+                "model": "nomic-embed-text:latest"
             }
             """;
 
@@ -106,7 +106,7 @@ class EmbeddingServiceTest {
         String[] texts = {"첫 번째 텍스트", "두 번째 텍스트"};
         String mockResponse = """
             {
-                "model": "nomic-embed-text",
+                "model": "nomic-embed-text:latest",
                 "embeddings": [[0.1, 0.2, 0.3]]
             }
             """;
@@ -135,7 +135,7 @@ class EmbeddingServiceTest {
         String model = embeddingService.getEmbeddingModel();
 
         // then
-        assertThat(model).isEqualTo("nomic-embed-text");
+        assertThat(model).isEqualTo("nomic-embed-text:latest");
     }
 
     @Test

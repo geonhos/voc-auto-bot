@@ -10,7 +10,7 @@ import java.util.List;
 public record UserListResponse(
 
         @Schema(description = "사용자 목록")
-        List<UserResponse> users,
+        List<UserResponse> content,
 
         @Schema(description = "현재 페이지", example = "0")
         int page,
@@ -22,19 +22,31 @@ public record UserListResponse(
         long totalElements,
 
         @Schema(description = "전체 페이지 수", example = "5")
-        int totalPages
+        int totalPages,
+
+        @Schema(description = "첫 페이지 여부")
+        boolean first,
+
+        @Schema(description = "마지막 페이지 여부")
+        boolean last,
+
+        @Schema(description = "빈 페이지 여부")
+        boolean empty
 ) {
     public static UserListResponse from(Page<User> userPage) {
-        List<UserResponse> users = userPage.getContent().stream()
+        List<UserResponse> content = userPage.getContent().stream()
                 .map(UserResponse::from)
                 .toList();
 
         return new UserListResponse(
-                users,
+                content,
                 userPage.getNumber(),
                 userPage.getSize(),
                 userPage.getTotalElements(),
-                userPage.getTotalPages()
+                userPage.getTotalPages(),
+                userPage.isFirst(),
+                userPage.isLast(),
+                userPage.isEmpty()
         );
     }
 }
