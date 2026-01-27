@@ -9,13 +9,17 @@ import { VocInputPage, VocTablePage } from '../page-objects';
  * Run with: npx playwright test e2e/voc/voc-real-api.spec.ts --project=chromium
  *
  * Environment variables:
- * - TEST_ADMIN_EMAIL: Admin email for login (default: test-admin@example.com)
- * - TEST_ADMIN_PASSWORD: Admin password for login (default: Test123!)
+ * - TEST_ADMIN_EMAIL: Admin email for login (required)
+ * - TEST_ADMIN_PASSWORD: Admin password for login (required)
  */
 
 // Test credentials from environment variables
-const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'test-admin@example.com';
-const TEST_ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'Test123!';
+const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL;
+const TEST_ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
+
+if (!TEST_ADMIN_EMAIL || !TEST_ADMIN_PASSWORD) {
+  throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD must be set in environment variables');
+}
 
 // Use a fresh browser context without mock auth
 test.use({ storageState: { cookies: [], origins: [] } });
