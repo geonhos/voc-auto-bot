@@ -5,10 +5,10 @@ public class UpdateCategoryCommand {
     private final Long id;
     private final String name;
     private final String description;
-    private final boolean isActive;
-    private final int sortOrder;
+    private final Boolean isActive;
+    private final Integer sortOrder;
 
-    public UpdateCategoryCommand(Long id, String name, String description, boolean isActive, int sortOrder) {
+    public UpdateCategoryCommand(Long id, String name, String description, Boolean isActive, Integer sortOrder) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -28,11 +28,11 @@ public class UpdateCategoryCommand {
         return description;
     }
 
-    public boolean isActive() {
+    public Boolean getIsActive() {
         return isActive;
     }
 
-    public int getSortOrder() {
+    public Integer getSortOrder() {
         return sortOrder;
     }
 }

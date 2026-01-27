@@ -29,12 +29,12 @@ public class UpdateCategoryService implements UpdateCategoryUseCase {
             category.update(name, description, category.isActive(), category.getSortOrder());
         }
 
-        if (command.getSortOrder() > 0) {
+        if (command.getSortOrder() != null && command.getSortOrder() > 0) {
             category.update(category.getName(), category.getDescription(), category.isActive(), command.getSortOrder());
         }
 
-        if (command.isActive() != category.isActive()) {
-            if (command.isActive()) {
+        if (command.getIsActive() != null && command.getIsActive() != category.isActive()) {
+            if (command.getIsActive()) {
                 // When activating, check if parent is active
                 if (category.getParentId() != null) {
                     Category parent = loadCategoryPort.loadById(category.getParentId())

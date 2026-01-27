@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.adapter.in.web.category.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.geonho.vocautobot.domain.category.Category;
 import com.geonho.vocautobot.domain.category.CategoryType;
 import lombok.Builder;
@@ -15,6 +16,7 @@ public class CategoryTreeResponse {
     private Long id;
     private String name;
     private CategoryType type;
+    @JsonProperty("isActive")
     private boolean isActive;
     private int sortOrder;
     private List<CategoryTreeResponse> children;
