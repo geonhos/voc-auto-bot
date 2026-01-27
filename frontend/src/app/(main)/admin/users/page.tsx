@@ -1,17 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useUsers } from '@/hooks/useUsers';
+import { useAuthStore } from '@/store/authStore';
 import { UserTable } from '@/components/user/UserTable';
 import { UserForm } from '@/components/user/UserForm';
 import type { User, UserRole } from '@/types';
 
 export default function UsersPage() {
+  const router = useRouter();
+  const { hasRole, isAuthenticated } = useAuthStore();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | ''>('');
   const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | ''>('');
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !hasRole('ADMIN')) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, hasRole, router]);
 
   const { data, isLoading, refetch } = useUsers({
     search: search || undefined,
@@ -20,6 +30,10 @@ export default function UsersPage() {
   });
 
   const users = data?.data?.content || [];
+
+  if (!isAuthenticated || !hasRole('ADMIN')) {
+    return null;
+  }
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
