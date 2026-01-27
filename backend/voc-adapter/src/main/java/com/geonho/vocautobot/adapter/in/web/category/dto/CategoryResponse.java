@@ -1,6 +1,7 @@
 package com.geonho.vocautobot.adapter.in.web.category.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.geonho.vocautobot.domain.category.Category;
 import com.geonho.vocautobot.domain.category.CategoryType;
 import lombok.Builder;
@@ -18,6 +19,7 @@ public class CategoryResponse {
     private Long parentId;
     private String parentName;
     private String description;
+    @JsonProperty("isActive")
     private boolean isActive;
     private int sortOrder;
 

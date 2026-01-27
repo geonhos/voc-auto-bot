@@ -10,6 +10,14 @@ import java.util.stream.Collectors;
 public class CategoryMapper {
 
     public Category toDomain(CategoryJpaEntity entity) {
+        return toDomain(entity, true);
+    }
+
+    /**
+     * Convert entity to domain with option to include children.
+     * This prevents infinite recursion in parent-child relationships.
+     */
+    public Category toDomain(CategoryJpaEntity entity, boolean includeChildren) {
         if (entity == null) {
             return null;
         }
@@ -28,13 +36,12 @@ public class CategoryMapper {
                 entity.getUpdatedAt()
         );
 
-        if (entity.getParent() != null) {
-            category.setParent(toDomain(entity.getParent()));
-        }
+        // Don't recursively load parent to avoid infinite loop
+        // Parent info is already available via parentId
 
-        if (entity.getChildren() != null && !entity.getChildren().isEmpty()) {
+        if (includeChildren && entity.getChildren() != null && !entity.getChildren().isEmpty()) {
             List<Category> children = entity.getChildren().stream()
-                    .map(this::toDomain)
+                    .map(child -> toDomain(child, true))
                     .collect(Collectors.toList());
             category.setChildren(children);
         }

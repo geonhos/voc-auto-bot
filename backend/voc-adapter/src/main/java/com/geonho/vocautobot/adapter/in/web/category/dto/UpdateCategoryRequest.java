@@ -26,8 +26,16 @@ public class UpdateCategoryRequest {
                 id,
                 name,
                 description,
-                isActive != null ? isActive : true,
-                sortOrder != null ? sortOrder : 1
+                isActive,
+                sortOrder
         );
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
     }
 }
