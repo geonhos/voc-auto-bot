@@ -36,7 +36,7 @@ export function useVocFormViewModel({
       parentCategoryId: null,
       priority: 'MEDIUM',
       customerName: '',
-      customerPhone: '',
+      customerEmail: '',
       files: [],
     },
   });
@@ -71,8 +71,7 @@ export function useVocFormViewModel({
       priority: values.priority,
       channel: 'WEB' as const,
       customerName: values.customerName || 'Anonymous',
-      customerEmail: 'customer@example.com', // TODO: 실제 고객 이메일 사용
-      customerPhone: values.customerPhone || undefined,
+      customerEmail: values.customerEmail!,
       files: values.files || [],
     };
 
@@ -87,7 +86,7 @@ export function useVocFormViewModel({
       parentCategoryId: null,
       priority: 'MEDIUM',
       customerName: '',
-      customerPhone: '',
+      customerEmail: '',
       files: [],
     });
   };

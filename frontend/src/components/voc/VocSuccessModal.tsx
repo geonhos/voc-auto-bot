@@ -20,7 +20,7 @@ export function VocSuccessModal({ isOpen, ticketId, onClose, onNewVoc }: VocSucc
   if (!isOpen) return null;
 
   const handleGoToList = () => {
-    router.push('/voc/list');
+    router.push('/voc/table');
     onClose();
   };
 

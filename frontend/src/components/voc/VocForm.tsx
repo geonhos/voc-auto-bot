@@ -142,7 +142,7 @@ export function VocForm() {
 
         {/* 고객 정보 */}
         <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">고객 정보 (선택)</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-4">고객 정보</h3>
 
           <div className="space-y-4">
             {/* 고객명 */}
@@ -170,27 +170,27 @@ export function VocForm() {
               )}
             </div>
 
-            {/* 고객 연락처 */}
+            {/* 고객 이메일 */}
             <div>
-              <label htmlFor="customerPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                연락처
+              <label htmlFor="customerEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                이메일 <span className="text-red-500">*</span>
               </label>
               <input
-                id="customerPhone"
-                type="tel"
-                {...register('customerPhone')}
-                placeholder="연락처를 입력하세요 (예: 010-1234-5678)"
+                id="customerEmail"
+                type="email"
+                {...register('customerEmail')}
+                placeholder="이메일을 입력하세요 (예: customer@example.com)"
                 className={cn(
                   'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-                  errors.customerPhone
+                  errors.customerEmail
                     ? 'border-red-500 focus:ring-red-200'
                     : 'border-gray-300 focus:ring-blue-200'
                 )}
-                aria-invalid={!!errors.customerPhone}
+                aria-invalid={!!errors.customerEmail}
               />
-              {errors.customerPhone && (
+              {errors.customerEmail && (
                 <p className="mt-1 text-sm text-red-600" role="alert">
-                  {errors.customerPhone.message}
+                  {errors.customerEmail.message}
                 </p>
               )}
             </div>

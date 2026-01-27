@@ -86,6 +86,7 @@ export interface CreateVocRequest {
   title: string;
   content: string;
   channel: VocChannel;
+  status?: VocStatus;
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
