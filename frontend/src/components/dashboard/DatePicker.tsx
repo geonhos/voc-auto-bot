@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
 import { format, startOfDay, endOfDay, isAfter, isBefore } from 'date-fns';
@@ -12,6 +12,7 @@ export interface DatePickerProps {
   onApply: (startDate: string, endDate: string) => void;
   initialStartDate?: string;
   initialEndDate?: string;
+  children?: React.ReactNode;
 }
 
 export function DatePicker({
@@ -20,6 +21,7 @@ export function DatePicker({
   onApply,
   initialStartDate,
   initialEndDate,
+  children,
 }: DatePickerProps) {
   const [startDate, setStartDate] = useState<string>(
     initialStartDate || format(new Date(), 'yyyy-MM-dd')
@@ -28,6 +30,15 @@ export function DatePicker({
     initialEndDate || format(new Date(), 'yyyy-MM-dd')
   );
   const [error, setError] = useState<string>('');
+
+  // MAJ-002: Reset state when popover reopens
+  useEffect(() => {
+    if (isOpen) {
+      setStartDate(initialStartDate || format(new Date(), 'yyyy-MM-dd'));
+      setEndDate(initialEndDate || format(new Date(), 'yyyy-MM-dd'));
+      setError('');
+    }
+  }, [isOpen, initialStartDate, initialEndDate]);
 
   const handleApply = () => {
     setError('');
@@ -64,6 +75,11 @@ export function DatePicker({
 
   return (
     <Popover.Root open={isOpen} onOpenChange={onOpenChange}>
+      {children && (
+        <Popover.Trigger asChild>
+          {children}
+        </Popover.Trigger>
+      )}
       <Popover.Portal>
         <Popover.Content
           className="z-50 w-80 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-lg"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   BarChart3Icon,
   ClockIcon,
@@ -36,9 +36,10 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDateRangeApply = (startDate: string, endDate: string) => {
+  // MAJ-003: Memoize handler to prevent unnecessary re-renders
+  const handleDateRangeApply = useCallback((startDate: string, endDate: string) => {
     setCustomDateRange(startDate, endDate);
-  };
+  }, [setCustomDateRange]);
 
   if (isLoading) {
     return (
@@ -127,26 +128,27 @@ export default function DashboardPage() {
                 >
                   30일
                 </button>
-                <button
-                  onClick={() => handlePeriodChange('custom')}
-                  className={`px-4 py-2 text-sm font-medium rounded border transition-colors flex items-center gap-1 ${
-                    period === 'custom'
-                      ? 'bg-primary text-white border-primary'
-                      : 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                  aria-pressed={period === 'custom'}
-                  aria-label="사용자 지정 날짜 범위"
-                >
-                  <CalendarIcon className="h-4 w-4" />
-                  <span>사용자 지정</span>
-                </button>
                 <DatePicker
                   isOpen={isDatePickerOpen}
                   onOpenChange={setIsDatePickerOpen}
                   onApply={handleDateRangeApply}
                   initialStartDate={customDateRange.fromDate}
                   initialEndDate={customDateRange.toDate}
-                />
+                >
+                  <button
+                    onClick={() => handlePeriodChange('custom')}
+                    className={`px-4 py-2 text-sm font-medium rounded border transition-colors flex items-center gap-1 ${
+                      period === 'custom'
+                        ? 'bg-primary text-white border-primary'
+                        : 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                    aria-pressed={period === 'custom'}
+                    aria-label="사용자 지정 날짜 범위"
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                    <span>사용자 지정</span>
+                  </button>
+                </DatePicker>
               </div>
               <div className="ml-auto">
                 <button
