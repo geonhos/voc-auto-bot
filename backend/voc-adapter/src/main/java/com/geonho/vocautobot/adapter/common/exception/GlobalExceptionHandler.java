@@ -13,6 +13,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import static com.geonho.vocautobot.adapter.common.exception.ErrorCodes.*;
+
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -21,7 +23,7 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
         log.error("BusinessException: {}", e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(e.getHttpStatus())
                 .body(ApiResponse.error(e.getErrorCode(), e.getMessage()));
     }
 
@@ -35,7 +37,7 @@ public class GlobalExceptionHandler {
                 .orElse("입력값이 올바르지 않습니다");
         return ResponseEntity
                 .badRequest()
-                .body(ApiResponse.error("INVALID_INPUT", message));
+                .body(ApiResponse.error(INVALID_INPUT, message));
     }
 
     @ExceptionHandler(BindException.class)
@@ -47,7 +49,7 @@ public class GlobalExceptionHandler {
                 .orElse("입력값이 올바르지 않습니다");
         return ResponseEntity
                 .badRequest()
-                .body(ApiResponse.error("INVALID_INPUT", message));
+                .body(ApiResponse.error(INVALID_INPUT, message));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -56,7 +58,7 @@ public class GlobalExceptionHandler {
         log.error("HttpRequestMethodNotSupportedException: {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
-                .body(ApiResponse.error("METHOD_NOT_ALLOWED", "지원하지 않는 HTTP 메서드입니다"));
+                .body(ApiResponse.error(METHOD_NOT_ALLOWED, "지원하지 않는 HTTP 메서드입니다"));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -64,7 +66,7 @@ public class GlobalExceptionHandler {
         log.error("AccessDeniedException: {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(ApiResponse.error("FORBIDDEN", "접근 권한이 없습니다"));
+                .body(ApiResponse.error(FORBIDDEN, "접근 권한이 없습니다"));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -72,7 +74,7 @@ public class GlobalExceptionHandler {
         log.error("BadCredentialsException: {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("INVALID_CREDENTIALS", "이메일 또는 비밀번호가 올바르지 않습니다"));
+                .body(ApiResponse.error(INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다"));
     }
 
     @ExceptionHandler(Exception.class)
@@ -80,6 +82,6 @@ public class GlobalExceptionHandler {
         log.error("Exception: ", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다"));
+                .body(ApiResponse.error(INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다"));
     }
 }
