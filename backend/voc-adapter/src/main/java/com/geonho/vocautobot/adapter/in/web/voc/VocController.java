@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Tag(name = "VOC", description = "VOC 관리 API (인증 필요)")
 @RestController
-@RequestMapping("/api/v1/vocs")
+@RequestMapping("/v1/vocs")
 @RequiredArgsConstructor
 public class VocController {
 

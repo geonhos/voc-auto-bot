@@ -13,7 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class OllamaConfig {
 
     private String baseUrl = "http://localhost:11434";
-    private String model = "llama3.2";
+    private String model = "gpt-oss:20b";
+    private String embeddingModel = "nomic-embed-text:latest";
     private int timeout = 30000;
     private int maxRetries = 3;
 
@@ -38,6 +39,14 @@ public class OllamaConfig {
 
     public void setModel(String model) {
         this.model = model;
+    }
+
+    public String getEmbeddingModel() {
+        return embeddingModel;
+    }
+
+    public void setEmbeddingModel(String embeddingModel) {
+        this.embeddingModel = embeddingModel;
     }
 
     public int getTimeout() {

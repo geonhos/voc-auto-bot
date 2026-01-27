@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @Tag(name = "Email Template", description = "이메일 템플릿 관리 API")
 @RestController
-@RequestMapping("/api/v1/email-templates")
+@RequestMapping("/v1/email-templates")
 @RequiredArgsConstructor
 public class EmailTemplateController {
 

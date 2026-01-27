@@ -24,8 +24,10 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort,
     // ======= Auth LoadUserPort =======
 
     @Override
-    public Optional<AuthUserInfo> loadUserByUsername(String username) {
-        return userJpaRepository.findByUsername(username)
+    public Optional<AuthUserInfo> loadUserByUsername(String usernameOrEmail) {
+        // Try to find by email first, then by username
+        return userJpaRepository.findByEmail(usernameOrEmail)
+                .or(() -> userJpaRepository.findByUsername(usernameOrEmail))
                 .map(this::toAuthUserInfo);
     }
 

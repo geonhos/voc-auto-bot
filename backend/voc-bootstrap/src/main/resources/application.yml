@@ -98,7 +98,8 @@ opensearch:
 # Ollama (LLM)
 ollama:
   base-url: http://localhost:11434
-  model: llama2
+  model: gpt-oss:20b
+  embedding-model: nomic-embed-text:latest
 
 # Logging
 logging:
@@ -165,7 +166,8 @@ opensearch:
 # Ollama (LLM)
 ollama:
   base-url: ${LLM_API_URL:http://ollama:11434}
-  model: ${LLM_MODEL:llama2}
+  model: ${LLM_MODEL:gpt-oss:20b}
+  embedding-model: ${LLM_EMBEDDING_MODEL:nomic-embed-text:latest}
 
 # Logging
 logging:
