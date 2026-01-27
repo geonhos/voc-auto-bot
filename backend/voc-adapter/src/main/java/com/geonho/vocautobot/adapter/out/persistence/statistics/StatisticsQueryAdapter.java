@@ -67,20 +67,40 @@ public class StatisticsQueryAdapter implements StatisticsQueryPort {
 
     @Override
     public Map<LocalDate, Long> countVocsByDateRange(LocalDate startDate, LocalDate endDate) {
+        // Convert LocalDate to LocalDateTime for proper comparison with createdAt
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+
         TypedQuery<Object[]> query = entityManager.createQuery(
-                "SELECT CAST(v.createdAt AS date), COUNT(v) FROM VocJpaEntity v " +
-                        "WHERE CAST(v.createdAt AS date) BETWEEN :startDate AND :endDate " +
-                        "GROUP BY CAST(v.createdAt AS date) " +
-                        "ORDER BY CAST(v.createdAt AS date)",
+                "SELECT FUNCTION('DATE', v.createdAt), COUNT(v) FROM VocJpaEntity v " +
+                        "WHERE v.createdAt >= :startDateTime AND v.createdAt < :endDateTime " +
+                        "GROUP BY FUNCTION('DATE', v.createdAt) " +
+                        "ORDER BY FUNCTION('DATE', v.createdAt)",
                 Object[].class);
-        query.setParameter("startDate", startDate);
-        query.setParameter("endDate", endDate);
+        query.setParameter("startDateTime", startDateTime);
+        query.setParameter("endDateTime", endDateTime);
 
         Map<LocalDate, Long> result = new HashMap<>();
         List<Object[]> results = query.getResultList();
 
         for (Object[] row : results) {
-            LocalDate date = (LocalDate) row[0];
+            // Handle different possible return types from FUNCTION('DATE', ...)
+            LocalDate date;
+            Object dateObj = row[0];
+            if (dateObj instanceof LocalDate) {
+                date = (LocalDate) dateObj;
+            } else if (dateObj instanceof java.sql.Date) {
+                date = ((java.sql.Date) dateObj).toLocalDate();
+            } else if (dateObj instanceof java.util.Date) {
+                date = ((java.util.Date) dateObj).toInstant()
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toLocalDate();
+            } else if (dateObj instanceof LocalDateTime) {
+                date = ((LocalDateTime) dateObj).toLocalDate();
+            } else {
+                // Fallback: try to parse as string
+                date = LocalDate.parse(dateObj.toString().substring(0, 10));
+            }
             Long count = (Long) row[1];
             result.put(date, count);
         }
