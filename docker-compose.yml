@@ -173,8 +173,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:-my-super-secret-jwt-key-for-voc-auto-bot-application}
       OPENSEARCH_HOST: opensearch
       OPENSEARCH_PORT: 9200
-      LLM_API_URL: ${LLM_API_URL:-http://ollama:11434/api/generate}
-      LLM_MODEL: ${LLM_MODEL:-llama2}
+      LLM_API_URL: ${LLM_API_URL:-http://ollama:11434}
+      LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
+      LLM_EMBEDDING_MODEL: ${LLM_EMBEDDING_MODEL:-nomic-embed-text:latest}
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minio_admin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio_password}
