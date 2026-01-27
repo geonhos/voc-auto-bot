@@ -71,4 +71,11 @@ public record LogAnalysisResult(
             summary
         );
     }
+
+    /**
+     * 빈 결과 생성 (기본 메시지)
+     */
+    public static LogAnalysisResult empty() {
+        return empty("OpenSearch is not available");
+    }
 }
