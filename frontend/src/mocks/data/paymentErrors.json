@@ -1,0 +1,274 @@
+{
+  "paymentErrorLogs": [
+    {
+      "id": "ERR-001",
+      "timestamp": "2026-01-28T10:30:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "errorCode": "PAYMENT_TIMEOUT",
+      "message": "결제 처리 시간 초과 - 외부 PG사 응답 지연",
+      "accountId": "ACC-12345",
+      "transactionId": "TXN-67890",
+      "amount": 50000,
+      "currency": "KRW",
+      "cardLast4": "1234",
+      "merchantId": "MERCHANT-001",
+      "metadata": {
+        "pgProvider": "NICE_PAY",
+        "timeoutSeconds": 30,
+        "retryCount": 3
+      }
+    },
+    {
+      "id": "ERR-002",
+      "timestamp": "2026-01-28T11:15:00Z",
+      "level": "CRITICAL",
+      "service": "payment-service",
+      "errorCode": "INSUFFICIENT_BALANCE",
+      "message": "결제 실패 - 잔액 부족",
+      "accountId": "ACC-23456",
+      "transactionId": "TXN-67891",
+      "amount": 150000,
+      "currency": "KRW",
+      "cardLast4": "5678",
+      "merchantId": "MERCHANT-002",
+      "metadata": {
+        "availableBalance": 120000,
+        "requestedAmount": 150000
+      }
+    },
+    {
+      "id": "ERR-003",
+      "timestamp": "2026-01-28T12:00:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "errorCode": "INVALID_CARD",
+      "message": "결제 실패 - 유효하지 않은 카드 정보",
+      "accountId": "ACC-34567",
+      "transactionId": "TXN-67892",
+      "amount": 25000,
+      "currency": "KRW",
+      "cardLast4": "9999",
+      "merchantId": "MERCHANT-003",
+      "metadata": {
+        "validationError": "Invalid card number format",
+        "cardType": "UNKNOWN"
+      }
+    },
+    {
+      "id": "ERR-004",
+      "timestamp": "2026-01-28T13:30:00Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "errorCode": "CARD_EXPIRED",
+      "message": "결제 실패 - 카드 유효기간 만료",
+      "accountId": "ACC-45678",
+      "transactionId": "TXN-67893",
+      "amount": 80000,
+      "currency": "KRW",
+      "cardLast4": "3456",
+      "merchantId": "MERCHANT-001",
+      "metadata": {
+        "cardExpiryDate": "2025-12-31",
+        "currentDate": "2026-01-28"
+      }
+    },
+    {
+      "id": "ERR-005",
+      "timestamp": "2026-01-28T14:45:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "errorCode": "NETWORK_ERROR",
+      "message": "결제 실패 - 네트워크 연결 오류",
+      "accountId": "ACC-56789",
+      "transactionId": "TXN-67894",
+      "amount": 200000,
+      "currency": "KRW",
+      "cardLast4": "7890",
+      "merchantId": "MERCHANT-002",
+      "metadata": {
+        "errorType": "CONNECTION_TIMEOUT",
+        "pgEndpoint": "https://api.pgprovider.com/v1/pay",
+        "httpStatusCode": 503
+      }
+    },
+    {
+      "id": "ERR-006",
+      "timestamp": "2026-01-28T15:20:00Z",
+      "level": "CRITICAL",
+      "service": "payment-service",
+      "errorCode": "FRAUD_DETECTED",
+      "message": "결제 차단 - 이상 거래 감지",
+      "accountId": "ACC-67890",
+      "transactionId": "TXN-67895",
+      "amount": 500000,
+      "currency": "KRW",
+      "cardLast4": "2345",
+      "merchantId": "MERCHANT-004",
+      "metadata": {
+        "fraudScore": 0.89,
+        "fraudReason": "Unusual transaction pattern",
+        "blockedBy": "FDS_SYSTEM"
+      }
+    },
+    {
+      "id": "ERR-007",
+      "timestamp": "2026-01-28T16:10:00Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "errorCode": "DAILY_LIMIT_EXCEEDED",
+      "message": "결제 실패 - 일일 한도 초과",
+      "accountId": "ACC-78901",
+      "transactionId": "TXN-67896",
+      "amount": 100000,
+      "currency": "KRW",
+      "cardLast4": "6789",
+      "merchantId": "MERCHANT-001",
+      "metadata": {
+        "dailyLimit": 1000000,
+        "todayTotal": 950000,
+        "requestedAmount": 100000
+      }
+    },
+    {
+      "id": "ERR-008",
+      "timestamp": "2026-01-28T17:00:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "errorCode": "SYSTEM_ERROR",
+      "message": "결제 실패 - 내부 시스템 오류",
+      "accountId": "ACC-89012",
+      "transactionId": "TXN-67897",
+      "amount": 75000,
+      "currency": "KRW",
+      "cardLast4": "4567",
+      "merchantId": "MERCHANT-003",
+      "metadata": {
+        "errorClass": "DatabaseConnectionException",
+        "errorMessage": "Unable to connect to payment database",
+        "stackTrace": "at com.payment.service.PaymentService.process(PaymentService.java:123)"
+      }
+    },
+    {
+      "id": "ERR-009",
+      "timestamp": "2026-01-28T18:15:00Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "errorCode": "AUTHENTICATION_FAILED",
+      "message": "결제 실패 - 카드 인증 실패",
+      "accountId": "ACC-90123",
+      "transactionId": "TXN-67898",
+      "amount": 60000,
+      "currency": "KRW",
+      "cardLast4": "8901",
+      "merchantId": "MERCHANT-002",
+      "metadata": {
+        "authenticationType": "3DS",
+        "failureReason": "Incorrect OTP code",
+        "attemptCount": 3
+      }
+    },
+    {
+      "id": "ERR-010",
+      "timestamp": "2026-01-28T19:30:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "errorCode": "DUPLICATE_TRANSACTION",
+      "message": "결제 차단 - 중복 거래 요청",
+      "accountId": "ACC-01234",
+      "transactionId": "TXN-67899",
+      "amount": 45000,
+      "currency": "KRW",
+      "cardLast4": "0123",
+      "merchantId": "MERCHANT-001",
+      "metadata": {
+        "originalTransactionId": "TXN-67880",
+        "originalTimestamp": "2026-01-28T19:28:00Z",
+        "timeDifferenceSeconds": 120
+      }
+    },
+    {
+      "id": "ERR-011",
+      "timestamp": "2026-01-28T20:00:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "errorCode": "MERCHANT_NOT_FOUND",
+      "message": "결제 실패 - 가맹점 정보 없음",
+      "accountId": "ACC-11111",
+      "transactionId": "TXN-67900",
+      "amount": 90000,
+      "currency": "KRW",
+      "cardLast4": "1111",
+      "merchantId": "MERCHANT-999",
+      "metadata": {
+        "requestedMerchantId": "MERCHANT-999",
+        "searchAttempted": true
+      }
+    },
+    {
+      "id": "ERR-012",
+      "timestamp": "2026-01-28T21:00:00Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "errorCode": "CURRENCY_NOT_SUPPORTED",
+      "message": "결제 실패 - 지원하지 않는 통화",
+      "accountId": "ACC-22222",
+      "transactionId": "TXN-67901",
+      "amount": 100,
+      "currency": "XYZ",
+      "cardLast4": "2222",
+      "merchantId": "MERCHANT-001",
+      "metadata": {
+        "requestedCurrency": "XYZ",
+        "supportedCurrencies": ["KRW", "USD", "EUR", "JPY"]
+      }
+    }
+  ],
+  "paymentTransactions": [
+    {
+      "id": "TXN-001",
+      "transactionId": "TXN-67890",
+      "accountId": "ACC-12345",
+      "amount": 50000,
+      "currency": "KRW",
+      "status": "TIMEOUT",
+      "errorCode": "PAYMENT_TIMEOUT",
+      "errorMessage": "결제 처리 시간 초과",
+      "cardLast4": "1234",
+      "merchantId": "MERCHANT-001",
+      "createdAt": "2026-01-28T10:29:30Z",
+      "updatedAt": "2026-01-28T10:30:00Z",
+      "failedAt": "2026-01-28T10:30:00Z"
+    },
+    {
+      "id": "TXN-002",
+      "transactionId": "TXN-67891",
+      "accountId": "ACC-23456",
+      "amount": 150000,
+      "currency": "KRW",
+      "status": "FAILED",
+      "errorCode": "INSUFFICIENT_BALANCE",
+      "errorMessage": "잔액 부족",
+      "cardLast4": "5678",
+      "merchantId": "MERCHANT-002",
+      "createdAt": "2026-01-28T11:14:45Z",
+      "updatedAt": "2026-01-28T11:15:00Z",
+      "failedAt": "2026-01-28T11:15:00Z"
+    },
+    {
+      "id": "TXN-003",
+      "transactionId": "TXN-67892",
+      "accountId": "ACC-34567",
+      "amount": 25000,
+      "currency": "KRW",
+      "status": "FAILED",
+      "errorCode": "INVALID_CARD",
+      "errorMessage": "유효하지 않은 카드",
+      "cardLast4": "9999",
+      "merchantId": "MERCHANT-003",
+      "createdAt": "2026-01-28T11:59:50Z",
+      "updatedAt": "2026-01-28T12:00:00Z",
+      "failedAt": "2026-01-28T12:00:00Z"
+    }
+  ]
+}
