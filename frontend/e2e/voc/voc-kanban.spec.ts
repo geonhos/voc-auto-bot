@@ -1,3 +1,7 @@
+/**
+ * @see ./detailed/voc/voc-kanban.detailed.spec.ts for detailed UI interaction tests
+ */
+
 import { test, expect } from '@playwright/test';
 import { VocKanbanPage } from '../page-objects';
 import { testVocs, kanbanColumns } from '../fixtures';

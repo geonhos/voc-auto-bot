@@ -1,3 +1,7 @@
+/**
+ * @see ./detailed/dashboard/dashboard.detailed.spec.ts for detailed UI interaction tests
+ */
+
 import { test, expect } from '@playwright/test';
 import { DashboardPage } from '../pages/DashboardPage';
 import { mockApi } from '../utils/test-helpers';

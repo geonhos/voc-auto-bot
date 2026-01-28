@@ -1,3 +1,7 @@
+/**
+ * @see ./detailed/admin/categories.detailed.spec.ts for detailed UI interaction tests
+ */
+
 import { test, expect } from '@playwright/test';
 import { CategoryPage } from '../pages/CategoryPage';
 import { mockApi } from '../utils/test-helpers';

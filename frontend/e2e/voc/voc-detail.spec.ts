@@ -1,3 +1,7 @@
+/**
+ * @see ./detailed/voc/voc-detail.detailed.spec.ts for detailed UI interaction tests
+ */
+
 import { test, expect } from '@playwright/test';
 import { VocDetailPage } from '../page-objects';
 import { testVocs, testAssignees } from '../fixtures';
