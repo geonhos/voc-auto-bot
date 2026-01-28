@@ -97,6 +97,12 @@ public class Voc extends BaseEntity {
         }
     }
 
+    public void updateCategory(Long categoryId) {
+        if (categoryId != null) {
+            this.categoryId = categoryId;
+        }
+    }
+
     public void assign(Long userId) {
         this.assigneeId = userId;
         if (this.status == VocStatus.NEW) {

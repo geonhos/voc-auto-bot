@@ -25,12 +25,16 @@ public class UpdateVocRequest {
     @Schema(description = "우선순위", example = "HIGH")
     private VocPriority priority;
 
+    @Schema(description = "카테고리 ID", example = "1")
+    private Long categoryId;
+
     public UpdateVocCommand toCommand(Long vocId) {
         return new UpdateVocCommand(
                 vocId,
                 title,
                 content,
-                priority
+                priority,
+                categoryId
         );
     }
 }

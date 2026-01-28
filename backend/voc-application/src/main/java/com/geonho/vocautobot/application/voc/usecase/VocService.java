@@ -76,6 +76,11 @@ public class VocService implements
             voc.updatePriority(command.priority());
         }
 
+        // Update category if provided
+        if (command.categoryId() != null) {
+            voc.updateCategory(command.categoryId());
+        }
+
         return saveVocPort.saveVoc(voc);
     }
 

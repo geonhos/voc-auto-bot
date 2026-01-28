@@ -76,8 +76,10 @@ export default function VocDetailPage() {
         },
       });
       setNewMemo('');
+      alert('메모가 성공적으로 저장되었습니다.');
     } catch (err) {
       console.error('Failed to add memo:', err);
+      alert('메모 저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -88,11 +90,15 @@ export default function VocDetailPage() {
       await updateVocMutation.mutateAsync({
         vocId: voc.id,
         data: {
+          title: voc.title,
+          content: voc.content,
           categoryId: Number(selectedSubCategory),
         },
       });
+      alert('카테고리가 성공적으로 변경되었습니다.');
     } catch (err) {
       console.error('Failed to update category:', err);
+      alert('카테고리 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -107,8 +113,10 @@ export default function VocDetailPage() {
           status: 'REJECTED',
         },
       });
+      alert('VOC가 반려되었습니다.');
     } catch (err) {
       console.error('Failed to reject:', err);
+      alert('VOC 반려 중 오류가 발생했습니다.');
     }
   };
 
@@ -123,12 +131,19 @@ export default function VocDetailPage() {
           status: 'RESOLVED',
         },
       });
+      alert('VOC가 완료 처리되었습니다.');
     } catch (err) {
       console.error('Failed to complete:', err);
+      alert('VOC 완료 처리 중 오류가 발생했습니다.');
     }
   };
 
-  const mainCategories = categoryTree?.filter((cat) => cat.level === 0) || [];
+  // Filter main categories (those with children or type === 'MAIN')
+  const mainCategories = categoryTree?.filter((cat) =>
+    cat.children && cat.children.length > 0
+  ) || [];
+
+  // Get subcategories based on selected main category
   const subCategories =
     categoryTree?.find((cat) => cat.id === selectedMainCategory)?.children || [];
 
