@@ -79,7 +79,7 @@ const mockVocs: Voc[] = [
     ticketId: 'VOC-2024-0001',
     title: '제품 배송 지연 문의',
     content: '주문한 상품이 아직 도착하지 않았습니다.',
-    status: 'RECEIVED',
+    status: 'NEW',
     priority: 'MEDIUM',
     channel: 'WEB',
     customerName: '홍길동',
@@ -238,7 +238,7 @@ export const handlers = [
       id: mockVocs.length + 1,
       ticketId: `VOC-2024-${String(mockVocs.length + 1).padStart(4, '0')}`,
       ...(body as Omit<Voc, 'id' | 'ticketId' | 'attachments' | 'memos' | 'createdAt' | 'updatedAt'>),
-      status: 'RECEIVED',
+      status: 'NEW',
       attachments: [],
       memos: [],
       createdAt: new Date().toISOString(),
@@ -246,6 +246,85 @@ export const handlers = [
     };
     mockVocs.push(newVoc);
     return HttpResponse.json({ success: true, data: newVoc }, { status: 201 });
+  }),
+
+  // VOC Status Change
+  http.patch(`${API_BASE}/vocs/:id/status`, async ({ params, request }) => {
+    await delay(300);
+    const id = Number(params.id);
+    const body = (await request.json()) as { status: VocStatus; processingNote?: string };
+    const voc = mockVocs.find((v) => v.id === id);
+
+    if (!voc) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'VOC_NOT_FOUND', message: 'VOC를 찾을 수 없습니다' },
+        },
+        { status: 404 }
+      );
+    }
+
+    voc.status = body.status;
+    voc.updatedAt = new Date().toISOString();
+    return HttpResponse.json({ success: true, data: voc });
+  }),
+
+  // VOC Assign
+  http.patch(`${API_BASE}/vocs/:id/assign`, async ({ params, request }) => {
+    await delay(300);
+    const id = Number(params.id);
+    const body = (await request.json()) as { assigneeId: number };
+    const voc = mockVocs.find((v) => v.id === id);
+
+    if (!voc) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'VOC_NOT_FOUND', message: 'VOC를 찾을 수 없습니다' },
+        },
+        { status: 404 }
+      );
+    }
+
+    // Find the user to assign
+    const assignee = body.assigneeId === 1 ? { id: 1, name: '관리자', username: 'admin' } : null;
+    voc.assignee = assignee ?? undefined;
+    voc.updatedAt = new Date().toISOString();
+    return HttpResponse.json({ success: true, data: voc });
+  }),
+
+  // VOC Add Memo
+  http.post(`${API_BASE}/vocs/:id/memos`, async ({ params, request }) => {
+    await delay(300);
+    const id = Number(params.id);
+    const body = (await request.json()) as { content: string; isInternal: boolean };
+    const voc = mockVocs.find((v) => v.id === id);
+
+    if (!voc) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: { code: 'VOC_NOT_FOUND', message: 'VOC를 찾을 수 없습니다' },
+        },
+        { status: 404 }
+      );
+    }
+
+    const newMemo = {
+      id: (voc.memos?.length ?? 0) + 1,
+      content: body.content,
+      isInternal: body.isInternal,
+      author: { id: 1, name: '관리자', username: 'admin' },
+      createdAt: new Date().toISOString(),
+    };
+
+    if (!voc.memos) {
+      voc.memos = [];
+    }
+    voc.memos.push(newMemo);
+    voc.updatedAt = new Date().toISOString();
+    return HttpResponse.json({ success: true, data: voc });
   }),
 
   // VOC Public Status Lookup
@@ -334,6 +413,10 @@ export const handlers = [
         todayVocs: 58,
         weekVocs: 386,
         monthVocs: 1234,
+        totalVocsChange: { value: 12, type: 'increase', count: 148 },
+        avgResolutionTimeChange: { value: 5, type: 'decrease', count: -0.1 },
+        resolutionRateChange: { value: 3, type: 'increase', count: 1.6 },
+        pendingVocsChange: { value: 8, type: 'decrease', count: -20 },
       },
       trend: generateTrendData(),
       categoryStats: [
@@ -351,8 +434,8 @@ export const handlers = [
       statusDistribution: [
         { status: 'RESOLVED', statusLabel: '완료', count: 678, percentage: 54.9 },
         { status: 'IN_PROGRESS', statusLabel: '처리중', count: 234, percentage: 18.96 },
-        { status: 'ASSIGNED', statusLabel: '분석중', count: 156, percentage: 12.64 },
-        { status: 'RECEIVED', statusLabel: '접수', count: 89, percentage: 7.21 },
+        { status: 'IN_PROGRESS', statusLabel: '처리중', count: 156, percentage: 12.64 },
+        { status: 'NEW', statusLabel: '신규', count: 89, percentage: 7.21 },
         { status: 'REJECTED', statusLabel: '반려', count: 45, percentage: 3.65 },
         { status: 'PENDING', statusLabel: '분석실패', count: 32, percentage: 2.59 },
       ],
@@ -383,11 +466,10 @@ export const handlers = [
 
 function getStatusLabel(status: VocStatus): string {
   const labels: Record<VocStatus, string> = {
-    RECEIVED: '접수됨',
-    ASSIGNED: '담당자 배정',
+    NEW: '신규',
     IN_PROGRESS: '처리중',
     PENDING: '보류',
-    RESOLVED: '처리완료',
+    RESOLVED: '해결완료',
     CLOSED: '종료',
     REJECTED: '반려',
   };

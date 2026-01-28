@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { useVocs, useChangeVocStatus } from '@/hooks/useVocs';
+import { VocPriorityBadge } from '@/components/voc/VocPriorityBadge';
 import { VocStatus } from '@/types';
 
-const STATUS_COLUMNS: { status: VocStatus; label: string; color: string }[] = [
-  { status: 'RECEIVED', label: '접수', color: 'bg-blue-500' },
-  { status: 'ASSIGNED', label: '배정', color: 'bg-purple-500' },
-  { status: 'IN_PROGRESS', label: '처리중', color: 'bg-yellow-500' },
-  { status: 'PENDING', label: '보류', color: 'bg-red-500' },
-  { status: 'RESOLVED', label: '완료', color: 'bg-green-500' },
+const STATUS_COLUMNS: { status: VocStatus; label: string; color: string; bgColor: string }[] = [
+  { status: 'NEW', label: '접수', color: 'bg-slate-400', bgColor: 'bg-slate-50 dark:bg-slate-900/50' },
+  { status: 'IN_PROGRESS', label: '처리중', color: 'bg-warning', bgColor: 'bg-warning/5 dark:bg-warning/10' },
+  { status: 'PENDING', label: '분석실패', color: 'bg-danger', bgColor: 'bg-danger/5 dark:bg-danger/10' },
+  { status: 'RESOLVED', label: '완료', color: 'bg-success', bgColor: 'bg-success/5 dark:bg-success/10' },
+  { status: 'CLOSED', label: '반려', color: 'bg-warning', bgColor: 'bg-warning/5 dark:bg-warning/10' },
 ];
 
 export default function VocKanbanPage() {
@@ -76,8 +77,8 @@ export default function VocKanbanPage() {
     return (
       <div className="p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">VOC 칸반 보드</h1>
-          <p className="text-gray-500 mt-1">드래그 앤 드롭으로 VOC 상태를 변경하세요.</p>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">VOC 칸반 보드</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2">드래그 앤 드롭으로 VOC 상태를 변경하세요.</p>
         </div>
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -87,97 +88,104 @@ export default function VocKanbanPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">VOC 칸반 보드</h1>
-        <p className="text-gray-500 mt-1">드래그 앤 드롭으로 VOC 상태를 변경하세요.</p>
-      </div>
+    <div className="py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">VOC 칸반보드</h1>
+          <p className="text-slate-500 dark:text-slate-400">VOC를 드래그앤드롭으로 관리하세요.</p>
+        </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {STATUS_COLUMNS.map((column) => {
-          const columnVocs = getVocsByStatus(column.status);
-          const isDropTarget = dragOverStatus === column.status;
-          return (
-            <div
-              key={column.status}
-              className={`flex-shrink-0 w-72 rounded-lg transition-colors ${
-                isDropTarget
-                  ? 'bg-blue-100 dark:bg-blue-900 ring-2 ring-blue-500'
-                  : 'bg-gray-100 dark:bg-gray-800'
-              }`}
-              onDragOver={(e) => handleDragOver(e, column.status)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, column.status)}
-            >
-              {/* Column Header */}
-              <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${column.color}`} />
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                    {column.label}
-                  </h3>
-                  <span className="ml-auto text-sm text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">
-                    {columnVocs.length}
-                  </span>
+        <div className="flex gap-4 overflow-x-auto pb-6">
+          {STATUS_COLUMNS.map((column) => {
+            const columnVocs = getVocsByStatus(column.status);
+            const isDropTarget = dragOverStatus === column.status;
+            return (
+              <div
+                key={column.status}
+                className="flex-shrink-0 w-80"
+              >
+                <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                  {/* Column Header */}
+                  <div className={`px-4 py-3 border-b border-border-light dark:border-border-dark ${
+                    column.status === 'NEW' ? 'bg-slate-100 dark:bg-slate-800' :
+                    column.status === 'IN_PROGRESS' ? 'bg-warning/10 dark:bg-warning/20' :
+                    column.status === 'PENDING' ? 'bg-danger/10 dark:bg-danger/20' :
+                    column.status === 'RESOLVED' ? 'bg-success/10 dark:bg-success/20' :
+                    'bg-warning/10 dark:bg-warning/20'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${column.color}`} />
+                        <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100">
+                          {column.label}
+                        </h3>
+                      </div>
+                      <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                        {columnVocs.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Column Content */}
+                  <div
+                    className={`p-3 space-y-3 min-h-[400px] transition-colors ${column.bgColor} ${
+                      isDropTarget ? 'ring-2 ring-primary ring-inset' : ''
+                    }`}
+                    onDragOver={(e) => handleDragOver(e, column.status)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, column.status)}
+                  >
+                    {columnVocs.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
+                        {isDropTarget ? '여기에 놓으세요' : 'VOC가 없습니다'}
+                      </div>
+                    ) : (
+                      columnVocs.map((voc) => (
+                        <div
+                          key={voc.id}
+                          className={`p-4 bg-white dark:bg-slate-800 rounded-lg border-l-4 ${
+                            column.status === 'NEW' ? 'border-slate-400' :
+                            column.status === 'IN_PROGRESS' ? 'border-warning' :
+                            column.status === 'PENDING' ? 'border-danger' :
+                            column.status === 'RESOLVED' ? 'border-success' :
+                            'border-warning'
+                          } shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
+                            draggedId === voc.id ? 'opacity-50 scale-95' : ''
+                          }`}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, voc.id)}
+                          onDragEnd={handleDragEnd}
+                        >
+                          <Link href={`/voc/${voc.id}`} className="block">
+                            <div className="mb-3">
+                              <p className="font-semibold text-sm text-primary mb-1">
+                                {voc.ticketId}
+                              </p>
+                              <h4 className="text-sm font-medium text-slate-900 dark:text-slate-100 line-clamp-2">
+                                {voc.title}
+                              </h4>
+                            </div>
+
+                            <div className="space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                              <div className="flex items-center gap-2">
+                                <span className="material-icons-outlined text-sm">person</span>
+                                <span>{voc.customerName}</span>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex items-center gap-2 flex-wrap">
+                              <VocPriorityBadge priority={voc.priority} />
+                            </div>
+                          </Link>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
-
-              {/* Column Content */}
-              <div className="p-2 space-y-2 min-h-[400px]">
-                {columnVocs.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400 text-sm">
-                    {isDropTarget ? '여기에 놓으세요' : 'VOC가 없습니다'}
-                  </div>
-                ) : (
-                  columnVocs.map((voc) => (
-                    <div
-                      key={voc.id}
-                      className={`p-3 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
-                        draggedId === voc.id ? 'opacity-50 scale-95' : ''
-                      }`}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, voc.id)}
-                      onDragEnd={handleDragEnd}
-                    >
-                      <Link href={`/voc/${voc.id}`} className="block">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <span className="text-xs font-mono text-gray-500">
-                            {voc.ticketId}
-                          </span>
-                          <span
-                            className={`px-1.5 py-0.5 text-xs rounded ${
-                              voc.priority === 'URGENT'
-                                ? 'bg-red-100 text-red-700'
-                                : voc.priority === 'HIGH'
-                                ? 'bg-orange-100 text-orange-700'
-                                : voc.priority === 'MEDIUM'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {voc.priority === 'URGENT'
-                              ? '긴급'
-                              : voc.priority === 'HIGH'
-                              ? '높음'
-                              : voc.priority === 'MEDIUM'
-                              ? '보통'
-                              : '낮음'}
-                          </span>
-                        </div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2">
-                          {voc.title}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-2">
-                          {voc.customerName}
-                        </p>
-                      </Link>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

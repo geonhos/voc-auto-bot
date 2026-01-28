@@ -1,3 +1,9 @@
+export interface KpiChangeData {
+  value: number;
+  type: 'increase' | 'decrease' | 'neutral';
+  count?: number; // 전일 대비 건수 변화
+}
+
 export interface KpiData {
   totalVocs: number;
   resolvedVocs: number;
@@ -7,6 +13,11 @@ export interface KpiData {
   todayVocs: number;
   weekVocs: number;
   monthVocs: number;
+  // 전일 대비 변화율 (백엔드에서 제공 시)
+  totalVocsChange?: KpiChangeData;
+  avgResolutionTimeChange?: KpiChangeData;
+  resolutionRateChange?: KpiChangeData;
+  pendingVocsChange?: KpiChangeData;
 }
 
 export interface TrendData {

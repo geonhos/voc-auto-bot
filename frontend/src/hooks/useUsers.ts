@@ -75,7 +75,8 @@ export function useToggleUserStatus() {
 
   return useMutation({
     mutationFn: async ({ userId, isActive }: { userId: number; isActive: boolean }) => {
-      const response = await api.patch<User>(`/users/${userId}`, { isActive });
+      const endpoint = isActive ? 'activate' : 'deactivate';
+      const response = await api.patch<User>(`/users/${userId}/${endpoint}`);
       return response.data;
     },
     onSuccess: () => {

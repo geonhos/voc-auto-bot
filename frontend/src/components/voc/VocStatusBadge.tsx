@@ -9,23 +9,21 @@ interface VocStatusBadgeProps {
 }
 
 const statusLabels: Record<VocStatus, string> = {
-  RECEIVED: '접수',
-  ASSIGNED: '배정됨',
+  NEW: '신규',
   IN_PROGRESS: '처리중',
-  PENDING: '대기',
-  RESOLVED: '해결',
+  PENDING: '보류',
+  RESOLVED: '해결완료',
   CLOSED: '종료',
-  REJECTED: '거부',
+  REJECTED: '반려',
 };
 
 const statusColors: Record<VocStatus, string> = {
-  RECEIVED: 'bg-gray-100 text-gray-800',
-  ASSIGNED: 'bg-blue-100 text-blue-800',
-  IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
-  PENDING: 'bg-orange-100 text-orange-800',
-  RESOLVED: 'bg-green-100 text-green-800',
-  CLOSED: 'bg-slate-100 text-slate-800',
-  REJECTED: 'bg-red-100 text-red-800',
+  NEW: 'bg-[#e7e5e4] text-[#44403c]', // status-received
+  IN_PROGRESS: 'bg-[#f0e8d9] text-[#7d6333]', // status-processing
+  PENDING: 'bg-[#ebe2e0] text-[#704040]', // status-analysis-failed
+  RESOLVED: 'bg-[#e1e9e0] text-[#475c47]', // status-completed
+  CLOSED: 'bg-[#e1e9e0] text-[#475c47]', // status-completed
+  REJECTED: 'bg-[#ebe2e0] text-[#704040]', // status-rejected
 };
 
 export function VocStatusBadge({ status, className }: VocStatusBadgeProps) {

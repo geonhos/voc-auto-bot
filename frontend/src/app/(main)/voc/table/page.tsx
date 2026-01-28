@@ -76,39 +76,41 @@ export default function VocTablePage() {
   } = useVocTableViewModel();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">VOC 목록</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          고객의 소리를 확인하고 관리할 수 있습니다.
-        </p>
-      </div>
-
-      <VocSearchFilter onFilterChange={handleFilterChange} onSearch={handleSearch} />
-
-      {error ? (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-          데이터를 불러오는 중 오류가 발생했습니다.
+    <div className="py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">VOC 리스트</h1>
+          <p className="text-slate-500 dark:text-slate-400">
+            VOC 목록을 테이블 형태로 조회하고 관리하세요.
+          </p>
         </div>
-      ) : (
-        <VocTable
-          vocs={
-            vocs || {
-              content: [],
-              page: 0,
-              size: 10,
-              totalElements: 0,
-              totalPages: 0,
-              first: true,
-              last: true,
-              empty: true,
+
+        <VocSearchFilter onFilterChange={handleFilterChange} onSearch={handleSearch} />
+
+        {error ? (
+          <div className="bg-danger/10 dark:bg-danger/5 border border-danger/20 rounded-xl p-4 text-danger">
+            데이터를 불러오는 중 오류가 발생했습니다.
+          </div>
+        ) : (
+          <VocTable
+            vocs={
+              vocs || {
+                content: [],
+                page: 0,
+                size: 10,
+                totalElements: 0,
+                totalPages: 0,
+                first: true,
+                last: true,
+                empty: true,
+              }
             }
-          }
-          isLoading={isLoading}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      )}
+            isLoading={isLoading}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        )}
+      </div>
     </div>
   );
 }
