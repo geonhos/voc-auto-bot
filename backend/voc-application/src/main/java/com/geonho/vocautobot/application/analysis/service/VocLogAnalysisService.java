@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,6 +24,9 @@ import java.util.stream.Collectors;
 /**
  * VOC 로그 분석 서비스
  * VOC 내용을 기반으로 관련 로그를 검색하고 AI로 분석
+ *
+ * Python AI 서비스가 활성화된 경우 해당 서비스를 우선 사용하고,
+ * 실패 시 기존 OpenSearch + LLM 방식으로 폴백
  */
 @Service
 @RequiredArgsConstructor
@@ -36,6 +41,9 @@ public class VocLogAnalysisService {
     private final LlmPort llmPort;
     private final ObjectMapper objectMapper;
 
+    @Autowired(required = false)
+    private com.geonho.vocautobot.adapter.out.ai.PythonAiServiceAdapter pythonAiServiceAdapter;
+
     /**
      * VOC 내용을 기반으로 관련 로그를 분석
      *
@@ -46,6 +54,33 @@ public class VocLogAnalysisService {
     public VocLogAnalysis analyzeLogsForVoc(String vocTitle, String vocContent) {
         log.info("Analyzing logs for VOC: {}", vocTitle);
 
+        // 1. Python AI 서비스 사용 시도
+        if (pythonAiServiceAdapter != null) {
+            try {
+                log.debug("Using Python AI service for log analysis");
+                VocLogAnalysis result = pythonAiServiceAdapter.analyzeVocWithPythonService(vocTitle, vocContent);
+
+                // Python 서비스 결과가 유효하면 반환
+                if (result.isValid()) {
+                    log.info("Successfully analyzed VOC using Python AI service");
+                    return result;
+                }
+
+                log.warn("Python AI service returned invalid result, falling back to legacy method");
+            } catch (Exception e) {
+                log.warn("Failed to use Python AI service, falling back to legacy method: {}", e.getMessage());
+            }
+        }
+
+        // 2. 폴백: 기존 OpenSearch + LLM 방식
+        log.debug("Using legacy OpenSearch + LLM for log analysis");
+        return analyzeLogsLegacy(vocTitle, vocContent);
+    }
+
+    /**
+     * 기존 방식의 로그 분석 (OpenSearch + LLM)
+     */
+    private VocLogAnalysis analyzeLogsLegacy(String vocTitle, String vocContent) {
         try {
             // 1. VOC 내용에서 키워드 추출
             List<String> keywords = extractKeywords(vocTitle, vocContent);

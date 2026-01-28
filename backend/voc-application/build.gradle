@@ -21,4 +21,11 @@ dependencies {
 
     // For ApplicationEventPublisher
     implementation 'org.springframework:spring-context'
+
+    // Jackson for JSON parsing (AI log analysis)
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 }

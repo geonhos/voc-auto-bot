@@ -1,0 +1,278 @@
+[
+  {
+    "id": "log-001",
+    "timestamp": "2026-01-28T10:15:23.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Payment gateway timeout: Connection to PG server failed after 30 seconds. TransactionId: TX-20260128-001",
+    "stackTrace": "java.net.SocketTimeoutException: connect timed out\n\tat payment.gateway.PGClient.connect(PGClient.java:145)",
+    "category": "payment",
+    "severity": "high"
+  },
+  {
+    "id": "log-002",
+    "timestamp": "2026-01-28T10:15:25.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Failed to process payment for order ORD-20260128-0001. Reason: Gateway timeout",
+    "category": "payment",
+    "severity": "high"
+  },
+  {
+    "id": "log-003",
+    "timestamp": "2026-01-28T10:16:01.789Z",
+    "logLevel": "WARN",
+    "serviceName": "payment-service",
+    "message": "Retry attempt 1/3 for transaction TX-20260128-001",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "log-004",
+    "timestamp": "2026-01-28T09:45:12.234Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "JWT token validation failed: Token expired. UserId: U-123456",
+    "stackTrace": "io.jsonwebtoken.ExpiredJwtException: JWT expired at 2026-01-28T09:30:00Z",
+    "category": "authentication",
+    "severity": "medium"
+  },
+  {
+    "id": "log-005",
+    "timestamp": "2026-01-28T09:45:15.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "User session invalidated due to token expiration. Redirecting to login page.",
+    "category": "authentication",
+    "severity": "medium"
+  },
+  {
+    "id": "log-006",
+    "timestamp": "2026-01-28T11:20:33.891Z",
+    "logLevel": "ERROR",
+    "serviceName": "database-service",
+    "message": "Connection pool exhausted: All 50 connections are in use. Operation timeout after 5000ms",
+    "stackTrace": "com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool",
+    "category": "database",
+    "severity": "critical"
+  },
+  {
+    "id": "log-007",
+    "timestamp": "2026-01-28T11:20:34.012Z",
+    "logLevel": "ERROR",
+    "serviceName": "voc-service",
+    "message": "Failed to fetch VOC list: Database connection timeout",
+    "category": "database",
+    "severity": "critical"
+  },
+  {
+    "id": "log-008",
+    "timestamp": "2026-01-28T11:20:35.234Z",
+    "logLevel": "WARN",
+    "serviceName": "database-service",
+    "message": "Active connections: 50/50, Idle: 0, Pending: 25",
+    "category": "database",
+    "severity": "high"
+  },
+  {
+    "id": "log-009",
+    "timestamp": "2026-01-28T08:30:45.678Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "Upstream service unavailable: user-service returned 503 Service Unavailable",
+    "category": "system",
+    "severity": "high"
+  },
+  {
+    "id": "log-010",
+    "timestamp": "2026-01-28T08:30:46.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "Circuit breaker opened for user-service after 5 consecutive failures",
+    "category": "system",
+    "severity": "critical"
+  },
+  {
+    "id": "log-011",
+    "timestamp": "2026-01-28T14:15:22.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "order-service",
+    "message": "Failed to create order: Payment service returned error - insufficient balance",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "log-012",
+    "timestamp": "2026-01-28T14:15:23.789Z",
+    "logLevel": "INFO",
+    "serviceName": "order-service",
+    "message": "Order creation failed notification sent to user U-789012",
+    "category": "notification",
+    "severity": "low"
+  },
+  {
+    "id": "log-013",
+    "timestamp": "2026-01-28T13:45:11.234Z",
+    "logLevel": "ERROR",
+    "serviceName": "cache-service",
+    "message": "Redis connection lost: Connection refused (Connection refused)",
+    "stackTrace": "redis.clients.jedis.exceptions.JedisConnectionException: java.net.ConnectException: Connection refused",
+    "category": "cache",
+    "severity": "high"
+  },
+  {
+    "id": "log-014",
+    "timestamp": "2026-01-28T13:45:12.567Z",
+    "logLevel": "WARN",
+    "serviceName": "cache-service",
+    "message": "Falling back to database queries due to cache unavailability",
+    "category": "cache",
+    "severity": "medium"
+  },
+  {
+    "id": "log-015",
+    "timestamp": "2026-01-28T15:30:45.890Z",
+    "logLevel": "ERROR",
+    "serviceName": "file-service",
+    "message": "File upload failed: Maximum file size exceeded (uploaded: 15MB, limit: 10MB)",
+    "category": "file",
+    "severity": "low"
+  },
+  {
+    "id": "log-016",
+    "timestamp": "2026-01-28T15:30:46.123Z",
+    "logLevel": "INFO",
+    "serviceName": "file-service",
+    "message": "Returning error response to client: File size limit exceeded",
+    "category": "file",
+    "severity": "low"
+  },
+  {
+    "id": "log-017",
+    "timestamp": "2026-01-28T12:00:15.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "notification-service",
+    "message": "Failed to send email notification: SMTP connection timeout to mail.company.com:587",
+    "category": "notification",
+    "severity": "medium"
+  },
+  {
+    "id": "log-018",
+    "timestamp": "2026-01-28T12:00:16.789Z",
+    "logLevel": "WARN",
+    "serviceName": "notification-service",
+    "message": "Queuing failed notification for retry. NotificationId: N-20260128-001",
+    "category": "notification",
+    "severity": "low"
+  },
+  {
+    "id": "log-019",
+    "timestamp": "2026-01-28T16:45:33.234Z",
+    "logLevel": "ERROR",
+    "serviceName": "voc-service",
+    "message": "NullPointerException while processing VOC: category field is null",
+    "stackTrace": "java.lang.NullPointerException: Cannot invoke method on null object\n\tat com.voc.service.VocProcessor.process(VocProcessor.java:89)",
+    "category": "application",
+    "severity": "high"
+  },
+  {
+    "id": "log-020",
+    "timestamp": "2026-01-28T16:45:34.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "voc-service",
+    "message": "VOC processing failed for VOC-20260128-0001. Rolling back transaction.",
+    "category": "application",
+    "severity": "high"
+  },
+  {
+    "id": "log-021",
+    "timestamp": "2026-01-28T10:30:22.890Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Card authorization failed: Invalid card number format",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "log-022",
+    "timestamp": "2026-01-28T10:30:23.123Z",
+    "logLevel": "INFO",
+    "serviceName": "payment-service",
+    "message": "Payment declined notification sent to user",
+    "category": "payment",
+    "severity": "low"
+  },
+  {
+    "id": "log-023",
+    "timestamp": "2026-01-28T09:15:44.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "Login attempt blocked: Too many failed attempts from IP 192.168.1.100",
+    "category": "security",
+    "severity": "high"
+  },
+  {
+    "id": "log-024",
+    "timestamp": "2026-01-28T09:15:45.789Z",
+    "logLevel": "WARN",
+    "serviceName": "auth-service",
+    "message": "Account temporarily locked for user U-999888. Unlock time: 2026-01-28T09:30:00Z",
+    "category": "security",
+    "severity": "medium"
+  },
+  {
+    "id": "log-025",
+    "timestamp": "2026-01-28T17:20:11.234Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "Rate limit exceeded for API key: AK-20260128-001. Requests: 1005/1000 per minute",
+    "category": "api",
+    "severity": "medium"
+  },
+  {
+    "id": "log-026",
+    "timestamp": "2026-01-28T17:20:12.567Z",
+    "logLevel": "INFO",
+    "serviceName": "api-gateway",
+    "message": "Returning 429 Too Many Requests to client",
+    "category": "api",
+    "severity": "low"
+  },
+  {
+    "id": "log-027",
+    "timestamp": "2026-01-28T11:45:33.890Z",
+    "logLevel": "ERROR",
+    "serviceName": "search-service",
+    "message": "ElasticSearch query timeout: Query took longer than 10000ms",
+    "category": "search",
+    "severity": "medium"
+  },
+  {
+    "id": "log-028",
+    "timestamp": "2026-01-28T11:45:34.123Z",
+    "logLevel": "WARN",
+    "serviceName": "search-service",
+    "message": "Falling back to database search due to ElasticSearch timeout",
+    "category": "search",
+    "severity": "low"
+  },
+  {
+    "id": "log-029",
+    "timestamp": "2026-01-28T14:30:45.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "batch-service",
+    "message": "Scheduled job failed: VOC daily summary generation. OutOfMemoryError",
+    "stackTrace": "java.lang.OutOfMemoryError: Java heap space\n\tat java.util.Arrays.copyOf(Arrays.java:3332)",
+    "category": "batch",
+    "severity": "critical"
+  },
+  {
+    "id": "log-030",
+    "timestamp": "2026-01-28T14:30:46.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "batch-service",
+    "message": "Batch job marked as FAILED. JobId: JOB-20260128-001",
+    "category": "batch",
+    "severity": "high"
+  }
+]
