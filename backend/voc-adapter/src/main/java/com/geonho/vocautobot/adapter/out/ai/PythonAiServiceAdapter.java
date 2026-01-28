@@ -2,6 +2,7 @@ package com.geonho.vocautobot.adapter.out.ai;
 
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis.RelatedLog;
+import com.geonho.vocautobot.application.analysis.port.out.AiAnalysisPort;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
-public class PythonAiServiceAdapter {
+public class PythonAiServiceAdapter implements AiAnalysisPort {
 
     private static final Logger log = LoggerFactory.getLogger(PythonAiServiceAdapter.class);
 
@@ -37,7 +38,8 @@ public class PythonAiServiceAdapter {
      * @param vocContent VOC 내용
      * @return AI 분석 결과
      */
-    public VocLogAnalysis analyzeVocWithPythonService(String vocTitle, String vocContent) {
+    @Override
+    public VocLogAnalysis analyzeVoc(String vocTitle, String vocContent) {
         log.info("Calling Python AI service for VOC analysis: {}", vocTitle);
 
         try {

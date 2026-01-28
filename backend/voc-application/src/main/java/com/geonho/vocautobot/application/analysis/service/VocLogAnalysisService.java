@@ -4,6 +4,7 @@ import com.geonho.vocautobot.application.analysis.dto.LogAnalysisResult;
 import com.geonho.vocautobot.application.analysis.dto.LogEntry;
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis.RelatedLog;
+import com.geonho.vocautobot.application.analysis.port.out.AiAnalysisPort;
 import com.geonho.vocautobot.application.analysis.port.out.LogSearchPort;
 import com.geonho.vocautobot.application.analysis.port.out.LlmPort;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -42,7 +42,7 @@ public class VocLogAnalysisService {
     private final ObjectMapper objectMapper;
 
     @Autowired(required = false)
-    private com.geonho.vocautobot.adapter.out.ai.PythonAiServiceAdapter pythonAiServiceAdapter;
+    private AiAnalysisPort aiAnalysisPort;
 
     /**
      * VOC 내용을 기반으로 관련 로그를 분석
@@ -55,20 +55,20 @@ public class VocLogAnalysisService {
         log.info("Analyzing logs for VOC: {}", vocTitle);
 
         // 1. Python AI 서비스 사용 시도
-        if (pythonAiServiceAdapter != null) {
+        if (aiAnalysisPort != null) {
             try {
-                log.debug("Using Python AI service for log analysis");
-                VocLogAnalysis result = pythonAiServiceAdapter.analyzeVocWithPythonService(vocTitle, vocContent);
+                log.debug("Using AI analysis port for log analysis");
+                VocLogAnalysis result = aiAnalysisPort.analyzeVoc(vocTitle, vocContent);
 
-                // Python 서비스 결과가 유효하면 반환
+                // AI 서비스 결과가 유효하면 반환
                 if (result.isValid()) {
-                    log.info("Successfully analyzed VOC using Python AI service");
+                    log.info("Successfully analyzed VOC using AI analysis service");
                     return result;
                 }
 
-                log.warn("Python AI service returned invalid result, falling back to legacy method");
+                log.warn("AI analysis service returned invalid result, falling back to legacy method");
             } catch (Exception e) {
-                log.warn("Failed to use Python AI service, falling back to legacy method: {}", e.getMessage());
+                log.warn("Failed to use AI analysis service, falling back to legacy method: {}", e.getMessage());
             }
         }
 
