@@ -1,304 +1,156 @@
-# Issue #130 구현 요약: VOC 입력 시 AI 로그 분석
+# Slack Webhook 알림 구현 완료 (#131)
 
-## 작업 내용
+## 구현 개요
+VOC 생성, 상태 변경, 할당 시 Slack Webhook을 통해 실시간 알림을 전송하는 기능을 구현했습니다.
 
-VOC(Voice of Customer) 생성 시 AI를 활용하여 시스템 로그를 자동 분석하고, 문제의 예상 원인과 신뢰도를 제공하는 기능을 구현했습니다.
+## 구현된 파일 목록
 
-## 새로 생성된 파일
+### 1. Application Layer (Port Interface)
+- **NotificationPort.java** (`voc-application/src/main/java/.../notification/port/out/`)
+  - 알림 전송을 위한 포트 인터페이스
+  - `notifyVocCreated()`, `notifyVocStatusChanged()`, `notifyVocAssigned()` 메서드 정의
 
-### 1. DTOs
-```
-backend/voc-application/src/main/java/com/geonho/vocautobot/application/analysis/dto/
-├── VocLogAnalysis.java  # AI 로그 분석 결과 DTO
+### 2. Adapter Layer (Implementation)
+- **SlackNotificationAdapter.java** (`voc-adapter/src/main/java/.../adapter/out/notification/`)
+  - NotificationPort 구현체
+  - Slack Webhook API 호출
+  - 우선순위별 이모지 표시 (🔴 URGENT, 🟠 HIGH, 🟡 NORMAL, 🟢 LOW)
+  - 긴 내용 자동 잘림 (100자)
+  - 알림 실패 시 트랜잭션 롤백 방지
 
-backend/voc-adapter/src/main/java/com/geonho/vocautobot/adapter/in/web/voc/dto/
-├── VocResponseWithAnalysis.java  # 로그 분석 결과 포함 VOC 응답 DTO
-```
+- **SlackProperties.java** (`voc-adapter/src/main/java/.../adapter/out/notification/`)
+  - Slack 설정 프로퍼티
+  - `@ConfigurationProperties(prefix = "slack")`로 환경변수 바인딩
 
-### 2. Services
-```
-backend/voc-application/src/main/java/com/geonho/vocautobot/application/analysis/service/
-├── VocLogAnalysisService.java  # VOC 로그 분석 핵심 서비스
-```
+### 3. Application Service 수정
+- **VocService.java** 수정
+  - `NotificationPort` 주입
+  - `createVoc()`: VOC 생성 후 알림 전송
+  - `changeStatus()`: 상태 변경 후 이전 상태와 함께 알림 전송
+  - `assignVoc()`: 담당자 할당 후 알림 전송
 
-### 3. Tests
-```
-backend/voc-application/src/test/java/com/geonho/vocautobot/application/analysis/service/
-├── VocLogAnalysisServiceTest.java  # 단위 테스트
-```
+### 4. Configuration
+- **application.yml** 수정
+  ```yaml
+  slack:
+    enabled: ${SLACK_ENABLED:true}
+    webhook-url: ${SLACK_WEBHOOK_URL:}
+    username: ${SLACK_BOT_USERNAME:VOC Auto Bot}
+    icon-emoji: ${SLACK_BOT_ICON::bell:}
+  ```
 
-### 4. Documentation
-```
-AI_LOG_ANALYSIS_IMPLEMENTATION.md  # 상세 구현 문서
-IMPLEMENTATION_SUMMARY.md  # 구현 요약 (이 파일)
-```
+### 5. Tests
+- **SlackNotificationAdapterTest.java** (Unit Test)
+  - MockWebServer를 사용한 Webhook 호출 테스트
+  - 9개 테스트 케이스 작성
+  - 알림 전송 성공/실패, 비활성화, 우선순위 이모지, 내용 잘림 등 검증
 
-## 수정된 파일
+- **VocServiceSlackNotificationTest.java** (Integration Test)
+  - VocService와 NotificationPort 통합 테스트
+  - 6개 테스트 케이스 작성
+  - 알림 전송 확인 및 실패 시 트랜잭션 롤백 방지 검증
 
-```
-backend/voc-adapter/src/main/java/com/geonho/vocautobot/adapter/in/web/voc/
-├── VocController.java  # createVoc() 메서드에 로그 분석 통합
-```
+### 6. Documentation
+- **SLACK_NOTIFICATION_GUIDE.md**
+  - 아키텍처 설명
+  - 설정 방법 (Local, Docker, Kubernetes)
+  - 알림 메시지 형식
+  - 테스트 방법
+  - 문제 해결 가이드
 
 ## 주요 기능
 
-### 1. 키워드 기반 로그 검색
-- VOC 제목/내용에서 자동으로 키워드 추출
-- 에러, 실패, 타임아웃, 데이터베이스 등 시스템 문제 관련 키워드
-- OpenSearch에서 최근 24시간 로그 검색
+### 1. VOC 생성 알림
+- 티켓 ID, 제목, 우선순위, 카테고리, 고객 정보, 내용 포함
+- 생성 시간 표시
 
-### 2. AI 기반 로그 분석
-- Ollama LLM을 활용한 로그 분석
-- JSON 형식의 구조화된 응답
-- 분석 요약, 신뢰도, 예상 원인, 권장 조치 제공
+### 2. VOC 상태 변경 알림
+- 상태 변경 (이전 상태 → 새 상태)
+- 우선순위, 담당자 정보 포함
 
-### 3. 응답 형식
-```json
-{
-  "logAnalysis": {
-    "summary": "문제 요약 (2-3문장)",
-    "confidence": 0.85,
-    "keywords": ["keyword1", "keyword2"],
-    "possibleCauses": ["원인1", "원인2", "원인3"],
-    "relatedLogs": [
-      {
-        "timestamp": "2026-01-28 12:34:56",
-        "logLevel": "ERROR",
-        "serviceName": "voc-backend",
-        "message": "로그 메시지",
-        "relevanceScore": 0.8
-      }
-    ],
-    "recommendation": "권장 조치사항"
-  }
-}
-```
+### 3. VOC 할당 알림
+- 할당된 담당자 이름 표시
+- 우선순위, 현재 상태 포함
 
-### 4. 예외 처리
-- 로그가 없을 경우: 빈 분석 결과 반환
-- OpenSearch 연결 실패: VOC는 정상 생성, 분석만 실패
-- LLM 분석 실패: 오류 메시지 포함하여 빈 결과 반환
+## 설계 원칙 준수
 
-## 기술 스택 및 의존성
+### Hexagonal Architecture
+- **Port**: `NotificationPort` 인터페이스 (Application Layer)
+- **Adapter**: `SlackNotificationAdapter` 구현체 (Adapter Layer)
+- 의존성 역전: Application이 Adapter를 의존하지 않음
 
-### Backend
-- Spring Boot 3.2.2
-- Java 17
-- Jackson (JSON 처리)
-- Lombok
+### DDD (Domain-Driven Design)
+- Domain Layer는 알림 로직을 알지 못함
+- Application Layer에서 비즈니스 로직 실행 후 알림 전송
+- 도메인 이벤트 패턴 적용 가능 (향후 확장)
 
-### AI/ML
-- Ollama (LLM 서비스)
-- OpenSearch (로그 저장소)
+### TDD (Test-Driven Development)
+- Unit Test: `SlackNotificationAdapterTest` (9개)
+- Integration Test: `VocServiceSlackNotificationTest` (6개)
+- 총 15개 테스트 케이스 작성
 
-### 기존 인프라 활용
-- LogSearchPort (로그 검색 포트)
-- LlmPort (LLM 호출 포트)
-- OllamaAdapter (기존 Ollama 연동)
+### Clean Architecture
+- 단일 책임 원칙: 각 클래스는 하나의 책임만 가짐
+- 개방-폐쇄 원칙: 새로운 알림 채널 추가 용이
+- 의존성 역전 원칙: 추상화에 의존
 
-## 아키텍처 패턴
+## 환경 변수 설정
 
-### Hexagonal Architecture 준수
-```
-Adapter Layer (Web)
-    VocController
-        ↓
-Application Layer (Use Case)
-    VocLogAnalysisService
-        ↓
-Port (Interface)
-    LogSearchPort, LlmPort
-        ↓
-Adapter Layer (Infrastructure)
-    OpenSearchAdapter, OllamaAdapter
-```
-
-### 의존성 방향
-- Adapter → Application → Domain
-- 모든 의존성이 내부를 향함
-- Port를 통한 외부 시스템 추상화
-
-## 테스트 커버리지
-
-### 단위 테스트 (VocLogAnalysisServiceTest)
-1. ✅ 정상 시나리오 - 로그 검색 및 AI 분석 성공
-2. ✅ 로그 없음 - 빈 분석 결과 반환
-3. ✅ 로그 검색 오류 - 안전한 예외 처리
-4. ✅ LLM 분석 오류 - 안전한 예외 처리
-
-### 테스트 프레임워크
-- JUnit 5
-- Mockito (모킹)
-- AssertJ (assertion)
-
-## API 변경사항
-
-### Before
-```http
-POST /api/v1/vocs
-Response: VocResponse (기본 VOC 정보만)
-```
-
-### After
-```http
-POST /api/v1/vocs
-Response: VocResponseWithAnalysis (VOC 정보 + AI 로그 분석)
-```
-
-## 성능 특성
-
-### 현재 구현
-- 동기 처리 (VOC 생성과 함께 분석 완료)
-- 예상 응답 시간: 2-5초 (로그 검색 + AI 분석)
-- 타임아웃: LLM 기본 타임아웃 설정 활용
-
-### 향후 최적화 계획
-1. 비동기 처리 (CompletableFuture)
-2. 결과 캐싱 (유사 VOC)
-3. 타임아웃 설정 (5초 제한)
-4. WebSocket 알림 (분석 완료 시)
-
-## 보안 고려사항
-
-- 로그에는 민감 정보가 포함될 수 있으므로 필터링 필요 (향후)
-- LLM 프롬프트에 민감 정보 포함 방지
-- 인증된 사용자만 VOC 생성 및 로그 분석 가능
-
-## 환경 변수
-
-기존 설정 활용:
-```yaml
-ollama:
-  base-url: ${LLM_API_URL:http://ollama:11434}
-  model: ${LLM_MODEL:gpt-oss:20b}
-  
-opensearch:
-  host: ${OPENSEARCH_HOST:opensearch}
-  port: ${OPENSEARCH_PORT:9200}
-```
-
-## 빌드 및 배포
-
+### 필수 환경 변수
 ```bash
-# 1. 백엔드 빌드
-cd /Users/geonho.yeom/workspace/voc-wt-130-ai-analysis/backend
-./gradlew clean build
-
-# 2. Docker Compose 실행
-cd ..
-docker-compose up -d postgres redis ollama opensearch
-docker-compose up backend
-
-# 3. 테스트
-curl -X POST http://localhost:8080/api/v1/vocs \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"title": "DB 연결 오류", ...}'
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 ```
 
-## 문제 해결 가이드
-
-### OpenSearch 연결 실패
-```
-증상: logAnalysis가 null이거나 "OpenSearch is not available"
-해결: docker-compose logs opensearch 확인
-```
-
-### LLM 분석 실패
-```
-증상: confidence가 0.0이고 summary에 오류 메시지
-해결: Ollama 서비스 상태 확인, 모델 다운로드 확인
-```
-
-### 키워드 추출 실패
-```
-증상: "키워드를 추출할 수 없습니다"
-원인: VOC 내용이 너무 짧거나 일반적인 내용
-해결: 정상 동작, 로그 없음으로 처리
-```
-
-## 향후 개선 사항
-
-### 단기 (다음 스프린트)
-1. 비동기 처리 구현
-2. 프론트엔드 UI 추가 (분석 결과 표시)
-3. 타임아웃 설정
-
-### 중기
-1. 키워드 추출 개선 (NLP 활용)
-2. 분석 결과 DB 저장
-3. 분석 품질 피드백 수집
-
-### 장기
-1. 유사 VOC 자동 추천
-2. 벡터 임베딩 기반 검색
-3. 분석 정확도 향상 (Fine-tuning)
-
-## 코드 품질 체크리스트
-
-- ✅ Type hints (Java 17 Records)
-- ✅ Docstrings (Javadoc)
-- ✅ 예외 처리 (try-catch)
-- ✅ 로깅 (SLF4J)
-- ✅ 테스트 작성 (JUnit 5)
-- ✅ Hexagonal Architecture 준수
-- ✅ SOLID 원칙 준수
-
-## 커밋 준비
-
+### 선택 환경 변수
 ```bash
-cd /Users/geonho.yeom/workspace/voc-wt-130-ai-analysis
-
-# 변경된 파일 확인
-git status
-
-# 추가된 파일들
-git add backend/voc-application/src/main/java/com/geonho/vocautobot/application/analysis/dto/VocLogAnalysis.java
-git add backend/voc-application/src/main/java/com/geonho/vocautobot/application/analysis/service/VocLogAnalysisService.java
-git add backend/voc-adapter/src/main/java/com/geonho/vocautobot/adapter/in/web/voc/dto/VocResponseWithAnalysis.java
-git add backend/voc-adapter/src/main/java/com/geonho/vocautobot/adapter/in/web/voc/VocController.java
-git add backend/voc-application/src/test/java/com/geonho/vocautobot/application/analysis/service/VocLogAnalysisServiceTest.java
-git add AI_LOG_ANALYSIS_IMPLEMENTATION.md
-git add IMPLEMENTATION_SUMMARY.md
-
-# 커밋 메시지
-# [Feature] VOC 입력 시 AI 로그 분석 구현 (#130)
-# 
-# VOC 생성 시 AI로 관련 로그를 자동 분석하여 예상 원인과 신뢰도 제공
-# 
-# 구현 내용:
-# - VocLogAnalysis DTO: AI 분석 결과 (summary, confidence, causes, recommendation)
-# - VocLogAnalysisService: 키워드 추출 → 로그 검색 → AI 분석
-# - VocController: createVoc() 메서드에 로그 분석 통합
-# - 예외 처리: OpenSearch/LLM 실패 시에도 VOC 생성 정상 처리
-# 
-# 기술 스택:
-# - Spring Boot 3.2.2, Java 17
-# - Ollama LLM, OpenSearch
-# - Hexagonal Architecture
-# 
-# 테스트:
-# - VocLogAnalysisServiceTest (4개 시나리오)
-# 
-# Refs #130
-# 
-# Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+SLACK_ENABLED=true
+SLACK_BOT_USERNAME=VOC Auto Bot
+SLACK_BOT_ICON=:bell:
 ```
 
-## 작업 완료 확인
+## 트랜잭션 처리
+- 알림 전송 실패 시 예외를 던지지 않음
+- VOC 처리는 정상 진행 (트랜잭션 롤백 방지)
+- 실패는 로그로만 기록
 
-- ✅ DTO 생성 (VocLogAnalysis, VocResponseWithAnalysis)
-- ✅ 서비스 구현 (VocLogAnalysisService)
-- ✅ 컨트롤러 통합 (VocController)
-- ✅ 테스트 작성 (VocLogAnalysisServiceTest)
-- ✅ 문서화 (2개 마크다운 파일)
-- ✅ 예외 처리 (로그 없음, 검색 실패, LLM 실패)
-- ✅ 로깅 추가 (분석 시작/완료/실패)
+## 확장 가능성
+1. 다른 알림 채널 추가 (Email, Kakao, SMS 등)
+2. 알림 템플릿 커스터마이징
+3. 비동기 처리 (@Async)
+4. 재시도 로직 (Spring Retry)
+5. 알림 이력 저장
 
-## 참고 자료
+## 테스트 실행 방법
+```bash
+# Unit Test
+gradle :voc-adapter:test --tests SlackNotificationAdapterTest
 
-- Issue: #130
-- Branch: `feature/130-ai-analysis`
-- Worktree: `/Users/geonho.yeom/workspace/voc-wt-130-ai-analysis`
-- 상세 문서: `AI_LOG_ANALYSIS_IMPLEMENTATION.md`
+# Integration Test
+gradle :voc-application:test --tests VocServiceSlackNotificationTest
 
+# All Tests
+gradle test
+```
+
+## 문제 해결
+- Slack Webhook URL이 설정되지 않으면 알림을 보내지 않음
+- `slack.enabled=false`로 알림 비활성화 가능
+- 로그 레벨 DEBUG로 설정하여 상세 로그 확인
+
+## 완료 체크리스트
+- [x] NotificationPort 인터페이스 작성
+- [x] SlackNotificationAdapter 구현
+- [x] SlackProperties 설정 클래스 작성
+- [x] VocService에 알림 로직 통합
+- [x] application.yml 설정 추가
+- [x] Unit Test 작성 (SlackNotificationAdapterTest)
+- [x] Integration Test 작성 (VocServiceSlackNotificationTest)
+- [x] 문서 작성 (SLACK_NOTIFICATION_GUIDE.md)
+- [x] 트랜잭션 롤백 방지 처리
+- [x] 알림 비활성화 옵션 제공
+
+## 다음 단계
+1. Slack Webhook URL 설정
+2. 테스트 환경에서 동작 확인
+3. 프로덕션 배포 전 부하 테스트
+4. 모니터링 및 로그 확인
