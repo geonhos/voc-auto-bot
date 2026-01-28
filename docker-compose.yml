@@ -116,6 +116,32 @@ services:
       - llm
 
   # =========================
+  # AI Service (Python FastAPI)
+  # =========================
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: voc-ai-service
+    restart: unless-stopped
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
+      LLM_MODEL: ${LLM_MODEL:-llama3.2:latest}
+      PORT: 8001
+    ports:
+      - "8001:8001"
+    depends_on:
+      - ollama
+    volumes:
+      - ai_service_chroma:/app/chroma_db
+    networks:
+      - voc-network
+    profiles:
+      - full
+      - llm
+
+  # =========================
   # MailHog (Email Testing)
   # =========================
   mailhog:
@@ -176,6 +202,7 @@ services:
       LLM_API_URL: ${LLM_API_URL:-http://ollama:11434}
       LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
       LLM_EMBEDDING_MODEL: ${LLM_EMBEDDING_MODEL:-nomic-embed-text:latest}
+      AI_SERVICE_URL: http://ai-service:8001
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minio_admin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio_password}
@@ -234,6 +261,7 @@ volumes:
   opensearch_data:
   ollama_data:
   minio_data:
+  ai_service_chroma:
 
 networks:
   voc-network:

@@ -54,6 +54,13 @@ llm:
   api-url: ${LLM_API_URL:http://localhost:11434/api/generate}
   model: ${LLM_MODEL:llama2}
 
+# AI Service (Python FastAPI)
+ai:
+  service:
+    url: ${AI_SERVICE_URL:http://localhost:8001}
+    analyze-endpoint: /api/v1/analyze
+    timeout: ${AI_SERVICE_TIMEOUT:30000}
+
 # MinIO (S3-compatible storage)
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}

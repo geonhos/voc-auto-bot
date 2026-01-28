@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: voc-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - voc-network
+
+  ai-service:
+    build: .
+    container_name: voc-ai-service
+    ports:
+      - "8001:8001"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - EMBEDDING_MODEL=nomic-embed-text
+      - LLM_MODEL=llama3.2:latest
+    depends_on:
+      - ollama
+    networks:
+      - voc-network
+    volumes:
+      - ./chroma_db:/app/chroma_db
+
+networks:
+  voc-network:
+    driver: bridge
+
+volumes:
+  ollama-data:
