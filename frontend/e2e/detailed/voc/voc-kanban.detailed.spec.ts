@@ -548,10 +548,12 @@ test.describe('VOC 칸반 페이지 (/voc/kanban) - 상세 시나리오', () => 
       const card = page.locator('text=VOC-2024-001').locator('..');
       const targetColumn = page.locator('div:has-text("처리중")').locator('..').locator('[onDragOver]');
 
+      const responsePromise = page.waitForResponse(
+        (response) => response.url().includes('/api/vocs/1/status') && response.request().method() === 'PATCH'
+      );
       await card.dragTo(targetColumn);
+      await responsePromise;
 
-      // API 호출 확인
-      await page.waitForTimeout(1000);
       expect(apiCalled).toBe(true);
       expect(requestBody?.status).toBe('IN_PROGRESS');
     });
@@ -579,16 +581,20 @@ test.describe('VOC 칸반 페이지 (/voc/kanban) - 상세 시나리오', () => 
 
       await card.dragTo(sameColumn);
 
-      await page.waitForTimeout(500);
+      // API가 호출되지 않았는지 확인 (짧은 대기 후)
+      await page.waitForLoadState('networkidle');
       expect(apiCalled).toBe(false);
     });
 
     test('7.3 상태 변경 실패 시 에러 알림이 표시된다', async ({ page }) => {
       // 에러 다이얼로그 리스너
       let alertMessage = '';
-      page.on('dialog', async (dialog) => {
-        alertMessage = dialog.message();
-        await dialog.accept();
+      const dialogPromise = new Promise<void>((resolve) => {
+        page.once('dialog', async (dialog) => {
+          alertMessage = dialog.message();
+          await dialog.accept();
+          resolve();
+        });
       });
 
       await page.route('**/api/vocs/1/status', async (route) => {
@@ -609,7 +615,7 @@ test.describe('VOC 칸반 페이지 (/voc/kanban) - 상세 시나리오', () => 
 
       await card.dragTo(targetColumn);
 
-      await page.waitForTimeout(1000);
+      await dialogPromise;
       expect(alertMessage).toContain('상태 변경에 실패했습니다');
     });
 
@@ -653,10 +659,9 @@ test.describe('VOC 칸반 페이지 (/voc/kanban) - 상세 시나리오', () => 
 
       await card.dragTo(targetColumn);
 
-      // 카드가 처리중 컬럼으로 이동 확인 (자동 리페치 후)
-      await page.waitForTimeout(2000);
+      // 카드가 처리중 컬럼으로 이동 확인 (리페치가 완료될 때까지 대기)
       const inProgressColumn = page.locator('div:has-text("처리중")').locator('..');
-      await expect(inProgressColumn.locator('text=VOC-2024-001')).toBeVisible();
+      await expect(inProgressColumn.locator('text=VOC-2024-001')).toBeVisible({ timeout: 5000 });
     });
   });
 

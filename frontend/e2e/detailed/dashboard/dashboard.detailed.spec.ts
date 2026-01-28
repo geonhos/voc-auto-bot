@@ -1,4 +1,8 @@
 import { test, expect } from '@playwright/test';
+import {
+  createMockDashboardStats,
+  createMockApiResponse,
+} from '../../fixtures';
 
 /**
  * @description 대시보드 페이지 상세 E2E 테스트 시나리오
@@ -20,43 +24,11 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('대시보드 페이지 (/dashboard) - 상세 시나리오', () => {
-  const mockDashboardData = {
-    kpi: {
-      totalVocs: 1250,
-      totalVocsChange: { value: 8.5, type: 'increase' as const, count: 98 },
-      avgResolutionTimeHours: 24.5,
-      avgResolutionTimeChange: { value: -12.3, type: 'decrease' as const },
-      resolutionRate: 87.3,
-      resolutionRateChange: { value: 2.1, type: 'increase' as const },
-      pendingVocs: 158,
-      pendingVocsChange: { value: 0, type: 'neutral' as const, count: 0 },
-    },
-    trend: [
-      { date: '2024-01-01', received: 45, resolved: 38, pending: 7 },
-      { date: '2024-01-02', received: 52, resolved: 47, pending: 5 },
-      { date: '2024-01-03', received: 48, resolved: 51, pending: -3 },
-      { date: '2024-01-04', received: 61, resolved: 55, pending: 6 },
-      { date: '2024-01-05', received: 58, resolved: 60, pending: -2 },
-      { date: '2024-01-06', received: 43, resolved: 45, pending: -2 },
-      { date: '2024-01-07', received: 50, resolved: 48, pending: 2 },
-    ],
-    categoryStats: [
-      { categoryId: 1, categoryName: '제품 문의', count: 450, percentage: 36.0 },
-      { categoryId: 2, categoryName: '기술 지원', count: 325, percentage: 26.0 },
-      { categoryId: 3, categoryName: '배송 문의', count: 275, percentage: 22.0 },
-      { categoryId: 4, categoryName: '환불 요청', count: 125, percentage: 10.0 },
-      { categoryId: 5, categoryName: '기타', count: 75, percentage: 6.0 },
-    ],
-    statusDistribution: [
-      { status: 'NEW', statusLabel: '신규', count: 158, percentage: 12.6 },
-      { status: 'IN_PROGRESS', statusLabel: '처리중', count: 305, percentage: 24.4 },
-      { status: 'RESOLVED', statusLabel: '해결', count: 687, percentage: 55.0 },
-      { status: 'REJECTED', statusLabel: '거부', count: 100, percentage: 8.0 },
-    ],
-  };
+  // Use Mock Factory instead of inline data
+  const mockDashboardData = createMockDashboardStats();
 
   test.beforeEach(async ({ page }) => {
-    // API 모킹
+    // API 모킹 - Mock Factory 패턴 적용
     await page.route('**/api/statistics/dashboard**', async (route) => {
       const url = route.request().url();
       const period = new URL(url).searchParams.get('period') || '7days';
@@ -64,28 +36,25 @@ test.describe('대시보드 페이지 (/dashboard) - 상세 시나리오', () =>
       let responseData = mockDashboardData;
 
       if (period === 'today') {
-        responseData = {
-          ...mockDashboardData,
-          kpi: { ...mockDashboardData.kpi, totalVocs: 50 },
-        };
+        // Factory 함수를 사용하여 특정 값만 override
+        responseData = createMockDashboardStats({
+          kpi: { ...mockDashboardData.kpi, totalVocs: 50, todayVocs: 50 },
+        });
       } else if (period === '30days') {
-        responseData = {
-          ...mockDashboardData,
+        responseData = createMockDashboardStats({
           kpi: {
             ...mockDashboardData.kpi,
             totalVocs: 3500,
             avgResolutionTimeHours: 28.3,
           },
-        };
+        });
       }
 
+      // createMockApiResponse를 사용하여 API 응답 래핑
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          success: true,
-          data: responseData,
-        }),
+        body: JSON.stringify(createMockApiResponse(responseData)),
       });
     });
 
@@ -381,18 +350,16 @@ test.describe('대시보드 페이지 (/dashboard) - 상세 시나리오', () =>
     });
 
     test('4.7 데이터가 없을 때 빈 상태 메시지가 표시된다', async ({ page }) => {
-      // 빈 데이터로 API 재모킹
+      // 빈 데이터로 API 재모킹 - Factory 패턴 사용
       await page.route('**/api/statistics/dashboard**', async (route) => {
+        const emptyTrendData = createMockDashboardStats({
+          trend: [], // 빈 배열로 override
+        });
+
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({
-            success: true,
-            data: {
-              ...mockDashboardData,
-              trend: [],
-            },
-          }),
+          body: JSON.stringify(createMockApiResponse(emptyTrendData)),
         });
       });
 
@@ -456,17 +423,16 @@ test.describe('대시보드 페이지 (/dashboard) - 상세 시나리오', () =>
     });
 
     test('5.6 데이터가 없을 때 빈 상태 메시지가 표시된다', async ({ page }) => {
+      // Factory 패턴을 사용하여 빈 카테고리 통계 생성
       await page.route('**/api/statistics/dashboard**', async (route) => {
+        const emptyData = createMockDashboardStats({
+          categoryStats: [], // 빈 배열로 override
+        });
+
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({
-            success: true,
-            data: {
-              ...mockDashboardData,
-              categoryStats: [],
-            },
-          }),
+          body: JSON.stringify(createMockApiResponse(emptyData)),
         });
       });
 

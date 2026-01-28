@@ -191,9 +191,12 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
       const searchButton = page.locator('button[type="submit"]').first();
 
       await searchInput.fill('배송');
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await searchButton.click();
+      await responsePromise;
 
-      await page.waitForTimeout(500);
       expect(searchParam).toBe('배송');
     });
 
@@ -217,9 +220,12 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
       const searchInput = page.locator('input[placeholder*="검색"]');
 
       await searchInput.fill('제품');
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await searchInput.press('Enter');
+      await responsePromise;
 
-      await page.waitForTimeout(500);
       expect(searchParam).toBe('제품');
     });
 
@@ -238,12 +244,18 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
       const searchInput = page.locator('input[placeholder*="검색"]');
 
       await searchInput.fill('배송');
+      const response1 = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await searchInput.press('Enter');
-      await page.waitForTimeout(300);
+      await response1;
 
       await searchInput.clear();
+      const response2 = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await searchInput.press('Enter');
-      await page.waitForTimeout(300);
+      await response2;
 
       const rows = page.locator('tbody tr');
       await expect(rows).toHaveCount(3);
@@ -297,7 +309,7 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
     test.beforeEach(async ({ page }) => {
       // 필터 영역 열기
       await page.getByRole('button', { name: '필터' }).click();
-      await page.waitForTimeout(300);
+      await expect(page.locator('text=상태').first()).toBeVisible();
     });
 
     test('4.1 모든 상태 옵션이 표시된다', async ({ page }) => {
@@ -336,8 +348,11 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
         .locator('label', { hasText: '신규' })
         .locator('input[type="checkbox"]');
 
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await newStatusCheckbox.check();
-      await page.waitForTimeout(500);
+      await responsePromise;
 
       expect(statusParam).toBe('NEW');
     });
@@ -381,7 +396,7 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
     test.beforeEach(async ({ page }) => {
       // 필터 영역 열기
       await page.getByRole('button', { name: '필터' }).click();
-      await page.waitForTimeout(300);
+      await expect(page.locator('text=우선순위').first()).toBeVisible();
     });
 
     test('5.1 모든 우선순위 옵션이 표시된다', async ({ page }) => {
@@ -418,8 +433,11 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
         .locator('label', { hasText: '높음' })
         .locator('input[type="checkbox"]');
 
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await highPriorityCheckbox.check();
-      await page.waitForTimeout(500);
+      await responsePromise;
 
       expect(priorityParam).toBe('HIGH');
     });
@@ -455,7 +473,7 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
     test.beforeEach(async ({ page }) => {
       // 필터 영역 열기
       await page.getByRole('button', { name: '필터' }).click();
-      await page.waitForTimeout(300);
+      await expect(page.locator('text=기간').first()).toBeVisible();
     });
 
     test('6.1 시작일과 종료일 입력 필드가 표시된다', async ({ page }) => {
@@ -499,10 +517,17 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
       const fromDate = page.locator('input[type="date"]').first();
       const toDate = page.locator('input[type="date"]').nth(1);
 
+      const response1 = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await fromDate.fill('2026-01-20');
-      await page.waitForTimeout(300);
+      await response1;
+
+      const response2 = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await toDate.fill('2026-01-27');
-      await page.waitForTimeout(500);
+      await response2;
 
       expect(fromDateParam).toBe('2026-01-20');
       expect(toDateParam).toBe('2026-01-27');
@@ -540,7 +565,7 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
 
       // 필터 열기 및 선택
       await page.getByRole('button', { name: '필터' }).click();
-      await page.waitForTimeout(300);
+      await expect(page.locator('text=상태').first()).toBeVisible();
 
       const newCheckbox = page
         .locator('label', { hasText: '신규' })
@@ -548,8 +573,11 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
       await newCheckbox.check();
 
       // 초기화
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await page.getByRole('button', { name: '초기화' }).click();
-      await page.waitForTimeout(300);
+      await responsePromise;
 
       // 검증
       await expect(searchInput).toHaveValue('');
@@ -569,11 +597,17 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
     test('7.4 초기화 후 전체 VOC 목록이 표시된다', async ({ page }) => {
       const searchInput = page.locator('input[placeholder*="검색"]');
       await searchInput.fill('배송');
+      const response1 = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await searchInput.press('Enter');
-      await page.waitForTimeout(300);
+      await response1;
 
+      const response2 = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await page.getByRole('button', { name: '초기화' }).click();
-      await page.waitForTimeout(500);
+      await response2;
 
       const rows = page.locator('tbody tr');
       await expect(rows).toHaveCount(3);
@@ -823,8 +857,11 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
 
       const pageSizeSelect = page.locator('#pageSize');
 
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await pageSizeSelect.selectOption('20');
-      await page.waitForTimeout(500);
+      await responsePromise;
 
       expect(sizeParam).toBe('20');
       await expect(pageSizeSelect).toHaveValue('20');
@@ -857,8 +894,11 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
 
       const pageSizeSelect = page.locator('#pageSize');
 
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await pageSizeSelect.selectOption('20');
-      await page.waitForTimeout(500);
+      await responsePromise;
 
       expect(pageParam).toBe('0');
     });
@@ -903,8 +943,11 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
 
       const nextButton = page.getByRole('button', { name: '다음' });
 
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await nextButton.click();
-      await page.waitForTimeout(500);
+      await responsePromise;
 
       expect(pageParam).toBe(1);
     });
@@ -937,8 +980,11 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
 
       const prevButton = page.getByRole('button', { name: '이전' });
 
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await prevButton.click();
-      await page.waitForTimeout(500);
+      await responsePromise;
 
       expect(pageParam).toBe(0);
     });
@@ -1198,15 +1244,23 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
 
       const searchInput = page.locator('input[placeholder*="검색"]');
       await searchInput.fill('배송');
+      const response1 = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await searchInput.press('Enter');
-      await page.waitForTimeout(300);
+      await response1;
 
       await page.getByRole('button', { name: '필터' }).click();
+      await expect(page.locator('text=상태').first()).toBeVisible();
+
       const newCheckbox = page
         .locator('label', { hasText: '신규' })
         .locator('input[type="checkbox"]');
+      const response2 = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
       await newCheckbox.check();
-      await page.waitForTimeout(500);
+      await response2;
 
       expect(searchParam).toBe('배송');
       expect(statusParam).toBe('NEW');
@@ -1214,7 +1268,7 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
 
     test('23.2 우선순위와 날짜 범위 필터를 동시에 적용할 수 있다', async ({ page }) => {
       await page.getByRole('button', { name: '필터' }).click();
-      await page.waitForTimeout(300);
+      await expect(page.locator('text=우선순위').first()).toBeVisible();
 
       const highCheckbox = page
         .locator('label', { hasText: '높음' })
@@ -1233,7 +1287,7 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
       await searchInput.fill('배송');
 
       await page.getByRole('button', { name: '필터' }).click();
-      await page.waitForTimeout(300);
+      await expect(page.locator('text=상태').first()).toBeVisible();
 
       const newCheckbox = page
         .locator('label', { hasText: '신규' })
@@ -1270,16 +1324,19 @@ test.describe('VOC 테이블 페이지 (/voc/table) - 상세 시나리오', () =
 
     test('24.2 필터 변경 시 디바운스 없이 즉시 적용된다', async ({ page }) => {
       await page.getByRole('button', { name: '필터' }).click();
-      await page.waitForTimeout(300);
+      await expect(page.locator('text=상태').first()).toBeVisible();
 
       const startTime = Date.now();
 
       const newCheckbox = page
         .locator('label', { hasText: '신규' })
         .locator('input[type="checkbox"]');
-      await newCheckbox.check();
 
-      await page.waitForTimeout(500);
+      const responsePromise = page.waitForResponse((response) =>
+        response.url().includes('/api/vocs?')
+      );
+      await newCheckbox.check();
+      await responsePromise;
 
       const endTime = Date.now();
       const responseTime = endTime - startTime;
