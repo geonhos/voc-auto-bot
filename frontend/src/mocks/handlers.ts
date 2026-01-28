@@ -475,3 +475,284 @@ function getStatusLabel(status: VocStatus): string {
   };
   return labels[status];
 }
+
+// Payment Error Handlers
+import type { PaymentRequest, PaymentResponse } from '@/types';
+import {
+  mockPaymentErrorLogs,
+  mockPaymentTransactions,
+  getPaymentErrorLogs,
+  getPaymentTransactions,
+  getRandomPaymentError,
+} from './data/paymentErrors';
+
+// Append payment handlers to existing handlers array
+handlers.push(
+  // Get payment error logs
+  http.get(`${API_BASE}/payments/errors`, async ({ request }) => {
+    await delay(300);
+    const url = new URL(request.url);
+    const errorCode = url.searchParams.get('errorCode');
+    const accountId = url.searchParams.get('accountId');
+    const level = url.searchParams.get('level');
+    const fromDate = url.searchParams.get('fromDate');
+    const toDate = url.searchParams.get('toDate');
+
+    const filteredLogs = getPaymentErrorLogs({
+      errorCode: errorCode ?? undefined,
+      accountId: accountId ?? undefined,
+      level: level ?? undefined,
+      fromDate: fromDate ?? undefined,
+      toDate: toDate ?? undefined,
+    });
+
+    return HttpResponse.json({
+      success: true,
+      data: filteredLogs,
+      totalCount: filteredLogs.length,
+    });
+  }),
+
+  // Get payment error log by ID
+  http.get(`${API_BASE}/payments/errors/:id`, async ({ params }) => {
+    await delay(200);
+    const { id } = params;
+    const errorLog = mockPaymentErrorLogs.find((log) => log.id === id);
+
+    if (!errorLog) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'ERROR_LOG_NOT_FOUND',
+            message: '오류 로그를 찾을 수 없습니다',
+          },
+        },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({ success: true, data: errorLog });
+  }),
+
+  // Get payment transactions
+  http.get(`${API_BASE}/payments/transactions`, async ({ request }) => {
+    await delay(300);
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
+    const accountId = url.searchParams.get('accountId');
+    const errorCode = url.searchParams.get('errorCode');
+
+    const filteredTransactions = getPaymentTransactions({
+      status: status ?? undefined,
+      accountId: accountId ?? undefined,
+      errorCode: errorCode ?? undefined,
+    });
+
+    return HttpResponse.json({
+      success: true,
+      data: filteredTransactions,
+      totalCount: filteredTransactions.length,
+    });
+  }),
+
+  // Get payment transaction by ID
+  http.get(`${API_BASE}/payments/transactions/:id`, async ({ params }) => {
+    await delay(200);
+    const { id } = params;
+    const transaction = mockPaymentTransactions.find((txn) => txn.transactionId === id);
+
+    if (!transaction) {
+      return HttpResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'TRANSACTION_NOT_FOUND',
+            message: '거래 정보를 찾을 수 없습니다',
+          },
+        },
+        { status: 404 }
+      );
+    }
+
+    return HttpResponse.json({ success: true, data: transaction });
+  }),
+
+  // Process payment (simulate various error scenarios)
+  http.post(`${API_BASE}/payments/process`, async ({ request }) => {
+    await delay(800);
+    const body = (await request.json()) as PaymentRequest;
+
+    // Simulate different error scenarios based on card number patterns
+    const cardNumber = body.cardNumber.replace(/\s/g, '');
+    const last4 = cardNumber.slice(-4);
+
+    // Trigger specific error scenarios based on last 4 digits
+    if (last4 === '0000') {
+      // Timeout scenario
+      await delay(30000); // This will trigger timeout in client
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: 'PAYMENT_TIMEOUT',
+        errorMessage: '결제 처리 시간 초과',
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 408 });
+    }
+
+    if (last4 === '1111') {
+      // Insufficient balance
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: 'INSUFFICIENT_BALANCE',
+        errorMessage: '잔액 부족',
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 400 });
+    }
+
+    if (last4 === '2222') {
+      // Invalid card
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: 'INVALID_CARD',
+        errorMessage: '유효하지 않은 카드 정보',
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 400 });
+    }
+
+    if (last4 === '3333') {
+      // Card expired
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: 'CARD_EXPIRED',
+        errorMessage: '카드 유효기간 만료',
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 400 });
+    }
+
+    if (last4 === '4444') {
+      // Network error
+      return HttpResponse.json(
+        {
+          success: false,
+          errorCode: 'NETWORK_ERROR',
+          errorMessage: '네트워크 연결 오류',
+          timestamp: new Date().toISOString(),
+        },
+        { status: 503 }
+      );
+    }
+
+    if (last4 === '5555') {
+      // Fraud detected
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: 'FRAUD_DETECTED',
+        errorMessage: '이상 거래 감지',
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 403 });
+    }
+
+    if (last4 === '6666') {
+      // Daily limit exceeded
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: 'DAILY_LIMIT_EXCEEDED',
+        errorMessage: '일일 한도 초과',
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 400 });
+    }
+
+    if (last4 === '7777') {
+      // System error
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: 'SYSTEM_ERROR',
+        errorMessage: '내부 시스템 오류',
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 500 });
+    }
+
+    if (last4 === '8888') {
+      // Authentication failed
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: 'AUTHENTICATION_FAILED',
+        errorMessage: '카드 인증 실패',
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 401 });
+    }
+
+    if (last4 === '9999') {
+      // Random error for testing
+      const randomError = getRandomPaymentError();
+      const response: PaymentResponse = {
+        success: false,
+        errorCode: randomError.errorCode,
+        errorMessage: randomError.message,
+        timestamp: new Date().toISOString(),
+      };
+      return HttpResponse.json(response, { status: 400 });
+    }
+
+    // Success scenario - all other cards
+    const transactionId = 'TXN-' + Date.now().toString();
+    const response: PaymentResponse = {
+      success: true,
+      transactionId,
+      status: 'SUCCESS',
+      timestamp: new Date().toISOString(),
+    };
+    return HttpResponse.json(response, { status: 200 });
+  }),
+
+  // Get payment error statistics
+  http.get(`${API_BASE}/payments/statistics/errors`, async ({ request }) => {
+    await delay(400);
+    const url = new URL(request.url);
+    const fromDate = url.searchParams.get('fromDate');
+    const toDate = url.searchParams.get('toDate');
+
+    const logs = getPaymentErrorLogs({
+      fromDate: fromDate ?? undefined,
+      toDate: toDate ?? undefined,
+    });
+
+    // Calculate statistics
+    const errorsByCode = logs.reduce(
+      (acc, log) => {
+        acc[log.errorCode] = (acc[log.errorCode] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    const errorsByLevel = logs.reduce(
+      (acc, log) => {
+        acc[log.level] = (acc[log.level] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+
+    const totalAmount = logs.reduce((sum, log) => sum + log.amount, 0);
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        totalErrors: logs.length,
+        errorsByCode,
+        errorsByLevel,
+        totalFailedAmount: totalAmount,
+        averageFailedAmount: logs.length > 0 ? totalAmount / logs.length : 0,
+      },
+    });
+  })
+);
