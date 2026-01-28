@@ -17,7 +17,7 @@ analysis_service: Optional[AnalysisService] = None
 def initialize_services(
     ollama_base_url: str = "http://localhost:11434",
     embedding_model: str = "nomic-embed-text",
-    llm_model: str = "llama3.2:latest",
+    llm_model: str = "gpt-oss:20b",
 ) -> None:
     """Initialize services and load mock data.
 

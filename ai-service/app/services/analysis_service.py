@@ -21,7 +21,7 @@ class AnalysisService:
     def __init__(
         self,
         embedding_service: EmbeddingService,
-        model_name: str = "llama3.2:latest",
+        model_name: str = "gpt-oss:20b",
         ollama_base_url: str = "http://localhost:11434",
     ):
         """Initialize analysis service.
@@ -203,10 +203,26 @@ Important:
                 logLevel=log.logLevel,
                 serviceName=log.serviceName,
                 message=log.message,
-                relevanceScore=round(score, 2),
+                relevanceScore=round(self._normalize_score(score), 2),
             )
             for log, score in similar_logs
         ]
+
+    def _normalize_score(self, score: float) -> float:
+        """Normalize relevance score to 0-1 range.
+
+        Args:
+            score: Raw relevance score from vector store.
+
+        Returns:
+            Normalized score in [0, 1] range.
+        """
+        # If score is already in [0, 1] range, keep it
+        if 0.0 <= score <= 1.0:
+            return score
+        # ChromaDB can return negative scores; normalize from [-300, 300] to [0, 1]
+        normalized = (score + 300) / 600
+        return max(0.0, min(1.0, normalized))
 
     def _create_empty_response(self, reason: str) -> AnalysisResponse:
         """Create empty response when analysis cannot be performed.
