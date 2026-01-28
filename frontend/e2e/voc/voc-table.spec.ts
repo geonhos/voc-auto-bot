@@ -1,3 +1,7 @@
+/**
+ * @see ./detailed/voc/voc-table.detailed.spec.ts for detailed UI interaction tests
+ */
+
 import { test, expect } from '@playwright/test';
 import { VocTablePage } from '../page-objects';
 import { testVocs, pageResponseMock, testCategories } from '../fixtures';

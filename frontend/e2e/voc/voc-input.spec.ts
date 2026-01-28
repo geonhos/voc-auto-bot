@@ -1,3 +1,7 @@
+/**
+ * @see ./detailed/voc/voc-input.detailed.spec.ts for detailed UI interaction tests
+ */
+
 import { test, expect } from '@playwright/test';
 import { VocInputPage } from '../page-objects';
 import { createVocFormData, testCategories } from '../fixtures';

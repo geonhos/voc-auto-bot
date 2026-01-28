@@ -1,3 +1,7 @@
+/**
+ * @see ./detailed/admin/users.detailed.spec.ts for detailed UI interaction tests
+ */
+
 import { test, expect } from '@playwright/test';
 import { UserPage } from '../pages/UserPage';
 import { mockApi, createTestUser } from '../utils/test-helpers';

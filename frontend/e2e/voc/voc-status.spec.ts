@@ -1,3 +1,7 @@
+/**
+ * @see ./detailed/public/voc-status.detailed.spec.ts for detailed UI interaction tests
+ */
+
 import { test, expect } from '@playwright/test';
 import { VocStatusPage } from '../page-objects';
 import { statusLookupData, testVocs } from '../fixtures';
