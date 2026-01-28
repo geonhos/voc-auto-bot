@@ -171,29 +171,25 @@ export default function DashboardPage() {
               title="총 접수 건수"
               value={`${safeKpi.totalVocs.toLocaleString()}건`}
               icon={<BarChart3Icon className="h-6 w-6" />}
-              change={{ value: 12, type: 'increase', label: '전일 대비 12% 증가' }}
+              change={kpi?.totalVocsChange}
             />
             <KpiCard
               title="평균 처리 시간"
               value={`${safeKpi.avgResolutionTimeHours.toFixed(1)}시간`}
               icon={<ClockIcon className="h-6 w-6" />}
-              change={{ value: 5, type: 'decrease', label: '전일 대비 5% 감소' }}
+              change={kpi?.avgResolutionTimeChange}
             />
             <KpiCard
               title="완료율"
               value={`${safeKpi.resolutionRate.toFixed(1)}%`}
               icon={<CheckCircleIcon className="h-6 w-6" />}
-              change={{ value: 3, type: 'increase', label: '전일 대비 3% 증가' }}
+              change={kpi?.resolutionRateChange}
             />
             <KpiCard
               title="처리 중"
               value={`${safeKpi.pendingVocs.toLocaleString()}건`}
               icon={<ActivityIcon className="h-6 w-6" />}
-              change={{
-                value: safeKpi.totalVocs > 0 ? parseFloat(((safeKpi.pendingVocs / safeKpi.totalVocs) * 100).toFixed(2)) : 0,
-                type: 'neutral',
-                label: safeKpi.totalVocs > 0 ? `전체 VOC의 ${((safeKpi.pendingVocs / safeKpi.totalVocs) * 100).toFixed(1)}%` : '전체 VOC의 0%',
-              }}
+              change={kpi?.pendingVocsChange}
             />
           </KpiGrid>
         </DashboardSection>

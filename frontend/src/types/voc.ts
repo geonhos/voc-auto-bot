@@ -1,6 +1,5 @@
 export type VocStatus =
-  | 'RECEIVED'
-  | 'ASSIGNED'
+  | 'NEW'
   | 'IN_PROGRESS'
   | 'PENDING'
   | 'RESOLVED'

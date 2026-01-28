@@ -4,7 +4,7 @@ import { VocStatusTimeline } from '../VocStatusTimeline';
 
 describe('VocStatusTimeline', () => {
   const mockStatusHistory = [
-    { id: 1, status: 'RECEIVED' as const, statusLabel: '접수', changedAt: '2026-01-23T14:30:25Z' },
+    { id: 1, status: 'NEW' as const, statusLabel: '접수', changedAt: '2026-01-23T14:30:25Z' },
     { id: 2, status: 'IN_PROGRESS' as const, statusLabel: '처리중', changedAt: '2026-01-23T14:45:30Z' },
   ];
 

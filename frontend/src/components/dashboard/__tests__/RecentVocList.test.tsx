@@ -10,7 +10,7 @@ const mockVocs: Voc[] = [
     ticketId: 'VOC-2024-001',
     title: '제품 불량 문의',
     content: '제품에 결함이 있습니다',
-    status: 'RECEIVED',
+    status: 'NEW',
     priority: 'HIGH',
     channel: 'EMAIL',
     customerName: '홍길동',

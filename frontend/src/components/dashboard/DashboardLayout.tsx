@@ -95,13 +95,13 @@ export function DashboardCard({ children, title, className }: DashboardCardProps
   return (
     <div
       className={cn(
-        'rounded-xl border border-gray-200 bg-white p-6 shadow-sm',
-        'dark:border-gray-700 dark:bg-gray-800',
+        'rounded-xl border border-border-light bg-surface-light p-6 shadow-sm',
+        'dark:border-border-dark dark:bg-surface-dark',
         className
       )}
     >
       {title && (
-        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
           {title}
         </h3>
       )}

@@ -4,21 +4,19 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { VocPriorityBadge } from '@/components/voc/VocPriorityBadge';
-import { VocStatusBadge } from '@/components/voc/VocStatusBadge';
-import { useUsers } from '@/hooks/useUsers';
-import { useVoc, useChangeVocStatus, useAddVocMemo, useAssignVoc } from '@/hooks/useVocs';
+import { useCategoryTree } from '@/hooks/useCategories';
+import { useSimilarVocs } from '@/hooks/useSimilarVocs';
+import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc } from '@/hooks/useVocs';
 import type { VocStatus, VocMemo } from '@/types';
 
-const STATUS_OPTIONS: { value: VocStatus; label: string }[] = [
-  { value: 'RECEIVED', label: '접수' },
-  { value: 'ASSIGNED', label: '배정' },
-  { value: 'IN_PROGRESS', label: '처리중' },
-  { value: 'PENDING', label: '보류' },
-  { value: 'RESOLVED', label: '완료' },
-  { value: 'CLOSED', label: '종료' },
-  { value: 'REJECTED', label: '반려' },
-];
+const STATUS_MAP: Record<VocStatus, { label: string; icon: string; class: string }> = {
+  NEW: { label: '접수', icon: 'inbox', class: 'status-received' },
+  IN_PROGRESS: { label: '처리중', icon: 'sync', class: 'status-processing' },
+  PENDING: { label: '보류', icon: 'pause_circle', class: 'status-analyzing' },
+  RESOLVED: { label: '완료', icon: 'check_circle', class: 'status-completed' },
+  CLOSED: { label: '종료', icon: 'archive', class: 'status-completed' },
+  REJECTED: { label: '반려', icon: 'block', class: 'status-rejected' },
+};
 
 export default function VocDetailPage() {
   const params = useParams();
@@ -26,18 +24,15 @@ export default function VocDetailPage() {
   const vocId = Number(params.id);
 
   const { data: voc, isLoading, error } = useVoc(vocId);
-  const { data: usersData } = useUsers({ page: 0, size: 100 });
+  const { data: categoryTree } = useCategoryTree();
+  const { data: similarVocs } = useSimilarVocs(vocId, { limit: 5, enabled: !!voc });
   const changeStatusMutation = useChangeVocStatus();
   const addMemoMutation = useAddVocMemo();
-  const assignMutation = useAssignVoc();
+  const updateVocMutation = useUpdateVoc();
 
   const [newMemo, setNewMemo] = useState('');
-  const [isInternalMemo, setIsInternalMemo] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<VocStatus | ''>('');
-  const [processingNote, setProcessingNote] = useState('');
-  const [selectedAssignee, setSelectedAssignee] = useState<number | ''>('');
-
-  const users = usersData?.data?.content ?? [];
+  const [selectedMainCategory, setSelectedMainCategory] = useState<number | ''>('');
+  const [selectedSubCategory, setSelectedSubCategory] = useState<number | ''>('');
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -47,28 +42,29 @@ export default function VocDetailPage() {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+      second: '2-digit',
     });
   };
 
-  const handleStatusChange = async () => {
-    if (!selectedStatus || !voc) return;
-
-    try {
-      await changeStatusMutation.mutateAsync({
-        vocId: voc.id,
-        data: {
-          status: selectedStatus,
-          processingNote: processingNote || undefined,
-        },
-      });
-      setSelectedStatus('');
-      setProcessingNote('');
-    } catch (err) {
-      console.error('Failed to change status:', err);
-    }
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
   };
 
-  const handleAddMemo = async () => {
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
+  const handleSaveMemo = async () => {
     if (!newMemo.trim() || !voc) return;
 
     try {
@@ -76,35 +72,69 @@ export default function VocDetailPage() {
         vocId: voc.id,
         data: {
           content: newMemo,
-          isInternal: isInternalMemo,
+          isInternal: true,
         },
       });
       setNewMemo('');
-      setIsInternalMemo(false);
     } catch (err) {
       console.error('Failed to add memo:', err);
     }
   };
 
-  const handleAssign = async () => {
-    if (!selectedAssignee || !voc) return;
+  const handleSaveCategory = async () => {
+    if (!voc || !selectedSubCategory) return;
 
     try {
-      await assignMutation.mutateAsync({
+      await updateVocMutation.mutateAsync({
         vocId: voc.id,
         data: {
-          assigneeId: Number(selectedAssignee),
+          categoryId: Number(selectedSubCategory),
         },
       });
-      setSelectedAssignee('');
     } catch (err) {
-      console.error('Failed to assign:', err);
+      console.error('Failed to update category:', err);
     }
   };
 
+  const handleReject = async () => {
+    if (!voc) return;
+    if (!confirm('이 VOC를 반려하시겠습니까?')) return;
+
+    try {
+      await changeStatusMutation.mutateAsync({
+        vocId: voc.id,
+        data: {
+          status: 'REJECTED',
+        },
+      });
+    } catch (err) {
+      console.error('Failed to reject:', err);
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!voc) return;
+    if (!confirm('이 VOC를 완료 처리하시겠습니까?')) return;
+
+    try {
+      await changeStatusMutation.mutateAsync({
+        vocId: voc.id,
+        data: {
+          status: 'RESOLVED',
+        },
+      });
+    } catch (err) {
+      console.error('Failed to complete:', err);
+    }
+  };
+
+  const mainCategories = categoryTree?.filter((cat) => cat.level === 0) || [];
+  const subCategories =
+    categoryTree?.find((cat) => cat.id === selectedMainCategory)?.children || [];
+
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -114,7 +144,7 @@ export default function VocDetailPage() {
 
   if (error || !voc) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <h2 className="text-lg font-semibold text-red-700 mb-2">VOC를 찾을 수 없습니다</h2>
           <p className="text-red-600 mb-4">요청하신 VOC가 존재하지 않거나 접근 권한이 없습니다.</p>
@@ -129,309 +159,402 @@ export default function VocDetailPage() {
     );
   }
 
+  const statusInfo = STATUS_MAP[voc.status];
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <Link href="/voc/table" className="hover:text-blue-600">
-            VOC 목록
-          </Link>
-          <span>/</span>
-          <span>{voc.ticketId}</span>
+        <h1 className="text-3xl font-bold mb-2">VOC 상세</h1>
+        <p className="text-slate-500 dark:text-slate-400">
+          VOC 처리 담당자를 위한 상세 정보 및 분석 결과를 확인하세요.
+        </p>
+      </div>
+
+      {/* 1. VOC 기본 정보 */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <span className="material-icons-outlined text-primary">receipt_long</span>
+            VOC 기본 정보
+          </h2>
         </div>
-        <div className="flex items-start justify-between gap-4">
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                Ticket ID
+              </span>
+              <p className="text-base font-mono">{voc.ticketId}</p>
+            </div>
+            <div>
+              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                상태
+              </span>
+              <span className={`status-badge ${statusInfo.class}`}>
+                <span className="material-icons-outlined text-sm">{statusInfo.icon}</span>
+                {statusInfo.label}
+              </span>
+            </div>
+            <div>
+              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                접수일시
+              </span>
+              <p className="text-base">{formatDateTime(voc.createdAt)}</p>
+            </div>
+            <div>
+              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                최종 사용자 이메일
+              </span>
+              <p className="text-base">{voc.customerEmail}</p>
+            </div>
+          </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{voc.title}</h1>
-            <div className="flex items-center gap-3 mt-2">
-              <VocStatusBadge status={voc.status} />
-              <VocPriorityBadge priority={voc.priority} />
-              <span className="text-sm text-gray-500">티켓 ID: {voc.ticketId}</span>
+            <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+              제목
+            </span>
+            <p className="text-base font-medium">{voc.title}</p>
+          </div>
+          <div>
+            <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+              내용
+            </span>
+            <p className="text-base leading-relaxed whitespace-pre-wrap bg-slate-50 dark:bg-slate-800/50 p-4 rounded border border-slate-200 dark:border-slate-700">
+              {voc.content}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                발생 시간
+              </span>
+              <p className="text-base">{formatDateTime(voc.createdAt)}</p>
+            </div>
+            <div>
+              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                계정 ID
+              </span>
+              <p className="text-base">{voc.customerName}</p>
             </div>
           </div>
-          <Link
-            href={`/voc/${voc.id}/similar`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-          >
-            유사 VOC 찾기
-          </Link>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* VOC Content */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">VOC 내용</h2>
-            <div className="prose prose-sm max-w-none">
-              <p className="whitespace-pre-wrap text-gray-700">{voc.content}</p>
-            </div>
-          </div>
-
-          {/* Attachments */}
           {voc.attachments && voc.attachments.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">첨부파일</h2>
-              <ul className="space-y-2">
+            <div>
+              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                첨부 파일
+              </span>
+              <div className="space-y-2">
                 {voc.attachments.map((attachment) => (
-                  <li key={attachment.id} className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                    </svg>
-                    <a
-                      href={attachment.downloadUrl}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {attachment.originalFileName}
-                    </a>
-                    <span className="text-xs text-gray-400">
-                      ({(attachment.fileSize / 1024).toFixed(1)} KB)
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Memos */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">메모 및 처리 이력</h2>
-
-            {/* Memo List */}
-            <div className="space-y-4 mb-6">
-              {voc.memos && voc.memos.length > 0 ? (
-                voc.memos.map((memo: VocMemo) => (
-                  <div
-                    key={memo.id}
-                    className={`p-4 rounded-lg ${
-                      memo.isInternal ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50 border border-gray-200'
-                    }`}
+                  <a
+                    key={attachment.id}
+                    href={attachment.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 px-4 py-3 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">{memo.author.name}</span>
-                        {memo.isInternal && (
-                          <span className="text-xs px-2 py-0.5 bg-yellow-200 text-yellow-800 rounded">
-                            내부 메모
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-500">{formatDateTime(memo.createdAt)}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{memo.content}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-sm">메모가 없습니다.</p>
-              )}
-            </div>
-
-            {/* Add Memo Form */}
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">메모 추가</h3>
-              <textarea
-                value={newMemo}
-                onChange={(e) => setNewMemo(e.target.value)}
-                placeholder="메모를 입력하세요..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-              />
-              <div className="flex items-center justify-between mt-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={isInternalMemo}
-                    onChange={(e) => setIsInternalMemo(e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                  <span className="text-gray-600">내부 메모 (고객에게 비공개)</span>
-                </label>
-                <button
-                  onClick={handleAddMemo}
-                  disabled={!newMemo.trim() || addMemoMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {addMemoMutation.isPending ? '저장 중...' : '메모 추가'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Customer Info */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">고객 정보</h2>
-            <dl className="space-y-3">
-              <div>
-                <dt className="text-xs text-gray-500">이름</dt>
-                <dd className="text-sm text-gray-900">{voc.customerName}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-gray-500">이메일</dt>
-                <dd className="text-sm text-gray-900">{voc.customerEmail}</dd>
-              </div>
-              {voc.customerPhone && (
-                <div>
-                  <dt className="text-xs text-gray-500">전화번호</dt>
-                  <dd className="text-sm text-gray-900">{voc.customerPhone}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
-
-          {/* VOC Info */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">VOC 정보</h2>
-            <dl className="space-y-3">
-              <div>
-                <dt className="text-xs text-gray-500">카테고리</dt>
-                <dd className="text-sm text-gray-900">{voc.category?.name || '미분류'}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-gray-500">채널</dt>
-                <dd className="text-sm text-gray-900">{voc.channel}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-gray-500">담당자</dt>
-                <dd className="text-sm text-gray-900">{voc.assignee?.name || '미배정'}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-gray-500">등록일</dt>
-                <dd className="text-sm text-gray-900">{formatDateTime(voc.createdAt)}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-gray-500">최종 수정</dt>
-                <dd className="text-sm text-gray-900">{formatDateTime(voc.updatedAt)}</dd>
-              </div>
-              {voc.resolvedAt && (
-                <div>
-                  <dt className="text-xs text-gray-500">처리 완료일</dt>
-                  <dd className="text-sm text-gray-900">{formatDateTime(voc.resolvedAt)}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
-
-          {/* Actions */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">처리</h2>
-
-            {/* Status Change */}
-            <div className="space-y-3 mb-4">
-              <label className="text-sm font-medium text-gray-700">상태 변경</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as VocStatus)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">상태 선택</option>
-                {STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {selectedStatus && (
-                <textarea
-                  value={processingNote}
-                  onChange={(e) => setProcessingNote(e.target.value)}
-                  placeholder="처리 내용을 입력하세요 (선택)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={2}
-                />
-              )}
-              <button
-                onClick={handleStatusChange}
-                disabled={!selectedStatus || changeStatusMutation.isPending}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {changeStatusMutation.isPending ? '변경 중...' : '상태 변경'}
-              </button>
-            </div>
-
-            {/* Assignee Change */}
-            <div className="space-y-3 border-t border-gray-200 pt-4">
-              <label className="text-sm font-medium text-gray-700">담당자 배정</label>
-              <select
-                value={selectedAssignee}
-                onChange={(e) => setSelectedAssignee(e.target.value ? Number(e.target.value) : '')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">담당자 선택</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name} (@{user.username})
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={handleAssign}
-                disabled={!selectedAssignee || assignMutation.isPending}
-                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {assignMutation.isPending ? '배정 중...' : '담당자 배정'}
-              </button>
-            </div>
-          </div>
-
-          {/* AI Analysis (if available) */}
-          {voc.aiAnalysis && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">AI 분석</h2>
-              <dl className="space-y-3">
-                {voc.aiAnalysis.summary && (
-                  <div>
-                    <dt className="text-xs text-gray-500">요약</dt>
-                    <dd className="text-sm text-gray-900">{voc.aiAnalysis.summary}</dd>
-                  </div>
-                )}
-                {voc.aiAnalysis.sentiment && (
-                  <div>
-                    <dt className="text-xs text-gray-500">감성 분석</dt>
-                    <dd className="text-sm">
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs ${
-                          voc.aiAnalysis.sentiment === 'POSITIVE'
-                            ? 'bg-green-100 text-green-700'
-                            : voc.aiAnalysis.sentiment === 'NEGATIVE'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {voc.aiAnalysis.sentiment === 'POSITIVE'
-                          ? '긍정'
-                          : voc.aiAnalysis.sentiment === 'NEGATIVE'
-                          ? '부정'
-                          : '중립'}
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className="material-icons-outlined text-primary text-xl flex-shrink-0">
+                        {attachment.mimeType.startsWith('image/') ? 'image' : 'description'}
                       </span>
-                    </dd>
-                  </div>
-                )}
-                {voc.aiAnalysis.keywords && voc.aiAnalysis.keywords.length > 0 && (
-                  <div>
-                    <dt className="text-xs text-gray-500">키워드</dt>
-                    <dd className="flex flex-wrap gap-1 mt-1">
-                      {voc.aiAnalysis.keywords.map((keyword, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs"
-                        >
-                          {keyword}
-                        </span>
-                      ))}
-                    </dd>
-                  </div>
-                )}
-              </dl>
+                      <span className="text-sm truncate">{attachment.originalFileName}</span>
+                      <span className="text-xs text-slate-400 flex-shrink-0">
+                        {(attachment.fileSize / (1024 * 1024)).toFixed(1)} MB
+                      </span>
+                    </div>
+                    <span className="material-icons-outlined text-slate-400 group-hover:text-primary transition-colors">
+                      download
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* 2. AI 분석 결과 */}
+      {voc.aiAnalysis && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+          <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <span className="material-icons-outlined text-primary">psychology</span>
+              AI 분석 결과
+            </h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                자동 분류 카테고리
+              </span>
+              <p className="text-base font-medium">
+                {voc.suggestedCategory?.name || voc.category?.name || '미분류'}
+              </p>
+            </div>
+            {voc.aiAnalysis.summary && (
+              <div>
+                <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                  추천 응대 가이드
+                </span>
+                <div className="text-base leading-relaxed bg-info/5 dark:bg-info/10 p-4 rounded border border-info/20">
+                  <p className="whitespace-pre-wrap">{voc.aiAnalysis.summary}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 3. 유사 VOC */}
+      {similarVocs && similarVocs.length > 0 && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+          <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <span className="material-icons-outlined text-primary">content_copy</span>
+              유사 VOC ({similarVocs.length}건)
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-2">
+              {similarVocs.map((similar) => (
+                <Link
+                  key={similar.id}
+                  href={`/voc/${similar.id}`}
+                  className="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 px-4 py-3 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="material-icons-outlined text-primary text-sm">open_in_new</span>
+                    <span className="text-sm font-mono">{similar.ticketId}</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">{similar.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs font-semibold ${
+                        similar.similarity >= 0.8 ? 'text-success' : 'text-warning'
+                      }`}
+                    >
+                      유사도 {similar.similarity.toFixed(2)}
+                    </span>
+                    <span className="material-icons-outlined text-slate-400 text-sm">chevron_right</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. 로그 분석 결과 (Placeholder - data not available in current schema) */}
+      {/* Uncomment when backend provides log analysis data */}
+      {/* <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <span className="material-icons-outlined text-primary">article</span>
+            로그 분석 결과
+          </h2>
+        </div>
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-slate-500">로그 분석 데이터가 없습니다.</p>
+        </div>
+      </div> */}
+
+      {/* 5. DB 조회 결과 (Placeholder - data not available in current schema) */}
+      {/* Uncomment when backend provides DB query results */}
+      {/* <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <span className="material-icons-outlined text-primary">storage</span>
+            DB 조회 결과
+          </h2>
+        </div>
+        <div className="p-6 space-y-4">
+          <p className="text-sm text-slate-500">DB 조회 결과가 없습니다.</p>
+        </div>
+      </div> */}
+
+      {/* 6. 카테고리 수정 */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <span className="material-icons-outlined text-primary">category</span>
+            카테고리 수정
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-semibold mb-2" htmlFor="mainCategory">
+                대분류
+              </label>
+              <select
+                className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                id="mainCategory"
+                name="mainCategory"
+                value={selectedMainCategory}
+                onChange={(e) => {
+                  setSelectedMainCategory(e.target.value ? Number(e.target.value) : '');
+                  setSelectedSubCategory('');
+                }}
+              >
+                <option value="">대분류 선택</option>
+                {mainCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2" htmlFor="subCategory">
+                중분류
+              </label>
+              <select
+                className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                id="subCategory"
+                name="subCategory"
+                value={selectedSubCategory}
+                onChange={(e) => setSelectedSubCategory(e.target.value ? Number(e.target.value) : '')}
+                disabled={!selectedMainCategory}
+              >
+                <option value="">중분류 선택</option>
+                {subCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <button
+            className="px-6 py-2 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm disabled:bg-slate-400 disabled:cursor-not-allowed"
+            type="button"
+            onClick={handleSaveCategory}
+            disabled={!selectedSubCategory || updateVocMutation.isPending}
+          >
+            {updateVocMutation.isPending ? '저장 중...' : '저장'}
+          </button>
+        </div>
+      </div>
+
+      {/* 7. 담당자 메모 */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <span className="material-icons-outlined text-primary">note_alt</span>
+            담당자 메모
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="mb-4">
+            <label className="block text-sm font-semibold mb-2" htmlFor="memo">
+              메모 내용 (최대 1000자)
+            </label>
+            <textarea
+              className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
+              id="memo"
+              name="memo"
+              placeholder="처리 내용, 조치 사항, 특이사항 등을 메모하세요"
+              rows={5}
+              value={newMemo}
+              onChange={(e) => setNewMemo(e.target.value)}
+              maxLength={1000}
+            />
+            <div className="text-xs text-slate-400 mt-1 text-right">
+              {newMemo.length} / 1,000자
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button
+              className="px-6 py-2 bg-primary text-white font-semibold rounded hover:bg-primary-dark transition-colors shadow-sm disabled:bg-slate-400 disabled:cursor-not-allowed"
+              type="button"
+              onClick={handleSaveMemo}
+              disabled={!newMemo.trim() || addMemoMutation.isPending}
+            >
+              {addMemoMutation.isPending ? '저장 중...' : '저장'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 8. 변경 이력 */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <span className="material-icons-outlined text-primary">history</span>
+            변경 이력
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="space-y-4">
+            {voc.memos && voc.memos.length > 0 ? (
+              voc.memos.map((memo: VocMemo) => (
+                <div
+                  key={memo.id}
+                  className="flex gap-4 pb-4 border-b border-slate-200 dark:border-slate-700 last:border-b-0"
+                >
+                  <div className="flex-shrink-0 w-40 text-sm text-slate-500 dark:text-slate-400">
+                    <div className="font-medium">{formatDate(memo.createdAt)}</div>
+                    <div className="text-xs">{formatTime(memo.createdAt)}</div>
+                  </div>
+                  <div className="flex-grow">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-semibold">{memo.author.name}</span>
+                      <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded">
+                        담당자
+                      </span>
+                    </div>
+                    <div className="text-sm">
+                      <p className="whitespace-pre-wrap">{memo.content}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">변경 이력이 없습니다.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 9. 하단 액션 버튼 */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="p-6">
+          <div className="flex flex-col sm:flex-row gap-3 justify-end">
+            <button
+              className="px-6 py-3 border border-danger text-danger font-semibold rounded hover:bg-danger/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              onClick={handleReject}
+              disabled={changeStatusMutation.isPending}
+            >
+              <span className="material-icons-outlined text-sm">block</span>
+              반려
+            </button>
+            <Link
+              href={`/email/compose?vocId=${voc.id}`}
+              className="px-6 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+            >
+              <span className="material-icons-outlined text-sm">email</span>
+              이메일 발송
+            </Link>
+            <button
+              className="px-6 py-3 bg-success text-white font-semibold rounded hover:bg-success/90 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              onClick={handleComplete}
+              disabled={changeStatusMutation.isPending}
+            >
+              <span className="material-icons-outlined text-sm">check_circle</span>
+              완료 처리
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 p-4 bg-info/10 dark:bg-info/5 border border-info/20 rounded-lg flex gap-3">
+        <span className="material-icons-outlined text-info">info</span>
+        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          VOC 처리 완료 후에는 최종 사용자에게 자동으로 알림이 발송됩니다. 유사 VOC를 참고하여
+          신속하고 정확한 처리를 진행해 주시기 바랍니다.
+        </p>
+      </div>
+
     </div>
   );
 }

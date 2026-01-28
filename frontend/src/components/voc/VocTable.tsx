@@ -52,74 +52,74 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (vocs.empty) {
     return (
-      <div className="text-center py-12 text-gray-500 bg-white rounded-lg border border-gray-200">
+      <div className="text-center py-12 text-slate-500 dark:text-slate-400 bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm">
         검색 결과가 없습니다.
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-border-light dark:divide-border-dark">
+          <thead className="bg-slate-50 dark:bg-slate-800/50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 티켓번호
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 제목
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 카테고리
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 상태
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 우선순위
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 담당자
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 등록일
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 최종 수정
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-surface-light dark:bg-surface-dark divide-y divide-border-light dark:divide-border-dark">
             {vocs.content.map((voc) => (
               <tr
                 key={voc.id}
                 onClick={() => handleRowClick(voc.id)}
-                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                className="hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors"
               >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary hover:text-primary-dark hover:underline">
                   {voc.ticketId}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  <div className="max-w-xs truncate">{voc.title}</div>
+                <td className="px-6 py-4 text-sm text-slate-900 dark:text-slate-100">
+                  <div className="max-w-xs truncate font-medium hover:text-primary transition-colors">{voc.title}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                   {voc.category ? (
                     <div className="text-xs">
-                      <div className="text-gray-900">{voc.category.name}</div>
+                      <div className="text-slate-900 dark:text-slate-100">{voc.category.name}</div>
                       {voc.category.code && (
-                        <div className="text-gray-400">{voc.category.code}</div>
+                        <div className="text-slate-400 dark:text-slate-500">{voc.category.code}</div>
                       )}
                     </div>
                   ) : (
-                    <span className="text-gray-400">미분류</span>
+                    <span className="text-slate-400 dark:text-slate-500">미분류</span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -128,20 +128,20 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
                 <td className="px-6 py-4 whitespace-nowrap">
                   <VocPriorityBadge priority={voc.priority} />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                   {voc.assignee ? (
                     <div>
-                      <div className="font-medium text-gray-900">{voc.assignee.name}</div>
-                      <div className="text-gray-400 text-xs">@{voc.assignee.username}</div>
+                      <div className="font-medium text-slate-900 dark:text-slate-100">{voc.assignee.name}</div>
+                      <div className="text-slate-400 dark:text-slate-500 text-xs">@{voc.assignee.username}</div>
                     </div>
                   ) : (
-                    <span className="text-gray-400">미배정</span>
+                    <span className="text-slate-400 dark:text-slate-500">미배정</span>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                   {formatDate(voc.createdAt)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                   {formatDateTime(voc.updatedAt)}
                 </td>
               </tr>
@@ -150,29 +150,29 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
         </table>
       </div>
 
-      <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
+      <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-3 border-t border-border-light dark:border-border-dark">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-700">
-              총 <span className="font-medium">{vocs.totalElements}</span>개 (
-              <span className="font-medium">{vocs.page + 1}</span> /{' '}
-              <span className="font-medium">{vocs.totalPages}</span> 페이지)
+            <div className="text-sm text-slate-700 dark:text-slate-300">
+              총 <span className="font-semibold text-slate-900 dark:text-slate-100">{vocs.totalElements}</span>개 (
+              <span className="font-semibold">{vocs.page + 1}</span> /{' '}
+              <span className="font-semibold">{vocs.totalPages}</span> 페이지)
             </div>
             <div className="flex items-center gap-2">
-              <label htmlFor="pageSize" className="text-sm text-gray-600">
+              <label htmlFor="pageSize" className="text-sm text-slate-600 dark:text-slate-400">
                 페이지당
               </label>
               <select
                 id="pageSize"
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               >
                 <option value={10}>10</option>
                 <option value={20}>20</option>
                 <option value={50}>50</option>
               </select>
-              <span className="text-sm text-gray-600">개</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">개</span>
             </div>
           </div>
 
@@ -181,10 +181,10 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
               onClick={() => onPageChange(vocs.page - 1)}
               disabled={vocs.first}
               className={cn(
-                'px-3 py-1 border border-gray-300 rounded text-sm',
+                'px-3 py-2 border border-border-light dark:border-border-dark rounded text-sm font-medium transition-colors',
                 vocs.first
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white hover:bg-gray-50 text-gray-700'
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                  : 'bg-surface-light dark:bg-surface-dark hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
               )}
             >
               이전
@@ -193,10 +193,10 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
               onClick={() => onPageChange(vocs.page + 1)}
               disabled={vocs.last}
               className={cn(
-                'px-3 py-1 border border-gray-300 rounded text-sm',
+                'px-3 py-2 border border-border-light dark:border-border-dark rounded text-sm font-medium transition-colors',
                 vocs.last
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white hover:bg-gray-50 text-gray-700'
+                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed'
+                  : 'bg-surface-light dark:bg-surface-dark hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
               )}
             >
               다음

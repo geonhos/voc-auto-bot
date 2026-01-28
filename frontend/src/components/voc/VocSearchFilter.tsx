@@ -10,13 +10,12 @@ interface VocSearchFilterProps {
 }
 
 const statusOptions: { value: VocStatus; label: string }[] = [
-  { value: 'RECEIVED', label: '접수' },
-  { value: 'ASSIGNED', label: '배정됨' },
+  { value: 'NEW', label: '신규' },
   { value: 'IN_PROGRESS', label: '처리중' },
-  { value: 'PENDING', label: '대기' },
-  { value: 'RESOLVED', label: '해결' },
+  { value: 'PENDING', label: '보류' },
+  { value: 'RESOLVED', label: '해결완료' },
   { value: 'CLOSED', label: '종료' },
-  { value: 'REJECTED', label: '거부' },
+  { value: 'REJECTED', label: '반려' },
 ];
 
 const priorityOptions: { value: VocPriority; label: string }[] = [
@@ -85,7 +84,7 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
     searchInput;
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+    <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-xl shadow-sm border border-border-light dark:border-border-dark mb-6">
       <div className="flex items-center gap-4 mb-4">
         <form onSubmit={handleSearchSubmit} className="flex-1">
           <div className="relative">
@@ -94,11 +93,11 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="제목 또는 내용으로 검색..."
-              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 pr-10 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -114,7 +113,7 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
 
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+          className="px-4 py-2 border border-border-light dark:border-border-dark rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -130,7 +129,7 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
         {hasActiveFilters && (
           <button
             onClick={handleClearFilters}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
           >
             초기화
           </button>
@@ -138,14 +137,14 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
       </div>
 
       {showFilters && (
-        <div className="border-t pt-4 space-y-4">
+        <div className="border-t border-border-light dark:border-border-dark pt-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">상태</label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">상태</label>
             <div className="flex flex-wrap gap-2">
               {statusOptions.map((option) => (
                 <label
                   key={option.value}
-                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-full cursor-pointer hover:bg-gray-50"
+                  className="inline-flex items-center px-3 py-1 border border-border-light dark:border-border-dark rounded-full cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -153,19 +152,19 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
                     onChange={() => handleStatusChange(option.value)}
                     className="mr-2"
                   />
-                  <span className="text-sm">{option.label}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300">{option.label}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">우선순위</label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">우선순위</label>
             <div className="flex flex-wrap gap-2">
               {priorityOptions.map((option) => (
                 <label
                   key={option.value}
-                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-full cursor-pointer hover:bg-gray-50"
+                  className="inline-flex items-center px-3 py-1 border border-border-light dark:border-border-dark rounded-full cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <input
                     type="checkbox"
@@ -173,27 +172,27 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
                     onChange={() => handlePriorityChange(option.value)}
                     className="mr-2"
                   />
-                  <span className="text-sm">{option.label}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300">{option.label}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">기간</label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">기간</label>
             <div className="flex items-center gap-2">
               <input
                 type="date"
                 value={filters.fromDate || ''}
                 onChange={(e) => handleDateChange('fromDate', e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               />
-              <span className="text-gray-500">~</span>
+              <span className="text-slate-500 dark:text-slate-400">~</span>
               <input
                 type="date"
                 value={filters.toDate || ''}
                 onChange={(e) => handleDateChange('toDate', e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               />
             </div>
           </div>

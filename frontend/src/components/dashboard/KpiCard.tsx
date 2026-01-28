@@ -10,6 +10,7 @@ export interface KpiCardProps {
     value: number;
     type: 'increase' | 'decrease' | 'neutral';
     label?: string;
+    count?: number; // 전일 대비 건수 변화
   };
   className?: string;
 }
@@ -19,11 +20,11 @@ export function KpiCard({ title, value, icon, change, className }: KpiCardProps)
     if (!change) return '';
     switch (change.type) {
       case 'increase':
-        return 'text-green-600 dark:text-green-500';
+        return 'text-info';
       case 'decrease':
-        return 'text-red-600 dark:text-red-500';
+        return 'text-success';
       case 'neutral':
-        return 'text-gray-600 dark:text-gray-400';
+        return 'text-slate-500 dark:text-slate-400';
     }
   };
 
@@ -50,27 +51,29 @@ export function KpiCard({ title, value, icon, change, className }: KpiCardProps)
       role="region"
       aria-label={title}
       className={cn(
-        'bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6',
+        'bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-6',
         'transition-all hover:-translate-y-0.5 hover:shadow-md',
         className
       )}
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</span>
-        <div className="text-primary dark:text-primary-light">{icon}</div>
+        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{title}</span>
+        <div className="text-primary">{icon}</div>
       </div>
 
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
+          <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}</p>
           {change && (
             <p
-              className={cn('text-sm mt-1 flex items-center gap-1', getChangeColor())}
-              aria-label={change.label || `전일 대비 ${formatChangeValue()}`}
+              className={cn('text-sm mt-1 flex items-center gap-1 flex-wrap', getChangeColor())}
+              aria-label={change.label || `전 기간 대비 ${formatChangeValue()}${change.count !== undefined ? ` (${change.count}건)` : ''}`}
             >
               <span className="font-medium">{formatChangeValue()}</span>
+              {change.count !== undefined && (
+                <span className="font-medium">({change.count.toLocaleString()}건)</span>
+              )}
               {getChangeIcon()}
-              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">전일 대비</span>
             </p>
           )}
         </div>

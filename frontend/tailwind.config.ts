@@ -23,9 +23,12 @@ const config: Config = {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
+          DEFAULT: '#556780',
+          light: '#8a9db3',
+          dark: '#2d3745',
           foreground: 'hsl(var(--primary-foreground))',
         },
+        'primary-dark': '#2d3745',
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
@@ -50,21 +53,32 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // Design System Colors
+        success: '#6b8e6b',
+        warning: '#b38f4d',
+        danger: '#a16060',
+        info: '#5b8a8a',
+        'background-light': '#f5f5f4',
+        'background-dark': '#1c1917',
+        'surface-light': '#ffffff',
+        'surface-dark': '#2d3745',
+        'border-light': '#e7e5e4',
+        'border-dark': '#373330',
         // VOC Status Colors
         status: {
-          received: '#3B82F6',      // blue-500
-          analyzing: '#F59E0B',     // amber-500
+          received: '#3B82F6', // blue-500
+          analyzing: '#F59E0B', // amber-500
           'analysis-failed': '#EF4444', // red-500
-          processing: '#8B5CF6',    // violet-500
-          completed: '#10B981',     // emerald-500
-          rejected: '#6B7280',      // gray-500
+          processing: '#8B5CF6', // violet-500
+          completed: '#10B981', // emerald-500
+          rejected: '#6B7280', // gray-500
         },
         // Priority Colors
         priority: {
-          low: '#6B7280',           // gray-500
-          medium: '#3B82F6',        // blue-500
-          high: '#F59E0B',          // amber-500
-          urgent: '#EF4444',        // red-500
+          low: '#6B7280', // gray-500
+          medium: '#3B82F6', // blue-500
+          high: '#F59E0B', // amber-500
+          urgent: '#EF4444', // red-500
         },
       },
       borderRadius: {
