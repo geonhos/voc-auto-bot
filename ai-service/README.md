@@ -234,15 +234,31 @@ LLM_MODEL=llama3.2:latest         # 또는 llama3.1:8b, mistral:latest
 ### 테스트 실행
 
 ```bash
-# 전체 테스트
+# 전체 테스트 실행
 pytest
 
-# 특정 테스트
+# 특정 테스트 파일 실행
 pytest tests/test_analysis_service.py -v
 
-# 커버리지
-pytest --cov=app --cov-report=html
+# 단위 테스트만 실행 (Ollama 불필요)
+pytest -m "not integration"
+
+# 통합 테스트 실행 (Ollama 필요)
+pytest -m integration
+
+# 커버리지 리포트 생성
+pytest --cov=app --cov-report=term-missing --cov-report=html
+
+# 테스트 결과 자세히 보기
+pytest -vv --tb=long
 ```
+
+**테스트 구조:**
+- `tests/test_models.py`: Pydantic 모델 검증 테스트
+- `tests/test_embedding_service.py`: 벡터 검색 서비스 테스트
+- `tests/test_analysis_service.py`: RAG 분석 서비스 테스트
+- `tests/test_api.py`: FastAPI 엔드포인트 테스트
+- `tests/conftest.py`: Pytest fixtures 및 공통 설정
 
 ## 문제 해결
 
