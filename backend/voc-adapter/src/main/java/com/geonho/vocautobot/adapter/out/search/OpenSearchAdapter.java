@@ -59,74 +59,10 @@ public class OpenSearchAdapter implements LogSearchPort {
 
     @PostConstruct
     public void initialize() {
-        try {
-            log.info("Initializing OpenSearch client - Host: {}:{}", properties.getHost(), properties.getPort());
-
-            HttpHost host = new HttpHost(
-                properties.getScheme(),
-                properties.getHost(),
-                properties.getPort()
-            );
-
-            ApacheHttpClient5TransportBuilder builder = ApacheHttpClient5TransportBuilder
-                .builder(host)
-                .setMapper(new JacksonJsonpMapper());
-
-            // 인증 설정
-            if (properties.requiresAuthentication()) {
-                log.info("Configuring authentication for user: {}", properties.getUsername());
-                BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-                credentialsProvider.setCredentials(
-                    new AuthScope(host),
-                    new UsernamePasswordCredentials(
-                        properties.getUsername(),
-                        properties.getPassword().toCharArray()
-                    )
-                );
-                builder.setHttpClientConfigCallback(httpClientBuilder ->
-                    httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
-                );
-            }
-
-            // SSL 설정
-            if (properties.isUseSsl()) {
-                log.info("Configuring SSL for OpenSearch connection");
-                try {
-                    SSLContext sslContext = SSLContextBuilder.create()
-                        .loadTrustMaterial(null, (chains, authType) -> !properties.isVerifySslCertificate())
-                        .build();
-
-                    TlsStrategy tlsStrategy = ClientTlsStrategyBuilder.create()
-                        .setSslContext(sslContext)
-                        .build();
-
-                    PoolingAsyncClientConnectionManager connectionManager =
-                        PoolingAsyncClientConnectionManagerBuilder.create()
-                            .setTlsStrategy(tlsStrategy)
-                            .build();
-
-                    builder.setHttpClientConfigCallback(httpClientBuilder ->
-                        httpClientBuilder.setConnectionManager(connectionManager)
-                    );
-                } catch (Exception e) {
-                    log.warn("Failed to configure SSL, OpenSearch will be unavailable: {}", e.getMessage());
-                    return;
-                }
-            }
-
-            transport = builder.build();
-            client = new OpenSearchClient(transport);
-
-            // 연결 테스트
-            testConnection();
-            available = true;
-
-            log.info("OpenSearch client initialized successfully");
-
-        } catch (Exception e) {
-            log.warn("Failed to initialize OpenSearch client - OpenSearch features will be unavailable: {}", e.getMessage());
-            available = false;
-        }
+        // TODO: OpenSearch 연동 구현 예정 (GitHub Issue 참조)
+        // 현재는 OpenSearch 연결을 비활성화하고, 빈 결과를 반환합니다.
+        log.info("OpenSearch integration is currently disabled. Will be implemented in future release.");
+        available = false;
     }
 
     @PreDestroy
