@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -32,7 +32,7 @@ class EmbeddingService:
             model=model_name, base_url=ollama_base_url
         )
         self.persist_directory = persist_directory
-        self.vectorstore: Chroma | None = None
+        self.vectorstore: Optional[Chroma] = None
         self._initialized = False
 
     def initialize_vectorstore(self, logs: List[LogDocument]) -> None:

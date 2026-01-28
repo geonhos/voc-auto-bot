@@ -1,5 +1,7 @@
 """API routes for VOC log analysis service."""
 
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import AnalysisRequest, AnalysisResponse, HealthResponse
 from app.services.embedding_service import EmbeddingService
@@ -8,8 +10,8 @@ from app.services.analysis_service import AnalysisService
 router = APIRouter()
 
 # Global service instances (initialized on startup)
-embedding_service: EmbeddingService | None = None
-analysis_service: AnalysisService | None = None
+embedding_service: Optional[EmbeddingService] = None
+analysis_service: Optional[AnalysisService] = None
 
 
 def initialize_services(
