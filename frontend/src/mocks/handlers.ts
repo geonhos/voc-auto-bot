@@ -80,7 +80,7 @@ const mockVocs: Voc[] = [
     title: '제품 배송 지연 문의',
     content: '주문한 상품이 아직 도착하지 않았습니다.',
     status: 'NEW',
-    priority: 'MEDIUM',
+    priority: 'NORMAL',
     channel: 'WEB',
     customerName: '홍길동',
     customerEmail: 'hong@example.com',
@@ -447,7 +447,7 @@ export const handlers = [
       priorityStats: [
         { priority: 'URGENT', priorityLabel: '긴급', count: 45, percentage: 3.65 },
         { priority: 'HIGH', priorityLabel: '높음', count: 289, percentage: 23.42 },
-        { priority: 'MEDIUM', priorityLabel: '보통', count: 567, percentage: 45.95 },
+        { priority: 'NORMAL', priorityLabel: '보통', count: 567, percentage: 45.95 },
         { priority: 'LOW', priorityLabel: '낮음', count: 333, percentage: 26.98 },
       ],
       topAssignees: [

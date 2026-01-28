@@ -2,8 +2,8 @@ package com.geonho.vocautobot.adapter.in.web.voc;
 
 import com.geonho.vocautobot.adapter.in.security.SecurityUser;
 import com.geonho.vocautobot.adapter.in.web.voc.dto.*;
-import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
-import com.geonho.vocautobot.application.analysis.service.VocLogAnalysisService;
+import com.geonho.vocautobot.application.analysis.dto.VocAnalysisDto;
+import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisService;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.domain.voc.Voc;
 import com.geonho.vocautobot.adapter.common.ApiResponse;
@@ -41,34 +41,28 @@ public class VocController {
     private final ChangeVocStatusUseCase changeVocStatusUseCase;
     private final AssignVocUseCase assignVocUseCase;
     private final AddMemoUseCase addMemoUseCase;
-    private final VocLogAnalysisService vocLogAnalysisService;
+    private final AsyncVocAnalysisService asyncVocAnalysisService;
 
     @Operation(
-            summary = "VOC 생성 (AI 로그 분석 포함)", 
-            description = "새로운 VOC를 생성하고 AI로 관련 로그를 분석하여 예상 원인과 신뢰도를 표시합니다"
+            summary = "VOC 생성 (즉시 응답, 분석은 백그라운드)",
+            description = "새로운 VOC를 생성하고 즉시 응답합니다. AI 로그 분석은 백그라운드에서 수행되며 분석 완료 후 Slack 알림이 전송됩니다."
     )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<VocResponseWithAnalysis> createVoc(@Valid @RequestBody CreateVocRequest request) {
-        // 1. VOC 생성
+    public ApiResponse<VocResponse> createVoc(@Valid @RequestBody CreateVocRequest request) {
+        // 1. VOC 생성 (즉시 완료)
         Voc voc = createVocUseCase.createVoc(request.toCommand());
+        log.info("VOC created: {} (ID: {})", voc.getTicketId(), voc.getId());
 
-        // 2. AI 로그 분석 (비동기로 처리하지 않고 동기 처리)
-        VocLogAnalysis logAnalysis = null;
-        try {
-            log.info("Starting log analysis for VOC: {}", voc.getTicketId());
-            logAnalysis = vocLogAnalysisService.analyzeLogsForVoc(voc.getTitle(), voc.getContent());
-            log.info("Log analysis completed for VOC: {} with confidence: {}", 
-                voc.getTicketId(), logAnalysis.confidence());
-        } catch (Exception e) {
-            log.error("Failed to analyze logs for VOC: {}", voc.getTicketId(), e);
-            // 로그 분석 실패해도 VOC 생성은 성공으로 처리
-            logAnalysis = VocLogAnalysis.empty("로그 분석 중 오류 발생: " + e.getMessage());
-        }
+        // 2. 분석 레코드 생성 (PENDING 상태)
+        asyncVocAnalysisService.createPendingAnalysis(voc.getId());
 
-        // 3. 응답 생성
-        VocResponseWithAnalysis response = VocResponseWithAnalysis.from(voc, logAnalysis);
+        // 3. 백그라운드에서 AI 분석 시작 (비동기)
+        asyncVocAnalysisService.analyzeVocAsync(voc);
+        log.info("Background analysis triggered for VOC: {}", voc.getTicketId());
 
+        // 4. 즉시 응답 (분석 대기 중 상태)
+        VocResponse response = VocResponse.from(voc);
         return ApiResponse.success(response);
     }
 
@@ -114,13 +108,28 @@ public class VocController {
         );
     }
 
-    @Operation(summary = "VOC 상세 조회", description = "ID로 VOC 상세 정보를 조회합니다")
+    @Operation(summary = "VOC 상세 조회", description = "ID로 VOC 상세 정보를 조회합니다 (분석 결과 포함)")
     @GetMapping("/{id}")
-    public ApiResponse<VocResponse> getVoc(@PathVariable Long id) {
+    public ApiResponse<VocDetailResponse> getVoc(@PathVariable Long id) {
         Voc voc = getVocDetailUseCase.getVocById(id);
-        VocResponse response = VocResponse.from(voc);
 
+        // 분석 결과 조회
+        VocAnalysisDto analysis = asyncVocAnalysisService.getAnalysis(id).orElse(null);
+
+        VocDetailResponse response = VocDetailResponse.from(voc, analysis);
         return ApiResponse.success(response);
+    }
+
+    @Operation(summary = "VOC 분석 결과 조회", description = "VOC의 AI 분석 결과만 조회합니다")
+    @GetMapping("/{id}/analysis")
+    public ApiResponse<VocAnalysisResponse> getVocAnalysis(@PathVariable Long id) {
+        VocAnalysisDto analysis = asyncVocAnalysisService.getAnalysis(id).orElse(null);
+
+        if (analysis == null) {
+            return ApiResponse.success(null);
+        }
+
+        return ApiResponse.success(VocAnalysisResponse.from(analysis));
     }
 
     @Operation(summary = "VOC 수정", description = "VOC 정보를 수정합니다")

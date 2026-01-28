@@ -18,7 +18,7 @@ const mockPriorityData: PriorityStats[] = [
     percentage: 33.6,
   },
   {
-    priority: 'MEDIUM',
+    priority: 'NORMAL',
     priorityLabel: '보통',
     count: 100,
     percentage: 42.0,

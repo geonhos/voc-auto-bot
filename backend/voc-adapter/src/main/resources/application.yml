@@ -61,6 +61,13 @@ ai:
     analyze-endpoint: /api/v1/analyze
     timeout: ${AI_SERVICE_TIMEOUT:30000}
 
+# Slack Notification
+slack:
+  webhook-url: ${SLACK_WEBHOOK_URL:}
+  enabled: ${SLACK_ENABLED:false}
+  username: VOC Auto Bot
+  icon-emoji: ":bell:"
+
 # MinIO (S3-compatible storage)
 minio:
   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}

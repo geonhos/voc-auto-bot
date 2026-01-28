@@ -41,7 +41,7 @@ export function VocForm() {
     setSuccessTicketId('');
   };
 
-  const priorityOptions: VocPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+  const priorityOptions: VocPriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
   return (
     <>

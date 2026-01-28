@@ -20,7 +20,7 @@ const statusOptions: { value: VocStatus; label: string }[] = [
 
 const priorityOptions: { value: VocPriority; label: string }[] = [
   { value: 'LOW', label: '낮음' },
-  { value: 'MEDIUM', label: '보통' },
+  { value: 'NORMAL', label: '보통' },
   { value: 'HIGH', label: '높음' },
   { value: 'URGENT', label: '긴급' },
 ];

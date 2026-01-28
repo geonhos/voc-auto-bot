@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc } from '@/hooks/useVocs';
-import type { VocStatus, VocMemo } from '@/types';
+import type { VocStatus, VocMemo, AiAnalysis, RelatedLog } from '@/types';
 
 const STATUS_MAP: Record<VocStatus, { label: string; icon: string; class: string }> = {
   NEW: { label: '접수', icon: 'inbox', class: 'status-received' },
@@ -23,7 +23,7 @@ export default function VocDetailPage() {
   const router = useRouter();
   const vocId = Number(params.id);
 
-  const { data: voc, isLoading, error } = useVoc(vocId);
+  const { data: voc, isLoading, error, refetch } = useVoc(vocId);
   const { data: categoryTree } = useCategoryTree();
   const { data: similarVocs } = useSimilarVocs(vocId, { limit: 5, enabled: !!voc });
   const changeStatusMutation = useChangeVocStatus();
@@ -33,6 +33,17 @@ export default function VocDetailPage() {
   const [newMemo, setNewMemo] = useState('');
   const [selectedMainCategory, setSelectedMainCategory] = useState<number | ''>('');
   const [selectedSubCategory, setSelectedSubCategory] = useState<number | ''>('');
+
+  // 분석 진행 중이면 주기적으로 새로고침
+  useEffect(() => {
+    if (voc?.aiAnalysis?.status === 'PENDING' || voc?.aiAnalysis?.status === 'IN_PROGRESS') {
+      const interval = setInterval(() => {
+        refetch();
+      }, 3000); // 3초마다 새로고침
+      return () => clearInterval(interval);
+    }
+    return undefined;
+  }, [voc?.aiAnalysis?.status, refetch]);
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -175,6 +186,7 @@ export default function VocDetailPage() {
   }
 
   const statusInfo = STATUS_MAP[voc.status];
+  const analysis = voc.aiAnalysis;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -287,36 +299,178 @@ export default function VocDetailPage() {
       </div>
 
       {/* 2. AI 분석 결과 */}
-      {voc.aiAnalysis && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
-          <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <span className="material-icons-outlined text-primary">psychology</span>
-              AI 분석 결과
-            </h2>
-          </div>
-          <div className="p-6 space-y-4">
-            <div>
-              <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                자동 분류 카테고리
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <span className="material-icons-outlined text-primary">psychology</span>
+            AI 분석 결과
+            {analysis?.status === 'PENDING' || analysis?.status === 'IN_PROGRESS' ? (
+              <span className="ml-2 text-sm font-normal text-warning flex items-center gap-1">
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-warning"></span>
+                분석 중...
               </span>
-              <p className="text-base font-medium">
-                {voc.suggestedCategory?.name || voc.category?.name || '미분류'}
+            ) : null}
+          </h2>
+        </div>
+        <div className="p-6 space-y-6">
+          {!analysis ? (
+            <p className="text-sm text-slate-500">분석 정보가 없습니다.</p>
+          ) : analysis.status === 'PENDING' || analysis.status === 'IN_PROGRESS' ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-slate-600 dark:text-slate-400">AI가 로그를 분석하고 있습니다...</p>
+                <p className="text-sm text-slate-500 mt-1">잠시만 기다려 주세요.</p>
+              </div>
+            </div>
+          ) : analysis.status === 'FAILED' ? (
+            <div className="bg-danger/10 border border-danger/20 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-danger mb-2">
+                <span className="material-icons-outlined">error</span>
+                <span className="font-semibold">분석 실패</span>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {analysis.errorMessage || '알 수 없는 오류가 발생했습니다.'}
               </p>
             </div>
-            {voc.aiAnalysis.summary && (
+          ) : (
+            <>
+              {/* 신뢰도 */}
               <div>
-                <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                  추천 응대 가이드
+                <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                  분석 신뢰도
                 </span>
-                <div className="text-base leading-relaxed bg-info/5 dark:bg-info/10 p-4 rounded border border-info/20">
-                  <p className="whitespace-pre-wrap">{voc.aiAnalysis.summary}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        (analysis.confidence || 0) >= 0.7
+                          ? 'bg-success'
+                          : (analysis.confidence || 0) >= 0.4
+                          ? 'bg-warning'
+                          : 'bg-danger'
+                      }`}
+                      style={{ width: `${(analysis.confidence || 0) * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-sm font-semibold min-w-[50px] text-right">
+                    {Math.round((analysis.confidence || 0) * 100)}%
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
+
+              {/* 분석 요약 */}
+              {analysis.summary && (
+                <div>
+                  <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                    분석 요약
+                  </span>
+                  <div className="text-base leading-relaxed bg-info/5 dark:bg-info/10 p-4 rounded border border-info/20">
+                    <p className="whitespace-pre-wrap">{analysis.summary}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* 예상 원인 */}
+              {analysis.possibleCauses && analysis.possibleCauses.length > 0 && (
+                <div>
+                  <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                    예상 원인
+                  </span>
+                  <ul className="space-y-2">
+                    {analysis.possibleCauses.map((cause, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-2 bg-warning/5 dark:bg-warning/10 p-3 rounded border border-warning/20"
+                      >
+                        <span className="text-warning font-bold">{idx + 1}.</span>
+                        <span>{cause}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* 권장 조치 */}
+              {analysis.recommendation && (
+                <div>
+                  <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                    권장 조치
+                  </span>
+                  <div className="bg-success/5 dark:bg-success/10 p-4 rounded border border-success/20">
+                    <p className="whitespace-pre-wrap">{analysis.recommendation}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* 키워드 */}
+              {analysis.keywords && analysis.keywords.length > 0 && (
+                <div>
+                  <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                    키워드
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.keywords.map((keyword, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-sm"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 관련 로그 */}
+              {analysis.relatedLogs && analysis.relatedLogs.length > 0 && (
+                <div>
+                  <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                    관련 로그 ({analysis.relatedLogs.length}건)
+                  </span>
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {analysis.relatedLogs.map((log: RelatedLog, idx: number) => (
+                      <div
+                        key={idx}
+                        className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded border border-slate-200 dark:border-slate-700"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className={`px-2 py-0.5 text-xs font-semibold rounded ${
+                              log.logLevel === 'ERROR'
+                                ? 'bg-danger/20 text-danger'
+                                : log.logLevel === 'WARN'
+                                ? 'bg-warning/20 text-warning'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                            }`}
+                          >
+                            {log.logLevel}
+                          </span>
+                          <span className="text-xs text-slate-500">{log.serviceName}</span>
+                          <span className="text-xs text-slate-400">{log.timestamp}</span>
+                          <span className="ml-auto text-xs text-primary font-semibold">
+                            유사도: {Math.round(log.relevanceScore * 100)}%
+                          </span>
+                        </div>
+                        <p className="text-sm font-mono text-slate-700 dark:text-slate-300 break-all">
+                          {log.message}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 분석 시간 */}
+              {analysis.analyzedAt && (
+                <div className="text-right text-xs text-slate-400">
+                  분석 완료: {formatDateTime(analysis.analyzedAt)}
+                </div>
+              )}
+            </>
+          )}
         </div>
-      )}
+      </div>
 
       {/* 3. 유사 VOC */}
       {similarVocs && similarVocs.length > 0 && (
@@ -357,35 +511,7 @@ export default function VocDetailPage() {
         </div>
       )}
 
-      {/* 4. 로그 분석 결과 (Placeholder - data not available in current schema) */}
-      {/* Uncomment when backend provides log analysis data */}
-      {/* <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
-        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <span className="material-icons-outlined text-primary">article</span>
-            로그 분석 결과
-          </h2>
-        </div>
-        <div className="p-6 space-y-4">
-          <p className="text-sm text-slate-500">로그 분석 데이터가 없습니다.</p>
-        </div>
-      </div> */}
-
-      {/* 5. DB 조회 결과 (Placeholder - data not available in current schema) */}
-      {/* Uncomment when backend provides DB query results */}
-      {/* <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
-        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-bold flex items-center gap-2">
-            <span className="material-icons-outlined text-primary">storage</span>
-            DB 조회 결과
-          </h2>
-        </div>
-        <div className="p-6 space-y-4">
-          <p className="text-sm text-slate-500">DB 조회 결과가 없습니다.</p>
-        </div>
-      </div> */}
-
-      {/* 6. 카테고리 수정 */}
+      {/* 4. 카테고리 수정 */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
         <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -449,7 +575,7 @@ export default function VocDetailPage() {
         </div>
       </div>
 
-      {/* 7. 담당자 메모 */}
+      {/* 5. 담당자 메모 */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
         <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -489,7 +615,7 @@ export default function VocDetailPage() {
         </div>
       </div>
 
-      {/* 8. 변경 이력 */}
+      {/* 6. 변경 이력 */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
         <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -529,7 +655,7 @@ export default function VocDetailPage() {
         </div>
       </div>
 
-      {/* 9. 하단 액션 버튼 */}
+      {/* 7. 하단 액션 버튼 */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col sm:flex-row gap-3 justify-end">

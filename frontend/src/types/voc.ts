@@ -6,7 +6,7 @@ export type VocStatus =
   | 'CLOSED'
   | 'REJECTED';
 
-export type VocPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type VocPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
 export type VocChannel = 'WEB' | 'EMAIL' | 'PHONE' | 'CHAT' | 'SNS' | 'OTHER';
 
@@ -72,13 +72,23 @@ export interface VocMemo {
 }
 
 export interface AiAnalysis {
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
   summary?: string;
-  sentiment?: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
-  suggestedCategoryId?: number;
-  suggestedCategoryName?: string;
   confidence?: number;
   keywords?: string[];
-  analyzedAt: string;
+  possibleCauses?: string[];
+  relatedLogs?: RelatedLog[];
+  recommendation?: string;
+  errorMessage?: string;
+  analyzedAt?: string;
+}
+
+export interface RelatedLog {
+  timestamp: string;
+  logLevel: string;
+  serviceName: string;
+  message: string;
+  relevanceScore: number;
 }
 
 export interface CreateVocRequest {

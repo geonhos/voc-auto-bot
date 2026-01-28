@@ -10,14 +10,14 @@ interface VocPriorityBadgeProps {
 
 const priorityLabels: Record<VocPriority, string> = {
   LOW: '낮음',
-  MEDIUM: '보통',
+  NORMAL: '보통',
   HIGH: '높음',
   URGENT: '긴급',
 };
 
 const priorityColors: Record<VocPriority, string> = {
   LOW: 'text-primary-light',
-  MEDIUM: 'text-warning',
+  NORMAL: 'text-warning',
   HIGH: 'text-warning',
   URGENT: 'text-danger',
 };
@@ -41,7 +41,7 @@ export function VocPriorityBadge({ priority, className }: VocPriorityBadgeProps)
           warning
         </span>
       )}
-      {priority === 'MEDIUM' && (
+      {priority === 'NORMAL' && (
         <span className="material-icons-outlined" style={{ fontSize: '12px' }}>
           info
         </span>

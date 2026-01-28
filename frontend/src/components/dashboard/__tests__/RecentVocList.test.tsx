@@ -27,7 +27,7 @@ const mockVocs: Voc[] = [
     title: '배송 지연 문의',
     content: '배송이 늦어지고 있습니다',
     status: 'IN_PROGRESS',
-    priority: 'MEDIUM',
+    priority: 'NORMAL',
     channel: 'PHONE',
     customerName: '김철수',
     customerEmail: 'kim@example.com',

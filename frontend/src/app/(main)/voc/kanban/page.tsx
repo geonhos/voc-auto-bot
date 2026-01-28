@@ -16,7 +16,7 @@ const STATUS_COLUMNS: { status: VocStatus; label: string; color: string; bgColor
 ];
 
 export default function VocKanbanPage() {
-  const { data, isLoading } = useVocs({ page: 1, size: 100 });
+  const { data, isLoading } = useVocs({ page: 0, size: 100 });
   const changeStatusMutation = useChangeVocStatus();
   const [draggedId, setDraggedId] = useState<number | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<VocStatus | null>(null);
