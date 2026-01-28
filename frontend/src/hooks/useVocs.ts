@@ -21,7 +21,7 @@ export function useVocs(params?: VocListParams) {
     queryKey: [VOCS_QUERY_KEY, params],
     queryFn: async () => {
       const response = await api.get<PageResponse<Voc>>('/vocs', params as Record<string, unknown>);
-      return response;
+      return response.data;
     },
   });
 }
@@ -31,7 +31,7 @@ export function useVoc(vocId: number) {
     queryKey: [VOCS_QUERY_KEY, vocId],
     queryFn: async () => {
       const response = await api.get<Voc>(`/vocs/${vocId}`);
-      return response;
+      return response.data;
     },
     enabled: !!vocId,
   });
@@ -43,7 +43,7 @@ export function useCreateVoc() {
   return useMutation({
     mutationFn: async (data: CreateVocRequest) => {
       const response = await api.post<Voc>('/vocs', data);
-      return response;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [VOCS_QUERY_KEY] });
@@ -57,7 +57,7 @@ export function useUpdateVoc() {
   return useMutation({
     mutationFn: async ({ vocId, data }: { vocId: number; data: UpdateVocRequest }) => {
       const response = await api.put<Voc>(`/vocs/${vocId}`, data);
-      return response;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [VOCS_QUERY_KEY] });
@@ -71,7 +71,7 @@ export function useAssignVoc() {
   return useMutation({
     mutationFn: async ({ vocId, data }: { vocId: number; data: AssignVocRequest }) => {
       const response = await api.patch<Voc>(`/vocs/${vocId}/assign`, data);
-      return response;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [VOCS_QUERY_KEY] });
@@ -85,7 +85,7 @@ export function useChangeVocStatus() {
   return useMutation({
     mutationFn: async ({ vocId, data }: { vocId: number; data: ChangeStatusRequest }) => {
       const response = await api.patch<Voc>(`/vocs/${vocId}/status`, data);
-      return response;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [VOCS_QUERY_KEY] });
@@ -99,7 +99,7 @@ export function useAddVocMemo() {
   return useMutation({
     mutationFn: async ({ vocId, data }: { vocId: number; data: AddMemoRequest }) => {
       const response = await api.post<Voc>(`/vocs/${vocId}/memos`, data);
-      return response;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [VOCS_QUERY_KEY] });
