@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.application.voc.usecase;
 
+import com.geonho.vocautobot.application.notification.port.out.NotificationPort;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.voc.exception.TicketIdGenerationException;
 import com.geonho.vocautobot.application.voc.exception.VocAccessDeniedException;
@@ -40,6 +41,7 @@ public class VocService implements
     private final SaveVocPort saveVocPort;
     private final GenerateTicketIdPort generateTicketIdPort;
     private final LoadUserPort loadUserPort;
+    private final NotificationPort notificationPort;
 
     @Override
     @Transactional
@@ -59,7 +61,12 @@ public class VocService implements
                 .priority(command.priority())
                 .build();
 
-        return saveVocPort.saveVoc(voc);
+        Voc savedVoc = saveVocPort.saveVoc(voc);
+
+        // Send notification
+        notificationPort.notifyVocCreated(savedVoc);
+
+        return savedVoc;
     }
 
     @Override
@@ -90,10 +97,18 @@ public class VocService implements
         Voc voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
+        // Store previous status for notification
+        String previousStatus = voc.getStatus().name();
+
         // Change status (domain logic validates state transition)
         voc.updateStatus(command.newStatus());
 
-        return saveVocPort.saveVoc(voc);
+        Voc savedVoc = saveVocPort.saveVoc(voc);
+
+        // Send notification
+        notificationPort.notifyVocStatusChanged(savedVoc, previousStatus);
+
+        return savedVoc;
     }
 
     @Override
@@ -102,10 +117,21 @@ public class VocService implements
         Voc voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
+        // Load assignee user
+        User assignee = loadUserPort.loadById(command.assigneeId())
+                .orElseThrow(() -> new VocAccessDeniedException(
+                        String.format("사용자(ID: %d)를 찾을 수 없습니다.", command.assigneeId())
+                ));
+
         // Assign to user (domain logic handles status change if needed)
         voc.assign(command.assigneeId());
 
-        return saveVocPort.saveVoc(voc);
+        Voc savedVoc = saveVocPort.saveVoc(voc);
+
+        // Send notification
+        notificationPort.notifyVocAssigned(savedVoc, assignee.getUsername());
+
+        return savedVoc;
     }
 
     @Override
