@@ -31,7 +31,7 @@ export const vocFormSchema = z.object({
     required_error: '카테고리를 선택해주세요',
     invalid_type_error: '카테고리를 선택해주세요',
   }).nullable(),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT'], {
+  priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT'], {
     required_error: '우선순위를 선택해주세요',
   }),
   customerName: z
@@ -53,7 +53,7 @@ export type VocFormSchemaType = z.infer<typeof vocFormSchema>;
  */
 export const priorityLabels: Record<VocPriority, string> = {
   LOW: '낮음',
-  MEDIUM: '보통',
+  NORMAL: '보통',
   HIGH: '높음',
   URGENT: '긴급',
 };
@@ -63,7 +63,7 @@ export const priorityLabels: Record<VocPriority, string> = {
  */
 export const priorityColors: Record<VocPriority, string> = {
   LOW: 'text-gray-600 bg-gray-100',
-  MEDIUM: 'text-blue-600 bg-blue-100',
+  NORMAL: 'text-blue-600 bg-blue-100',
   HIGH: 'text-orange-600 bg-orange-100',
   URGENT: 'text-red-600 bg-red-100',
 };
