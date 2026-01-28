@@ -2,6 +2,8 @@ package com.geonho.vocautobot.adapter.in.web.voc;
 
 import com.geonho.vocautobot.adapter.in.security.SecurityUser;
 import com.geonho.vocautobot.adapter.in.web.voc.dto.*;
+import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
+import com.geonho.vocautobot.application.analysis.service.VocLogAnalysisService;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.domain.voc.Voc;
 import com.geonho.vocautobot.adapter.common.ApiResponse;
@@ -10,6 +12,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -28,6 +32,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class VocController {
 
+    private static final Logger log = LoggerFactory.getLogger(VocController.class);
+
     private final CreateVocUseCase createVocUseCase;
     private final UpdateVocUseCase updateVocUseCase;
     private final GetVocListUseCase getVocListUseCase;
@@ -35,13 +41,33 @@ public class VocController {
     private final ChangeVocStatusUseCase changeVocStatusUseCase;
     private final AssignVocUseCase assignVocUseCase;
     private final AddMemoUseCase addMemoUseCase;
+    private final VocLogAnalysisService vocLogAnalysisService;
 
-    @Operation(summary = "VOC 생성", description = "새로운 VOC를 생성합니다")
+    @Operation(
+            summary = "VOC 생성 (AI 로그 분석 포함)", 
+            description = "새로운 VOC를 생성하고 AI로 관련 로그를 분석하여 예상 원인과 신뢰도를 표시합니다"
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<VocResponse> createVoc(@Valid @RequestBody CreateVocRequest request) {
+    public ApiResponse<VocResponseWithAnalysis> createVoc(@Valid @RequestBody CreateVocRequest request) {
+        // 1. VOC 생성
         Voc voc = createVocUseCase.createVoc(request.toCommand());
-        VocResponse response = VocResponse.from(voc);
+
+        // 2. AI 로그 분석 (비동기로 처리하지 않고 동기 처리)
+        VocLogAnalysis logAnalysis = null;
+        try {
+            log.info("Starting log analysis for VOC: {}", voc.getTicketId());
+            logAnalysis = vocLogAnalysisService.analyzeLogsForVoc(voc.getTitle(), voc.getContent());
+            log.info("Log analysis completed for VOC: {} with confidence: {}", 
+                voc.getTicketId(), logAnalysis.confidence());
+        } catch (Exception e) {
+            log.error("Failed to analyze logs for VOC: {}", voc.getTicketId(), e);
+            // 로그 분석 실패해도 VOC 생성은 성공으로 처리
+            logAnalysis = VocLogAnalysis.empty("로그 분석 중 오류 발생: " + e.getMessage());
+        }
+
+        // 3. 응답 생성
+        VocResponseWithAnalysis response = VocResponseWithAnalysis.from(voc, logAnalysis);
 
         return ApiResponse.success(response);
     }
