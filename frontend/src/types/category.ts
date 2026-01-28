@@ -13,8 +13,19 @@ export interface Category {
   updatedAt: string;
 }
 
-export interface CategoryTree extends Category {
-  children: CategoryTree[];
+export interface CategoryTree {
+  id: number;
+  name: string;
+  code?: string;
+  type?: 'MAIN' | 'SUB';
+  isActive: boolean;
+  sortOrder: number;
+  children?: CategoryTree[];
+  level?: number | null;
+  description?: string;
+  parentId?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateCategoryRequest {

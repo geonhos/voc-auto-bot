@@ -19,6 +19,8 @@ public record UpdateVocCommand(
         @NotBlank(message = "내용을 입력해주세요")
         String content,
 
-        VocPriority priority
+        VocPriority priority,
+
+        Long categoryId
 ) {
 }
