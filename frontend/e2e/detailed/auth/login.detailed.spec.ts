@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { LoginPage } from '../../page-objects/LoginPage';
 
 /**
  * @description 로그인 페이지 상세 E2E 테스트 시나리오
@@ -15,214 +16,166 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
+  let loginPage: LoginPage;
+
   test.beforeEach(async ({ page }) => {
-    // 인증 상태 초기화
-    await page.evaluate(() => {
-      localStorage.clear();
-      sessionStorage.clear();
-    });
-    await page.goto('/login');
+    loginPage = new LoginPage(page);
+    await loginPage.gotoAndClearAuth();
   });
 
   test.describe('1. 페이지 렌더링', () => {
-    test('1.1 페이지 타이틀과 헤딩이 올바르게 표시된다', async ({ page }) => {
-      // Arrange & Act - 페이지 로드됨
-
-      // Assert
-      await expect(page.locator('h2')).toHaveText('로그인');
-      await expect(page.locator('h2')).toBeVisible();
+    test('1.1 페이지 타이틀과 헤딩이 올바르게 표시된다', async () => {
+      await loginPage.verifyPageLoaded();
     });
 
-    test('1.2 모든 폼 필드가 올바르게 렌더링된다', async ({ page }) => {
+    test('1.2 모든 폼 필드가 올바르게 렌더링된다', async () => {
       // Assert - 이메일 필드
-      const emailLabel = page.locator('label[for="email"]');
-      const emailInput = page.locator('#email');
-      await expect(emailLabel).toHaveText('이메일');
-      await expect(emailInput).toBeVisible();
-      await expect(emailInput).toHaveAttribute('type', 'email');
-      await expect(emailInput).toHaveAttribute('placeholder', '이메일 입력');
-      await expect(emailInput).toHaveAttribute('autocomplete', 'email');
-      await expect(emailInput).toHaveAttribute('maxlength', '100');
+      await loginPage.verifyEmailInput();
 
       // Assert - 비밀번호 필드
-      const passwordLabel = page.locator('label[for="password"]');
-      const passwordInput = page.locator('#password');
-      await expect(passwordLabel).toHaveText('비밀번호');
-      await expect(passwordInput).toBeVisible();
-      await expect(passwordInput).toHaveAttribute('type', 'password');
-      await expect(passwordInput).toHaveAttribute('placeholder', '비밀번호 입력');
-      await expect(passwordInput).toHaveAttribute('autocomplete', 'current-password');
-      await expect(passwordInput).toHaveAttribute('maxlength', '100');
+      await loginPage.verifyPasswordInput();
 
       // Assert - 로그인 버튼
-      const submitButton = page.getByRole('button', { name: '로그인' });
-      await expect(submitButton).toBeVisible();
-      await expect(submitButton).toBeEnabled();
+      await loginPage.verifySubmitButton();
     });
 
-    test('1.3 비밀번호 보기 토글 버튼이 존재한다', async ({ page }) => {
-      const toggleButton = page.getByRole('button', { name: '비밀번호 보기' });
-      await expect(toggleButton).toBeVisible();
+    test('1.3 비밀번호 보기 토글 버튼이 존재한다', async () => {
+      await loginPage.verifyTogglePasswordButton();
     });
 
-    test('1.4 비밀번호 찾기 링크가 존재한다', async ({ page }) => {
-      const forgotLink = page.getByRole('link', { name: '비밀번호를 잊으셨나요?' });
-      await expect(forgotLink).toBeVisible();
-      await expect(forgotLink).toHaveAttribute('href', '/forgot-password');
+    test('1.4 비밀번호 찾기 링크가 존재한다', async () => {
+      await loginPage.verifyForgotPasswordLink();
     });
 
-    test('1.5 초기 상태에서 에러 메시지가 표시되지 않는다', async ({ page }) => {
-      const errorAlert = page.locator('[role="alert"]');
-      await expect(errorAlert).not.toBeVisible();
+    test('1.5 초기 상태에서 에러 메시지가 표시되지 않는다', async () => {
+      await loginPage.verifyNoError();
     });
   });
 
   test.describe('2. 이메일 입력 필드 (#email)', () => {
-    test('2.1 클릭 시 포커스된다', async ({ page }) => {
-      const emailInput = page.locator('#email');
-
+    test('2.1 클릭 시 포커스된다', async () => {
       // Act
-      await emailInput.click();
+      await loginPage.emailInput.click();
 
       // Assert
-      await expect(emailInput).toBeFocused();
+      await loginPage.verifyEmailFocused();
     });
 
-    test('2.2 텍스트 입력이 가능하다', async ({ page }) => {
-      const emailInput = page.locator('#email');
-
+    test('2.2 텍스트 입력이 가능하다', async () => {
       // Act
-      await emailInput.fill('test@example.com');
+      await loginPage.fillEmail('test@example.com');
 
       // Assert
-      await expect(emailInput).toHaveValue('test@example.com');
+      await expect(loginPage.emailInput).toHaveValue('test@example.com');
     });
 
-    test('2.3 빈 상태로 제출 시 유효성 검사 에러가 표시된다', async ({ page }) => {
+    test('2.3 빈 상태로 제출 시 유효성 검사 에러가 표시된다', async () => {
       // Act - 이메일 비우고 제출
-      await page.locator('#password').fill('password123');
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.fillPassword('password123');
+      await loginPage.submit();
 
       // Assert
-      await expect(page.locator('text=이메일을 입력해주세요')).toBeVisible();
-      await expect(page.locator('#email')).toHaveAttribute('aria-invalid', 'true');
+      await loginPage.verifyEmailValidationError('이메일을 입력해주세요');
     });
 
     test('2.4 잘못된 이메일 형식 입력 시 유효성 검사 에러가 표시된다', async ({ page }) => {
       // Act
-      await page.locator('#email').fill('invalid-email');
-      await page.locator('#password').fill('password123');
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.fillEmail('invalid-email');
+      await loginPage.fillPassword('password123');
+      await loginPage.submit();
 
       // Assert
       await expect(page.locator('text=올바른 이메일 형식이 아닙니다')).toBeVisible();
     });
 
-    test('2.5 최대 100자까지 입력 가능하다', async ({ page }) => {
-      const emailInput = page.locator('#email');
+    test('2.5 최대 100자까지 입력 가능하다', async () => {
       const longEmail = 'a'.repeat(90) + '@test.com'; // 100자
 
       // Act
-      await emailInput.fill(longEmail);
+      await loginPage.fillEmail(longEmail);
 
       // Assert - 100자 제한으로 잘림
-      const value = await emailInput.inputValue();
+      const value = await loginPage.getEmailValue();
       expect(value.length).toBeLessThanOrEqual(100);
     });
 
-    test('2.6 포커스 시 테두리 색상이 변경된다', async ({ page }) => {
-      const emailInput = page.locator('#email');
-
+    test('2.6 포커스 시 테두리 색상이 변경된다', async () => {
       // Act
-      await emailInput.focus();
+      await loginPage.focusEmail();
 
       // Assert - focus:ring-blue-200 클래스 효과 확인
-      await expect(emailInput).toHaveClass(/focus:ring-blue-200/);
+      await expect(loginPage.emailInput).toHaveClass(/focus:ring-blue-200/);
     });
   });
 
   test.describe('3. 비밀번호 입력 필드 (#password)', () => {
-    test('3.1 클릭 시 포커스된다', async ({ page }) => {
-      const passwordInput = page.locator('#password');
-
+    test('3.1 클릭 시 포커스된다', async () => {
       // Act
-      await passwordInput.click();
+      await loginPage.passwordInput.click();
 
       // Assert
-      await expect(passwordInput).toBeFocused();
+      await loginPage.verifyPasswordFocused();
     });
 
-    test('3.2 기본적으로 입력 내용이 마스킹된다 (type=password)', async ({ page }) => {
-      const passwordInput = page.locator('#password');
-
+    test('3.2 기본적으로 입력 내용이 마스킹된다 (type=password)', async () => {
       // Assert
-      await expect(passwordInput).toHaveAttribute('type', 'password');
+      await loginPage.verifyPasswordType('password');
     });
 
-    test('3.3 텍스트 입력이 가능하다', async ({ page }) => {
-      const passwordInput = page.locator('#password');
-
+    test('3.3 텍스트 입력이 가능하다', async () => {
       // Act
-      await passwordInput.fill('MySecurePassword123!');
+      await loginPage.fillPassword('MySecurePassword123!');
 
       // Assert
-      await expect(passwordInput).toHaveValue('MySecurePassword123!');
+      await expect(loginPage.passwordInput).toHaveValue('MySecurePassword123!');
     });
 
-    test('3.4 빈 상태로 제출 시 유효성 검사 에러가 표시된다', async ({ page }) => {
+    test('3.4 빈 상태로 제출 시 유효성 검사 에러가 표시된다', async () => {
       // Act
-      await page.locator('#email').fill('test@example.com');
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.fillEmail('test@example.com');
+      await loginPage.submit();
 
       // Assert
-      await expect(page.locator('text=비밀번호를 입력해주세요')).toBeVisible();
-      await expect(page.locator('#password')).toHaveAttribute('aria-invalid', 'true');
+      await loginPage.verifyPasswordValidationError('비밀번호를 입력해주세요');
     });
 
-    test('3.5 최대 100자까지 입력 가능하다', async ({ page }) => {
-      const passwordInput = page.locator('#password');
+    test('3.5 최대 100자까지 입력 가능하다', async () => {
       const longPassword = 'a'.repeat(101);
 
       // Act
-      await passwordInput.fill(longPassword);
+      await loginPage.fillPassword(longPassword);
 
       // Assert
-      const value = await passwordInput.inputValue();
+      const value = await loginPage.getPasswordValue();
       expect(value.length).toBeLessThanOrEqual(100);
     });
   });
 
   test.describe('4. 비밀번호 보기/숨기기 토글 버튼', () => {
-    test('4.1 클릭 시 비밀번호가 보인다 (type=text)', async ({ page }) => {
-      const passwordInput = page.locator('#password');
-      const toggleButton = page.getByRole('button', { name: '비밀번호 보기' });
-
+    test('4.1 클릭 시 비밀번호가 보인다 (type=text)', async () => {
       // Arrange
-      await passwordInput.fill('testpassword');
-      await expect(passwordInput).toHaveAttribute('type', 'password');
+      await loginPage.fillPassword('testpassword');
+      await loginPage.verifyPasswordType('password');
 
       // Act
-      await toggleButton.click();
+      await loginPage.togglePassword();
 
       // Assert
-      await expect(passwordInput).toHaveAttribute('type', 'text');
+      await loginPage.verifyPasswordType('text');
     });
 
     test('4.2 비밀번호 보기 상태에서 클릭 시 다시 숨김 (type=password)', async ({ page }) => {
-      const passwordInput = page.locator('#password');
-      const toggleShow = page.getByRole('button', { name: '비밀번호 보기' });
-
       // Arrange - 먼저 보기 상태로 전환
-      await passwordInput.fill('testpassword');
-      await toggleShow.click();
-      await expect(passwordInput).toHaveAttribute('type', 'text');
+      await loginPage.fillPassword('testpassword');
+      await loginPage.togglePassword();
+      await loginPage.verifyPasswordType('text');
 
       // Act - 숨기기 클릭
       const toggleHide = page.getByRole('button', { name: '비밀번호 숨기기' });
       await toggleHide.click();
 
       // Assert
-      await expect(passwordInput).toHaveAttribute('type', 'password');
+      await loginPage.verifyPasswordType('password');
     });
 
     test('4.3 토글 시 aria-label이 적절하게 변경된다', async ({ page }) => {
@@ -240,12 +193,11 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
     });
 
     test('4.4 토글 버튼은 폼 제출을 트리거하지 않는다', async ({ page }) => {
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('password');
-      const toggleButton = page.getByRole('button', { name: '비밀번호 보기' });
+      await loginPage.fillEmail('test@example.com');
+      await loginPage.fillPassword('password');
 
       // Act
-      await toggleButton.click();
+      await loginPage.togglePassword();
 
       // Assert - 여전히 로그인 페이지에 있음 (폼 제출 안됨)
       await expect(page).toHaveURL(/\/login/);
@@ -294,16 +246,12 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
       });
     });
 
-    test('5.1 클릭 시 폼이 제출된다', async ({ page }) => {
+    test('5.1 클릭 시 폼이 제출된다', async () => {
       // Arrange
-      await page.locator('#email').fill('admin@example.com');
-      await page.locator('#password').fill('admin123');
-
-      // Act
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.login('admin@example.com', 'admin123');
 
       // Assert - 대시보드로 리다이렉트
-      await page.waitForURL(/\/(dashboard|voc)/, { timeout: 10000 });
+      await loginPage.waitForRedirect();
     });
 
     test('5.2 로딩 중에는 버튼이 비활성화되고 스피너가 표시된다', async ({ page }) => {
@@ -324,19 +272,14 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
         });
       });
 
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('password123');
+      await loginPage.fillEmail('test@example.com');
+      await loginPage.fillPassword('password123');
 
       // Act
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.submit();
 
       // Assert - 로딩 상태 확인
-      const loadingButton = page.getByRole('button', { name: /로그인 중/i });
-      await expect(loadingButton).toBeVisible();
-      await expect(loadingButton).toBeDisabled();
-
-      // 스피너 SVG 확인
-      await expect(loadingButton.locator('svg.animate-spin')).toBeVisible();
+      await loginPage.verifyLoadingState();
     });
 
     test('5.3 로딩 중에는 버튼 텍스트가 "로그인 중..."으로 변경된다', async ({ page }) => {
@@ -356,14 +299,14 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
         });
       });
 
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('password123');
+      await loginPage.fillEmail('test@example.com');
+      await loginPage.fillPassword('password123');
 
       // Act
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.submit();
 
       // Assert
-      await expect(page.locator('text=로그인 중...')).toBeVisible();
+      await loginPage.verifyLoadingText();
     });
 
     test('5.4 유효하지 않은 입력 시 API 호출 없이 유효성 검사 에러만 표시된다', async ({
@@ -376,85 +319,61 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
       });
 
       // Act - 빈 폼 제출
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.submit();
 
       // Assert
       await expect(page.locator('text=이메일을 입력해주세요')).toBeVisible();
       expect(apiCalled).toBe(false);
     });
 
-    test('5.5 로그인 성공 시 대시보드로 리다이렉트된다', async ({ page }) => {
-      await page.locator('#email').fill('admin@example.com');
-      await page.locator('#password').fill('admin123');
-
-      // Act
-      await page.getByRole('button', { name: '로그인' }).click();
+    test('5.5 로그인 성공 시 대시보드로 리다이렉트된다', async () => {
+      await loginPage.login('admin@example.com', 'admin123');
 
       // Assert
-      await page.waitForURL(/\/(dashboard|voc)/, { timeout: 10000 });
+      await loginPage.waitForRedirect();
     });
 
-    test('5.6 로그인 성공 시 인증 토큰이 저장된다', async ({ page }) => {
-      await page.locator('#email').fill('admin@example.com');
-      await page.locator('#password').fill('admin123');
-
-      // Act
-      await page.getByRole('button', { name: '로그인' }).click();
-      await page.waitForURL(/\/(dashboard|voc)/, { timeout: 10000 });
+    test('5.6 로그인 성공 시 인증 토큰이 저장된다', async () => {
+      await loginPage.login('admin@example.com', 'admin123');
+      await loginPage.waitForRedirect();
 
       // Assert - localStorage에서 인증 상태 확인
-      const authState = await page.evaluate(() => {
-        const stored = localStorage.getItem('auth-storage');
-        return stored ? JSON.parse(stored) : null;
-      });
-
-      expect(authState?.state?.isAuthenticated).toBe(true);
-      expect(authState?.state?.accessToken).toBeTruthy();
+      await loginPage.verifyAuthTokenStored();
     });
 
-    test('5.7 로그인 실패 시 에러 메시지가 표시된다', async ({ page }) => {
-      await page.locator('#email').fill('wrong@example.com');
-      await page.locator('#password').fill('wrongpassword');
-
-      // Act
-      await page.getByRole('button', { name: '로그인' }).click();
+    test('5.7 로그인 실패 시 에러 메시지가 표시된다', async () => {
+      await loginPage.login('wrong@example.com', 'wrongpassword');
 
       // Assert
-      const errorAlert = page.locator('.bg-red-50[role="alert"]');
-      await expect(errorAlert).toBeVisible({ timeout: 5000 });
-      await expect(errorAlert).toContainText(/이메일 또는 비밀번호가 올바르지 않습니다/);
+      await loginPage.verifyErrorVisible(/이메일 또는 비밀번호가 올바르지 않습니다/);
     });
 
-    test('5.8 Enter 키로도 폼 제출이 가능하다', async ({ page }) => {
-      await page.locator('#email').fill('admin@example.com');
-      await page.locator('#password').fill('admin123');
+    test('5.8 Enter 키로도 폼 제출이 가능하다', async () => {
+      await loginPage.fillEmail('admin@example.com');
+      await loginPage.fillPassword('admin123');
 
       // Act - Enter 키 입력
-      await page.locator('#password').press('Enter');
+      await loginPage.submitByEnter();
 
       // Assert
-      await page.waitForURL(/\/(dashboard|voc)/, { timeout: 10000 });
+      await loginPage.waitForRedirect();
     });
   });
 
   test.describe('6. 비밀번호 찾기 링크', () => {
     test('6.1 클릭 시 /forgot-password 페이지로 이동한다', async ({ page }) => {
-      const forgotLink = page.getByRole('link', { name: '비밀번호를 잊으셨나요?' });
-
       // Act
-      await forgotLink.click();
+      await loginPage.clickForgotPassword();
 
       // Assert
       await expect(page).toHaveURL(/\/forgot-password/);
     });
 
-    test('6.2 호버 시 스타일이 변경된다', async ({ page }) => {
-      const forgotLink = page.getByRole('link', { name: '비밀번호를 잊으셨나요?' });
-
+    test('6.2 호버 시 스타일이 변경된다', async () => {
       // Assert - 기본 클래스 확인
-      await expect(forgotLink).toHaveClass(/text-blue-600/);
-      await expect(forgotLink).toHaveClass(/hover:text-blue-800/);
-      await expect(forgotLink).toHaveClass(/hover:underline/);
+      await expect(loginPage.forgotPasswordLink).toHaveClass(/text-blue-600/);
+      await expect(loginPage.forgotPasswordLink).toHaveClass(/hover:text-blue-800/);
+      await expect(loginPage.forgotPasswordLink).toHaveClass(/hover:underline/);
     });
   });
 
@@ -475,61 +394,45 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
       });
     });
 
-    test('7.1 API 에러 시 role="alert"로 에러가 표시된다', async ({ page }) => {
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('wrongpass');
-
-      // Act
-      await page.getByRole('button', { name: '로그인' }).click();
+    test('7.1 API 에러 시 role="alert"로 에러가 표시된다', async () => {
+      await loginPage.login('test@example.com', 'wrongpass');
 
       // Assert
-      const errorAlert = page.locator('[role="alert"]');
-      await expect(errorAlert).toBeVisible({ timeout: 5000 });
-      await expect(errorAlert).toHaveAttribute('aria-live', 'assertive');
+      await loginPage.verifyErrorAccessibility();
     });
 
-    test('7.2 에러 메시지에 에러 아이콘이 표시된다', async ({ page }) => {
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('wrongpass');
-
-      // Act
-      await page.getByRole('button', { name: '로그인' }).click();
+    test('7.2 에러 메시지에 에러 아이콘이 표시된다', async () => {
+      await loginPage.login('test@example.com', 'wrongpass');
 
       // Assert
-      const errorAlert = page.locator('[role="alert"]');
-      await expect(errorAlert).toBeVisible({ timeout: 5000 });
-      await expect(errorAlert.locator('svg')).toBeVisible();
+      await loginPage.verifyErrorVisible();
+      await expect(loginPage.errorAlert.locator('svg')).toBeVisible();
     });
 
-    test('7.3 에러 발생 후에도 폼 입력 필드는 수정 가능하다', async ({ page }) => {
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('wrongpass');
-      await page.getByRole('button', { name: '로그인' }).click();
+    test('7.3 에러 발생 후에도 폼 입력 필드는 수정 가능하다', async () => {
+      await loginPage.login('test@example.com', 'wrongpass');
 
       // 에러 표시 대기
-      await expect(page.locator('[role="alert"]')).toBeVisible({ timeout: 5000 });
+      await loginPage.verifyErrorVisible();
 
       // Act - 입력 수정
-      await page.locator('#email').fill('new@example.com');
-      await page.locator('#password').fill('newpassword');
+      await loginPage.fillEmail('new@example.com');
+      await loginPage.fillPassword('newpassword');
 
       // Assert
-      await expect(page.locator('#email')).toHaveValue('new@example.com');
-      await expect(page.locator('#password')).toHaveValue('newpassword');
+      await expect(loginPage.emailInput).toHaveValue('new@example.com');
+      await expect(loginPage.passwordInput).toHaveValue('newpassword');
     });
   });
 
   test.describe('8. 키보드 네비게이션', () => {
     test('8.1 Tab 키로 폼 요소 간 이동이 가능하다', async ({ page }) => {
-      const emailInput = page.locator('#email');
-      const passwordInput = page.locator('#password');
       const toggleButton = page.getByRole('button', { name: '비밀번호 보기' });
-      const submitButton = page.getByRole('button', { name: '로그인' });
 
       // 이메일 → 비밀번호
-      await emailInput.focus();
+      await loginPage.focusEmail();
       await page.keyboard.press('Tab');
-      await expect(passwordInput).toBeFocused();
+      await loginPage.verifyPasswordFocused();
 
       // 비밀번호 → 토글 버튼
       await page.keyboard.press('Tab');
@@ -537,61 +440,50 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
 
       // 토글 버튼 → 로그인 버튼
       await page.keyboard.press('Tab');
-      await expect(submitButton).toBeFocused();
+      await expect(loginPage.submitButton).toBeFocused();
     });
 
     test('8.2 Shift+Tab으로 역방향 이동이 가능하다', async ({ page }) => {
-      const emailInput = page.locator('#email');
-      const passwordInput = page.locator('#password');
-      const submitButton = page.getByRole('button', { name: '로그인' });
-
-      await submitButton.focus();
+      await loginPage.submitButton.focus();
 
       // 역방향 이동
       await page.keyboard.press('Shift+Tab');
       // 토글 버튼이 포커스됨
       await page.keyboard.press('Shift+Tab');
-      await expect(passwordInput).toBeFocused();
+      await loginPage.verifyPasswordFocused();
 
       await page.keyboard.press('Shift+Tab');
-      await expect(emailInput).toBeFocused();
+      await loginPage.verifyEmailFocused();
     });
 
     test('8.3 Space 키로 토글 버튼 활성화가 가능하다', async ({ page }) => {
-      const passwordInput = page.locator('#password');
       const toggleButton = page.getByRole('button', { name: '비밀번호 보기' });
 
-      await passwordInput.fill('testpassword');
+      await loginPage.fillPassword('testpassword');
       await toggleButton.focus();
 
       // Act
       await page.keyboard.press('Space');
 
       // Assert
-      await expect(passwordInput).toHaveAttribute('type', 'text');
+      await loginPage.verifyPasswordType('text');
     });
   });
 
   test.describe('9. 접근성 (Accessibility)', () => {
-    test('9.1 모든 폼 필드에 aria-label이 설정되어 있다', async ({ page }) => {
-      await expect(page.locator('#email')).toHaveAttribute('aria-label', '이메일');
-      await expect(page.locator('#password')).toHaveAttribute('aria-label', '비밀번호');
-      await expect(page.getByRole('button', { name: '로그인' })).toHaveAttribute(
-        'aria-label',
-        '로그인'
-      );
+    test('9.1 모든 폼 필드에 aria-label이 설정되어 있다', async () => {
+      await loginPage.verifyAccessibility();
     });
 
-    test('9.2 필수 필드에 aria-required가 설정되어 있다', async ({ page }) => {
-      await expect(page.locator('#email')).toHaveAttribute('aria-required', 'true');
-      await expect(page.locator('#password')).toHaveAttribute('aria-required', 'true');
+    test('9.2 필수 필드에 aria-required가 설정되어 있다', async () => {
+      await expect(loginPage.emailInput).toHaveAttribute('aria-required', 'true');
+      await expect(loginPage.passwordInput).toHaveAttribute('aria-required', 'true');
     });
 
-    test('9.3 유효성 검사 실패 시 aria-invalid가 true로 설정된다', async ({ page }) => {
-      await page.getByRole('button', { name: '로그인' }).click();
+    test('9.3 유효성 검사 실패 시 aria-invalid가 true로 설정된다', async () => {
+      await loginPage.submit();
 
-      await expect(page.locator('#email')).toHaveAttribute('aria-invalid', 'true');
-      await expect(page.locator('#password')).toHaveAttribute('aria-invalid', 'true');
+      await loginPage.verifyValidationErrorsAccessibility();
     });
 
     test('9.4 에러 메시지에 aria-live="assertive"가 설정되어 있다', async ({ page }) => {
@@ -606,13 +498,9 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
         });
       });
 
-      await page.locator('#email').fill('test@test.com');
-      await page.locator('#password').fill('wrong');
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.login('test@test.com', 'wrong');
 
-      const errorAlert = page.locator('[role="alert"]');
-      await expect(errorAlert).toBeVisible({ timeout: 5000 });
-      await expect(errorAlert).toHaveAttribute('aria-live', 'assertive');
+      await loginPage.verifyErrorAccessibility();
     });
   });
 
@@ -625,9 +513,9 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
       await expect(formContainer).toBeVisible();
 
       // 모든 요소가 여전히 접근 가능
-      await expect(page.locator('#email')).toBeVisible();
-      await expect(page.locator('#password')).toBeVisible();
-      await expect(page.getByRole('button', { name: '로그인' })).toBeVisible();
+      await expect(loginPage.emailInput).toBeVisible();
+      await expect(loginPage.passwordInput).toBeVisible();
+      await expect(loginPage.submitButton).toBeVisible();
     });
 
     test('10.2 태블릿 뷰포트에서 폼이 올바르게 표시된다', async ({ page }) => {
@@ -646,18 +534,18 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
   });
 
   test.describe('11. 보안', () => {
-    test('11.1 비밀번호 필드는 브라우저 자동완성이 활성화되어 있다', async ({ page }) => {
-      await expect(page.locator('#password')).toHaveAttribute('autocomplete', 'current-password');
+    test('11.1 비밀번호 필드는 브라우저 자동완성이 활성화되어 있다', async () => {
+      await expect(loginPage.passwordInput).toHaveAttribute('autocomplete', 'current-password');
     });
 
     test('11.2 입력 필드는 XSS 공격에 안전하다', async ({ page }) => {
       const xssPayload = '<script>alert("xss")</script>';
 
-      await page.locator('#email').fill(xssPayload);
-      await page.locator('#password').fill(xssPayload);
+      await loginPage.fillEmail(xssPayload);
+      await loginPage.fillPassword(xssPayload);
 
       // Assert - 스크립트가 실행되지 않고 텍스트로 저장됨
-      await expect(page.locator('#email')).toHaveValue(xssPayload);
+      await expect(loginPage.emailInput).toHaveValue(xssPayload);
 
       // 페이지에 alert 다이얼로그가 나타나지 않음
       let alertTriggered = false;
@@ -665,7 +553,7 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
         alertTriggered = true;
       });
 
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.submit();
       await page.waitForTimeout(500);
 
       expect(alertTriggered).toBe(false);
@@ -678,13 +566,10 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
         await route.abort('failed');
       });
 
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('password123');
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.login('test@example.com', 'password123');
 
       // Assert - 에러 상태 확인
-      const errorAlert = page.locator('[role="alert"]');
-      await expect(errorAlert).toBeVisible({ timeout: 10000 });
+      await loginPage.verifyErrorVisible();
     });
 
     test('12.2 서버 500 에러 시 일반적인 에러 메시지가 표시된다', async ({ page }) => {
@@ -699,12 +584,9 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
         });
       });
 
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('password123');
-      await page.getByRole('button', { name: '로그인' }).click();
+      await loginPage.login('test@example.com', 'password123');
 
-      const errorAlert = page.locator('[role="alert"]');
-      await expect(errorAlert).toBeVisible({ timeout: 5000 });
+      await loginPage.verifyErrorVisible();
     });
 
     test('12.3 더블 클릭 시 폼이 한 번만 제출된다', async ({ page }) => {
@@ -726,12 +608,11 @@ test.describe('로그인 페이지 (/login) - 상세 시나리오', () => {
         });
       });
 
-      await page.locator('#email').fill('test@example.com');
-      await page.locator('#password').fill('password123');
+      await loginPage.fillEmail('test@example.com');
+      await loginPage.fillPassword('password123');
 
       // Act - 더블 클릭
-      const submitButton = page.getByRole('button', { name: '로그인' });
-      await submitButton.dblclick();
+      await loginPage.submitButton.dblclick();
 
       // 잠시 대기
       await page.waitForTimeout(1000);

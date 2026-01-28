@@ -16,3 +16,30 @@ export {
   kanbanColumns,
   pageResponseMock,
 } from './voc-data';
+
+// Mock Factory exports
+export {
+  createMockUser,
+  createMockAssignee,
+  createMockUserInfo,
+  createMockAuthResponse,
+  createMockCategory,
+  createMockCategories,
+  createMockAttachment,
+  createMockMemo,
+  createMockAiAnalysis,
+  createMockVoc,
+  createMockVocs,
+  createMockSimilarVoc,
+  createMockKpiChange,
+  createMockKpiData,
+  createMockTrendData,
+  createMockTrendDataArray,
+  createMockCategoryStats,
+  createMockCategoryStatsArray,
+  createMockStatusDistribution,
+  createMockStatusDistributionArray,
+  createMockDashboardStats,
+  createMockApiResponse,
+  createMockPageResponse,
+} from './mock-factory';
