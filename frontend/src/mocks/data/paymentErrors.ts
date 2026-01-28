@@ -4,12 +4,12 @@ import paymentErrorsJson from './paymentErrors.json';
 /**
  * Mock payment error logs data
  */
-export const mockPaymentErrorLogs: PaymentErrorLog[] = paymentErrorsJson.paymentErrorLogs;
+export const mockPaymentErrorLogs = paymentErrorsJson.paymentErrorLogs as unknown as PaymentErrorLog[];
 
 /**
  * Mock payment transactions data
  */
-export const mockPaymentTransactions: PaymentTransaction[] = paymentErrorsJson.paymentTransactions;
+export const mockPaymentTransactions = paymentErrorsJson.paymentTransactions as unknown as PaymentTransaction[];
 
 /**
  * Get payment error logs with optional filtering
