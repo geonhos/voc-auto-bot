@@ -183,3 +183,9 @@ gen/
 # Claude Code
 # =========================
 .claude/
+
+# =========================
+# Temporary Plans & Reviews
+# =========================
+plans/
+reviews/
