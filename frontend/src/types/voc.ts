@@ -6,6 +6,41 @@ export type VocStatus =
   | 'CLOSED'
   | 'REJECTED';
 
+/**
+ * 최종 상태(Terminal Status) 목록
+ * 이 상태들은 다른 상태로 전이할 수 없습니다.
+ */
+export const TERMINAL_STATUSES: VocStatus[] = ['RESOLVED', 'REJECTED', 'CLOSED'];
+
+/**
+ * 상태별 전이 가능한 상태 목록
+ */
+export const ALLOWED_TRANSITIONS: Record<VocStatus, VocStatus[]> = {
+  NEW: ['IN_PROGRESS', 'RESOLVED', 'REJECTED'],
+  IN_PROGRESS: ['RESOLVED', 'REJECTED'],
+  PENDING: ['RESOLVED', 'REJECTED'],
+  RESOLVED: [], // 종료 상태
+  REJECTED: [], // 종료 상태
+  CLOSED: [],   // 종료 상태
+};
+
+/**
+ * 주어진 상태가 최종 상태인지 확인합니다.
+ * 최종 상태는 다른 상태로 변경할 수 없습니다.
+ */
+export function isTerminalStatus(status: VocStatus): boolean {
+  return TERMINAL_STATUSES.includes(status);
+}
+
+/**
+ * 특정 상태에서 다른 상태로 전이가 가능한지 확인합니다.
+ * 같은 상태로의 전이는 허용되지 않습니다.
+ */
+export function canTransitionTo(from: VocStatus, to: VocStatus): boolean {
+  if (from === to) return false; // 같은 상태로 전이 불가
+  return ALLOWED_TRANSITIONS[from].includes(to);
+}
+
 export type VocPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
 export type VocChannel = 'WEB' | 'EMAIL' | 'PHONE' | 'CHAT' | 'SNS' | 'OTHER';

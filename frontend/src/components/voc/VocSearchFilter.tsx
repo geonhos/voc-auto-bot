@@ -138,8 +138,8 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
 
       {showFilters && (
         <div className="border-t border-border-light dark:border-border-dark pt-4 space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">상태</label>
+          <div role="group" aria-labelledby="status-filter-label">
+            <span id="status-filter-label" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">상태</span>
             <div className="flex flex-wrap gap-2">
               {statusOptions.map((option) => (
                 <label
@@ -158,8 +158,8 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">우선순위</label>
+          <div role="group" aria-labelledby="priority-filter-label">
+            <span id="priority-filter-label" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">우선순위</span>
             <div className="flex flex-wrap gap-2">
               {priorityOptions.map((option) => (
                 <label
@@ -178,8 +178,8 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">기간</label>
+          <div role="group" aria-labelledby="date-filter-label">
+            <span id="date-filter-label" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">기간</span>
             <div className="flex items-center gap-2">
               <input
                 type="date"

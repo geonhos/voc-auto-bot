@@ -9,7 +9,17 @@ import type {
   VocStatus,
   EmailTemplate,
   DashboardData,
+  PaymentRequest,
+  PaymentResponse,
 } from '@/types';
+
+import {
+  mockPaymentErrorLogs,
+  mockPaymentTransactions,
+  getPaymentErrorLogs,
+  getPaymentTransactions,
+  getRandomPaymentError,
+} from './data/paymentErrors';
 
 const API_BASE = '/api/v1';
 
@@ -477,15 +487,6 @@ function getStatusLabel(status: VocStatus): string {
 }
 
 // Payment Error Handlers
-import type { PaymentRequest, PaymentResponse } from '@/types';
-import {
-  mockPaymentErrorLogs,
-  mockPaymentTransactions,
-  getPaymentErrorLogs,
-  getPaymentTransactions,
-  getRandomPaymentError,
-} from './data/paymentErrors';
-
 // Append payment handlers to existing handlers array
 handlers.push(
   // Get payment error logs

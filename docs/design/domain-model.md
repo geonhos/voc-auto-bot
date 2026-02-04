@@ -1,7 +1,8 @@
 # VOC Auto Bot - 도메인 모델 설계
 
-> 버전: 1.0
+> 버전: 1.1
 > 작성일: 2026-01-23
+> 수정일: 2026-02-04
 > 관련 이슈: #39
 
 ## 1. 개요
@@ -295,66 +296,75 @@ VOC 상태 변경 이력을 추적합니다.
 
 ### 3.1 상태 정의
 
-| 상태 | 코드 | 설명 |
-|------|------|------|
-| 접수 | RECEIVED | VOC가 시스템에 등록됨 |
-| 분석중 | ANALYZING | AI가 VOC를 분석 중 |
-| 분석실패 | ANALYSIS_FAILED | AI 분석 실패 (수동 처리 필요) |
-| 처리중 | PROCESSING | 담당자가 VOC를 처리 중 |
-| 완료 | COMPLETED | VOC 처리 완료 |
-| 반려 | REJECTED | VOC 반려 (처리 불가) |
+| 상태 | 코드 | 설명 | 종료 상태 |
+|------|------|------|----------|
+| 접수 | NEW | VOC가 시스템에 등록됨 | - |
+| 처리중 | IN_PROGRESS | 담당자가 VOC를 처리 중 | - |
+| 보류 | PENDING | 일시적으로 보류된 VOC | - |
+| 완료 | RESOLVED | VOC 처리 완료 | **O** |
+| 반려 | REJECTED | VOC 반려 (처리 불가) | **O** |
+| 종료 | CLOSED | VOC 종료 | **O** |
+
+**종료 상태 (Terminal Status)**: 완료(RESOLVED), 반려(REJECTED), 종료(CLOSED)는 종료 상태로, 다른 상태로 전이할 수 없습니다.
 
 ### 3.2 상태 전이 다이어그램
 
 ```
-                                    ┌─────────────────┐
-                                    │                 │
-                                    ▼                 │
-┌──────────┐     ┌───────────┐     ┌────────────────┐ │
-│          │     │           │     │                │ │
-│ RECEIVED ├────►│ ANALYZING ├────►│ ANALYSIS_FAILED├─┘
-│ (접수)    │     │ (분석중)   │     │ (분석실패)      │ 재분석 요청
-│          │     │           │     │                │
-└──────────┘     └─────┬─────┘     └───────┬────────┘
-                       │                   │
-                       │ 분석 완료          │ 수동 처리 전환
-                       ▼                   │
-                 ┌───────────┐             │
-                 │           │◄────────────┘
-                 │PROCESSING │
-                 │ (처리중)   │
-                 │           │
-                 └─────┬─────┘
-                       │
-          ┌────────────┼────────────┐
-          │            │            │
-          ▼            │            ▼
-    ┌───────────┐      │      ┌───────────┐
-    │           │      │      │           │
-    │ COMPLETED │      │      │ REJECTED  │
-    │ (완료)    │      │      │ (반려)    │
-    │           │      │      │           │
-    └───────────┘      │      └───────────┘
-                       │
-                       │ 재처리 요청
-                       │ (ADMIN만 가능)
-                       ▼
-                  (PROCESSING)
+┌──────────┐
+│          │
+│   NEW    │──────────────────────────────────────┐
+│  (접수)   │                                      │
+│          │                                      │
+└────┬─────┘                                      │
+     │                                            │
+     │ 처리중 전환                                 │
+     ▼                                            │
+┌───────────┐     ┌───────────┐                  │
+│           │     │           │                  │
+│IN_PROGRESS├────►│ RESOLVED  │◄─────────────────┤
+│ (처리중)   │     │  (완료)    │  완료 처리        │
+│           │     │           │                  │
+└─────┬─────┘     └───────────┘                  │
+      │           [종료 상태]                      │
+      │                                          │
+      │           ┌───────────┐                  │
+      │           │           │                  │
+      └──────────►│ REJECTED  │◄─────────────────┘
+       반려        │  (반려)    │  반려 처리
+                  │           │
+                  └───────────┘
+                  [종료 상태]
+
+┌──────────┐
+│          │
+│ PENDING  │───────────────────────┐
+│(분석실패) │                       │
+│          │                       ▼
+└──────────┘              RESOLVED 또는 REJECTED
 ```
+
+**주요 변경점**:
+- 완료(RESOLVED)와 반려(REJECTED)는 **종료 상태**로, 다른 상태로 전이 불가
+- 접수(NEW) 상태에서 바로 완료/반려로 전이 가능
 
 ### 3.3 상태 전이 규칙
 
 | 현재 상태 | 전이 가능 상태 | 전이 조건 | 권한 |
 |-----------|----------------|-----------|------|
-| RECEIVED | ANALYZING | 시스템 자동 | System |
-| ANALYZING | PROCESSING | 분석 성공 | System |
-| ANALYZING | ANALYSIS_FAILED | 분석 실패 | System |
-| ANALYSIS_FAILED | ANALYZING | 재분석 요청 | HANDLER, ADMIN |
-| ANALYSIS_FAILED | PROCESSING | 수동 처리 전환 | HANDLER, ADMIN |
-| PROCESSING | COMPLETED | 처리 완료 | HANDLER, ADMIN |
-| PROCESSING | REJECTED | 반려 | HANDLER, ADMIN |
-| COMPLETED | PROCESSING | 재처리 요청 | ADMIN |
-| REJECTED | PROCESSING | 재처리 요청 | ADMIN |
+| NEW | IN_PROGRESS | 처리 시작 | HANDLER, ADMIN |
+| NEW | RESOLVED | 바로 완료 처리 | HANDLER, ADMIN |
+| NEW | REJECTED | 바로 반려 처리 | HANDLER, ADMIN |
+| IN_PROGRESS | RESOLVED | 처리 완료 | HANDLER, ADMIN |
+| IN_PROGRESS | REJECTED | 반려 | HANDLER, ADMIN |
+| PENDING | RESOLVED | 완료 처리 | HANDLER, ADMIN |
+| PENDING | REJECTED | 반려 | HANDLER, ADMIN |
+| RESOLVED | - | **종료 상태 (전이 불가)** | - |
+| REJECTED | - | **종료 상태 (전이 불가)** | - |
+| CLOSED | - | **종료 상태 (전이 불가)** | - |
+
+**종료 상태 비즈니스 규칙**:
+- RESOLVED, REJECTED, CLOSED는 종료 상태로 어떤 상태로도 전이할 수 없습니다.
+- 잘못된 종료 상태를 수정해야 하는 경우 관리자가 새로운 VOC를 생성해야 합니다.
 
 ---
 
@@ -591,3 +601,4 @@ CREATE INDEX idx_email_log_status ON email_log(status);
 | 버전 | 일자 | 작성자 | 변경 내용 |
 |------|------|--------|-----------|
 | 1.0 | 2026-01-23 | Claude | 최초 작성 |
+| 1.1 | 2026-02-04 | Claude | 상태 전이 규칙 변경 - 종료 상태(RESOLVED, REJECTED, CLOSED) 개념 도입, 종료 상태에서 재처리 불가 |

@@ -209,17 +209,19 @@ GET /api/vocs?view=kanban
 
 | 현재 상태 | 이동 가능한 상태 | 비고 |
 |----------|----------------|------|
-| 접수 | 분석중 | 자동 전이 (드래그 불가) |
-| 분석중 | 처리중, 분석실패 | 분석중 → 처리중은 자동 전이 권장 |
-| 분석실패 | 처리중 | 수동 복구 |
+| 접수 | 처리중, 완료, 반려 | 드래그 가능 |
 | 처리중 | 완료, 반려 | 처리 완료 또는 반려 |
-| 완료 | 처리중 | 재처리 |
-| 반려 | 처리중 | 재처리 |
+| 분석실패 | 완료, 반려 | 수동 처리 |
+| 완료 | - | **종료 상태 (변경 불가)** |
+| 반려 | - | **종료 상태 (변경 불가)** |
+
+**종료 상태 (Terminal Status)**:
+- 완료(RESOLVED)와 반려(REJECTED)는 종료 상태로, 다른 상태로 전이할 수 없습니다.
+- 종료 상태의 VOC 카드는 드래그가 비활성화됩니다.
 
 **드래그 차단 조건**:
-- 접수 → 다른 상태 (자동 전이만 허용)
-- 분석중 → 완료/반려 (처리중을 거쳐야 함)
-- 분석실패 → 완료/반려/접수 (처리중을 거쳐야 함)
+- 완료 → 다른 상태 (종료 상태, 변경 불가)
+- 반려 → 다른 상태 (종료 상태, 변경 불가)
 
 **API 호출**:
 ```http
@@ -273,16 +275,20 @@ Content-Type: application/json
 **검증 로직**:
 ```typescript
 const allowedTransitions: Record<VocStatus, VocStatus[]> = {
-  RECEIVED: [], // 자동 전이만 허용
-  ANALYZING: ['PROCESSING', 'ANALYSIS_FAILED'],
-  ANALYSIS_FAILED: ['PROCESSING'],
-  PROCESSING: ['COMPLETED', 'REJECTED'],
-  COMPLETED: ['PROCESSING'],
-  REJECTED: ['PROCESSING']
+  NEW: ['IN_PROGRESS', 'RESOLVED', 'REJECTED'],
+  IN_PROGRESS: ['RESOLVED', 'REJECTED'],
+  PENDING: ['RESOLVED', 'REJECTED'],
+  RESOLVED: [], // 종료 상태 (변경 불가)
+  REJECTED: [], // 종료 상태 (변경 불가)
+  CLOSED: []    // 종료 상태 (변경 불가)
 };
 
 function canTransition(from: VocStatus, to: VocStatus): boolean {
   return allowedTransitions[from].includes(to);
+}
+
+function isTerminalStatus(status: VocStatus): boolean {
+  return ['RESOLVED', 'REJECTED', 'CLOSED'].includes(status);
 }
 ```
 
@@ -614,16 +620,22 @@ src/features/voc-kanban/
 ```typescript
 // src/features/voc-kanban/model/statusTransitionRules.ts
 export const STATUS_TRANSITION_RULES: Record<VocStatus, VocStatus[]> = {
-  RECEIVED: [],
-  ANALYZING: ['PROCESSING', 'ANALYSIS_FAILED'],
-  ANALYSIS_FAILED: ['PROCESSING'],
-  PROCESSING: ['COMPLETED', 'REJECTED'],
-  COMPLETED: ['PROCESSING'],
-  REJECTED: ['PROCESSING']
+  NEW: ['IN_PROGRESS', 'RESOLVED', 'REJECTED'],
+  IN_PROGRESS: ['RESOLVED', 'REJECTED'],
+  PENDING: ['RESOLVED', 'REJECTED'],
+  RESOLVED: [], // 종료 상태
+  REJECTED: [], // 종료 상태
+  CLOSED: []    // 종료 상태
 };
+
+export const TERMINAL_STATUSES: VocStatus[] = ['RESOLVED', 'REJECTED', 'CLOSED'];
 
 export function canTransition(from: VocStatus, to: VocStatus): boolean {
   return STATUS_TRANSITION_RULES[from].includes(to);
+}
+
+export function isTerminalStatus(status: VocStatus): boolean {
+  return TERMINAL_STATUSES.includes(status);
 }
 ```
 
@@ -661,6 +673,7 @@ const mutation = useMutation({
 | 버전 | 날짜 | 작성자 | 변경 내용 |
 |------|------|--------|----------|
 | 1.0 | 2026-01-23 | Claude Code | 초안 작성 |
+| 1.1 | 2026-02-04 | Claude Code | 상태 전이 규칙 변경 - 종료 상태(RESOLVED, REJECTED, CLOSED) 도입, 종료 상태에서 재처리 불가 |
 
 ---
 

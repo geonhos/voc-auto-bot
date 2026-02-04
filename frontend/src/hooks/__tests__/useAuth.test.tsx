@@ -30,9 +30,11 @@ function createWrapper() {
     },
   });
 
-  return ({ children }: { children: React.ReactNode }) => (
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  Wrapper.displayName = 'QueryClientWrapper';
+  return Wrapper;
 }
 
 // Helper to create mock token
@@ -108,8 +110,9 @@ describe('useAuth', () => {
     });
 
     it('should update tokens on successful refresh', async () => {
-      const { api } = require('@/lib/api/client');
-      api.post.mockResolvedValueOnce({
+      const apiModule = await import('@/lib/api/client');
+      const api = apiModule.api as jest.Mocked<typeof apiModule.api>;
+      (api.post as jest.Mock).mockResolvedValueOnce({
         data: {
           accessToken: 'new-access-token',
           refreshToken: 'new-refresh-token',

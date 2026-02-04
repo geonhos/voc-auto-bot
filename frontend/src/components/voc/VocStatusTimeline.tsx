@@ -40,7 +40,7 @@ export function VocStatusTimeline({ statusHistory, currentStatus }: VocStatusTim
     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
       <h3 className="text-sm font-bold mb-6 text-slate-700 dark:text-slate-300">처리 진행 상태</h3>
 
-      <ol className="space-y-6" role="list">
+      <ol className="space-y-6">
         {statusHistory.map((history, index) => {
           const state = getTimelineState(history.status, index);
           const isLast = index === statusHistory.length - 1;
