@@ -143,7 +143,7 @@ class OllamaAdapterTest {
         // when & then
         assertThatThrownBy(() -> ollamaAdapter.sendPrompt("test prompt"))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("LLM 호출 실패");
+                .hasMessageContaining("네트워크 오류");
     }
 
     @Test

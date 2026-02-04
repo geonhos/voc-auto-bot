@@ -95,4 +95,17 @@ public class UserJpaEntity extends BaseJpaEntity {
         this.isLocked = false;
         this.failedLoginAttempts = 0;
     }
+
+    /**
+     * 도메인 객체로부터 로그인 상태 관련 필드를 업데이트합니다.
+     *
+     * @param failedLoginAttempts 실패한 로그인 시도 횟수
+     * @param isLocked 계정 잠금 여부
+     * @param lastLoginAt 마지막 로그인 시간
+     */
+    public void updateLoginStatus(int failedLoginAttempts, boolean isLocked, LocalDateTime lastLoginAt) {
+        this.failedLoginAttempts = failedLoginAttempts;
+        this.isLocked = isLocked;
+        this.lastLoginAt = lastLoginAt;
+    }
 }

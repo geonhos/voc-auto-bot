@@ -20,7 +20,7 @@ import static com.geonho.vocautobot.adapter.common.exception.ErrorCodes.*;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
-    protected ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
         log.error("BusinessException: {}", e.getMessage());
         return ResponseEntity
                 .status(e.getHttpStatus())
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    protected ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e) {
         log.error("MethodArgumentNotValidException: {}", e.getMessage());
         String message = e.getBindingResult().getFieldErrors().stream()
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BindException.class)
-    protected ResponseEntity<ApiResponse<Void>> handleBindException(BindException e) {
+    public ResponseEntity<ApiResponse<Void>> handleBindException(BindException e) {
         log.error("BindException: {}", e.getMessage());
         String message = e.getBindingResult().getFieldErrors().stream()
                 .findFirst()
@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    protected ResponseEntity<ApiResponse<Void>> handleHttpRequestMethodNotSupportedException(
+    public ResponseEntity<ApiResponse<Void>> handleHttpRequestMethodNotSupportedException(
             HttpRequestMethodNotSupportedException e) {
         log.error("HttpRequestMethodNotSupportedException: {}", e.getMessage());
         return ResponseEntity
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    protected ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException e) {
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException e) {
         log.error("AccessDeniedException: {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    protected ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(BadCredentialsException e) {
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(BadCredentialsException e) {
         log.error("BadCredentialsException: {}", e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
+    public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         log.error("Exception: ", e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

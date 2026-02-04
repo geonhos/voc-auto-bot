@@ -1,6 +1,6 @@
 package com.geonho.vocautobot.adapter.in.web.voc.dto;
 
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.domain.Page;
 
@@ -33,7 +33,7 @@ public record VocListResponse(
         @Schema(description = "빈 페이지 여부")
         boolean empty
 ) {
-    public static VocListResponse from(Page<Voc> vocPage) {
+    public static VocListResponse from(Page<VocDomain> vocPage) {
         List<VocResponse> content = vocPage.getContent().stream()
                 .map(VocResponse::from)
                 .toList();

@@ -107,7 +107,7 @@ export function VocForm() {
 
         {/* 카테고리 선택 */}
         <CategorySelect
-          value={watch('categoryId')}
+          value={watch('categoryId') ?? null}
           error={errors.categoryId?.message}
           register={register}
           setValue={setValue}

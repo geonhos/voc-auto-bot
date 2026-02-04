@@ -1,5 +1,7 @@
 package com.geonho.vocautobot.adapter.in.web.voc.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.geonho.vocautobot.adapter.common.util.XssProtectionUtil;
 import com.geonho.vocautobot.application.voc.port.in.dto.CreateVocCommand;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Schema(description = "VOC 생성 요청")
 @Getter
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CreateVocRequest {
 
     @Schema(description = "제목", example = "상품 배송 지연 문의")
@@ -45,13 +48,23 @@ public class CreateVocRequest {
     @Schema(description = "우선순위", example = "NORMAL")
     private VocPriority priority;
 
+    /**
+     * Converts this request to a command object with XSS protection applied.
+     * <p>
+     * - title: Output encoded (plain text field)
+     * - content: HTML sanitized (rich text field, allows safe formatting)
+     * - customerName: Output encoded (plain text field)
+     * </p>
+     *
+     * @return CreateVocCommand with sanitized fields
+     */
     public CreateVocCommand toCommand() {
         return new CreateVocCommand(
-                title,
-                content,
+                XssProtectionUtil.encodeForHtml(title),
+                XssProtectionUtil.sanitizeHtml(content),
                 categoryId,
                 customerEmail,
-                customerName,
+                XssProtectionUtil.encodeForHtml(customerName),
                 customerPhone,
                 priority
         );

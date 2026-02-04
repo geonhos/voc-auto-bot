@@ -1,6 +1,6 @@
 package com.geonho.vocautobot.application.notification.port.out;
 
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 
 /**
  * Notification Port Interface
@@ -11,25 +11,25 @@ public interface NotificationPort {
     /**
      * Send notification when a new VOC is created
      *
-     * @param voc Created VOC entity
+     * @param voc Created VOC domain model
      */
-    void notifyVocCreated(Voc voc);
+    void notifyVocCreated(VocDomain voc);
 
     /**
      * Send notification when VOC status changes
      *
-     * @param voc VOC entity with changed status
+     * @param voc VOC domain model with changed status
      * @param previousStatus Previous status before change
      */
-    void notifyVocStatusChanged(Voc voc, String previousStatus);
+    void notifyVocStatusChanged(VocDomain voc, String previousStatus);
 
     /**
      * Send notification when VOC is assigned to a user
      *
-     * @param voc VOC entity
+     * @param voc VOC domain model
      * @param assigneeName Name of the assigned user
      */
-    void notifyVocAssigned(Voc voc, String assigneeName);
+    void notifyVocAssigned(VocDomain voc, String assigneeName);
 
     /**
      * Notification send exception

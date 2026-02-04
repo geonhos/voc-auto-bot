@@ -188,6 +188,9 @@ services:
     container_name: voc-backend
     restart: unless-stopped
     environment:
+      # Security: Set to false to disable authentication for development
+      # WARNING: NEVER use SECURITY_ENABLED=false in production!
+      SECURITY_ENABLED: ${SECURITY_ENABLED:-false}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-vocautobot}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-voc_user}

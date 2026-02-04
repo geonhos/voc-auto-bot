@@ -1,12 +1,12 @@
 package com.geonho.vocautobot.application.voc.port.in;
 
 import com.geonho.vocautobot.application.voc.port.in.dto.CreateVocCommand;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 
 /**
  * Use case for creating a new VOC
  */
 public interface CreateVocUseCase {
 
-    Voc createVoc(CreateVocCommand command);
+    VocDomain createVoc(CreateVocCommand command);
 }

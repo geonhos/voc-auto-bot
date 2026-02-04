@@ -17,7 +17,8 @@ import java.util.stream.Collectors;
 @Repository
 @RequiredArgsConstructor
 public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort,
-        com.geonho.vocautobot.application.auth.port.out.LoadUserPort {
+        com.geonho.vocautobot.application.auth.port.out.LoadUserPort,
+        com.geonho.vocautobot.application.auth.port.out.SaveUserPort {
 
     private final UserJpaRepository userJpaRepository;
 
@@ -35,6 +36,12 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort,
     public Optional<AuthUserInfo> loadUserById(Long id) {
         return userJpaRepository.findById(id)
                 .map(this::toAuthUserInfo);
+    }
+
+    @Override
+    public Optional<User> loadUserDomainById(Long id) {
+        return userJpaRepository.findById(id)
+                .map(this::toDomain);
     }
 
     private AuthUserInfo toAuthUserInfo(UserJpaEntity entity) {
@@ -125,6 +132,12 @@ public class UserPersistenceAdapter implements LoadUserPort, SaveUserPort,
             if (user.getPassword() != null && !user.getPassword().isEmpty()) {
                 entity.updatePassword(user.getPassword());
             }
+            // 로그인 상태 관련 필드 업데이트
+            entity.updateLoginStatus(
+                    user.getFailedLoginAttempts(),
+                    user.isLocked(),
+                    user.getLastLoginAt()
+            );
         } else {
             entity = new UserJpaEntity(
                     user.getUsername(),

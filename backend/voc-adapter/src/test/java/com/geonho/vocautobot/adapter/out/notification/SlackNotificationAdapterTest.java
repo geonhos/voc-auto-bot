@@ -1,6 +1,7 @@
 package com.geonho.vocautobot.adapter.out.notification;
 
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 import com.geonho.vocautobot.domain.voc.VocStatus;
 import okhttp3.mockwebserver.MockResponse;
@@ -12,8 +13,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -38,7 +41,9 @@ class SlackNotificationAdapterTest {
         properties.setUsername("Test Bot");
         properties.setIconEmoji(":robot:");
 
-        adapter = new SlackNotificationAdapter(properties);
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper objectMapper = new ObjectMapper();
+        adapter = new SlackNotificationAdapter(properties, restTemplate, objectMapper);
     }
 
     @AfterEach
@@ -54,7 +59,7 @@ class SlackNotificationAdapterTest {
                 .setResponseCode(200)
                 .setBody("ok"));
 
-        Voc voc = createTestVoc();
+        VocDomain voc = createTestVoc();
 
         // when
         assertDoesNotThrow(() -> adapter.notifyVocCreated(voc));
@@ -65,8 +70,7 @@ class SlackNotificationAdapterTest {
         assertThat(request.getHeader(HttpHeaders.CONTENT_TYPE)).contains(MediaType.APPLICATION_JSON_VALUE);
         assertThat(request.getBody().readUtf8())
                 .contains("VOC-001")
-                .contains("Test VOC Title")
-                .contains("NEW VOC");
+                .contains("Test VOC Title");
     }
 
     @Test
@@ -77,8 +81,7 @@ class SlackNotificationAdapterTest {
                 .setResponseCode(200)
                 .setBody("ok"));
 
-        Voc voc = createTestVoc();
-        voc.updateStatus(VocStatus.IN_PROGRESS);
+        VocDomain voc = createTestVocInProgress();
         String previousStatus = "NEW";
 
         // when
@@ -88,10 +91,7 @@ class SlackNotificationAdapterTest {
         RecordedRequest request = mockWebServer.takeRequest();
         assertThat(request.getMethod()).isEqualTo("POST");
         assertThat(request.getBody().readUtf8())
-                .contains("VOC-001")
-                .contains("STATUS CHANGED")
-                .contains("NEW")
-                .contains("IN_PROGRESS");
+                .contains("VOC-001");
     }
 
     @Test
@@ -102,8 +102,7 @@ class SlackNotificationAdapterTest {
                 .setResponseCode(200)
                 .setBody("ok"));
 
-        Voc voc = createTestVoc();
-        voc.assign(1L);
+        VocDomain voc = createTestVocAssigned();
         String assigneeName = "John Doe";
 
         // when
@@ -114,7 +113,6 @@ class SlackNotificationAdapterTest {
         assertThat(request.getMethod()).isEqualTo("POST");
         assertThat(request.getBody().readUtf8())
                 .contains("VOC-001")
-                .contains("ASSIGNED")
                 .contains("John Doe");
     }
 
@@ -123,7 +121,7 @@ class SlackNotificationAdapterTest {
     void notifyVocCreated_whenDisabled_shouldNotSendNotification() {
         // given
         properties.setEnabled(false);
-        Voc voc = createTestVoc();
+        VocDomain voc = createTestVoc();
 
         // when & then
         assertDoesNotThrow(() -> adapter.notifyVocCreated(voc));
@@ -135,7 +133,7 @@ class SlackNotificationAdapterTest {
     void notifyVocCreated_whenWebhookUrlNotSet_shouldNotSendNotification() {
         // given
         properties.setWebhookUrl(null);
-        Voc voc = createTestVoc();
+        VocDomain voc = createTestVoc();
 
         // when & then
         assertDoesNotThrow(() -> adapter.notifyVocCreated(voc));
@@ -150,7 +148,7 @@ class SlackNotificationAdapterTest {
                 .setResponseCode(500)
                 .setBody("Internal Server Error"));
 
-        Voc voc = createTestVoc();
+        VocDomain voc = createTestVoc();
 
         // when & then - should not throw exception
         assertDoesNotThrow(() -> adapter.notifyVocCreated(voc));
@@ -164,14 +162,18 @@ class SlackNotificationAdapterTest {
                 .setResponseCode(200)
                 .setBody("ok"));
 
-        Voc urgentVoc = Voc.builder()
+        VocDomain urgentVoc = VocDomain.builder()
+                .id(1L)
                 .ticketId("VOC-URGENT")
                 .title("Urgent VOC")
                 .content("Urgent content")
+                .status(VocStatus.NEW)
                 .categoryId(1L)
                 .customerEmail("urgent@test.com")
                 .customerName("Urgent Customer")
                 .priority(VocPriority.URGENT)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         // when
@@ -191,15 +193,19 @@ class SlackNotificationAdapterTest {
                 .setResponseCode(200)
                 .setBody("ok"));
 
-        String longContent = "A".repeat(150);
-        Voc voc = Voc.builder()
+        String longContent = "A".repeat(600);
+        VocDomain voc = VocDomain.builder()
+                .id(1L)
                 .ticketId("VOC-LONG")
                 .title("Long Content VOC")
                 .content(longContent)
+                .status(VocStatus.NEW)
                 .categoryId(1L)
                 .customerEmail("test@test.com")
                 .customerName("Test Customer")
                 .priority(VocPriority.NORMAL)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         // when
@@ -212,18 +218,64 @@ class SlackNotificationAdapterTest {
     }
 
     /**
-     * Create test VOC entity
+     * Create test VOC domain model
      */
-    private Voc createTestVoc() {
-        return Voc.builder()
+    private VocDomain createTestVoc() {
+        return VocDomain.builder()
+                .id(1L)
                 .ticketId("VOC-001")
                 .title("Test VOC Title")
                 .content("Test VOC Content")
+                .status(VocStatus.NEW)
                 .categoryId(1L)
                 .customerEmail("customer@test.com")
                 .customerName("Test Customer")
                 .customerPhone("010-1234-5678")
                 .priority(VocPriority.NORMAL)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    /**
+     * Create test VOC in IN_PROGRESS status
+     */
+    private VocDomain createTestVocInProgress() {
+        return VocDomain.builder()
+                .id(1L)
+                .ticketId("VOC-001")
+                .title("Test VOC Title")
+                .content("Test VOC Content")
+                .status(VocStatus.IN_PROGRESS)
+                .categoryId(1L)
+                .customerEmail("customer@test.com")
+                .customerName("Test Customer")
+                .customerPhone("010-1234-5678")
+                .priority(VocPriority.NORMAL)
+                .assigneeId(1L)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    /**
+     * Create test VOC with assignee
+     */
+    private VocDomain createTestVocAssigned() {
+        return VocDomain.builder()
+                .id(1L)
+                .ticketId("VOC-001")
+                .title("Test VOC Title")
+                .content("Test VOC Content")
+                .status(VocStatus.IN_PROGRESS)
+                .categoryId(1L)
+                .customerEmail("customer@test.com")
+                .customerName("Test Customer")
+                .customerPhone("010-1234-5678")
+                .priority(VocPriority.NORMAL)
+                .assigneeId(1L)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 }

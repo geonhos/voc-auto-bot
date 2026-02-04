@@ -1,8 +1,9 @@
 package com.geonho.vocautobot.adapter.out.persistence.voc;
 
+import com.geonho.vocautobot.adapter.out.persistence.voc.mapper.VocMapper;
 import com.geonho.vocautobot.application.voc.port.out.LoadVocPort;
 import com.geonho.vocautobot.application.voc.port.out.SaveVocPort;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 import com.geonho.vocautobot.domain.voc.VocStatus;
 import lombok.RequiredArgsConstructor;
@@ -14,30 +15,41 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/**
+ * Persistence adapter for VOC domain.
+ * Implements output ports using JPA and converts between domain models and JPA entities.
+ */
 @Component
 @RequiredArgsConstructor
 public class VocPersistenceAdapter implements LoadVocPort, SaveVocPort {
 
     private final VocJpaRepository vocJpaRepository;
-    private final VocPersistenceMapper vocPersistenceMapper;
+    private final VocMapper vocMapper;
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Voc> loadVocById(Long id) {
+    public Optional<VocDomain> loadVocById(Long id) {
         return vocJpaRepository.findById(id)
-                .map(vocPersistenceMapper::toDomain);
+                .map(vocMapper::toDomain);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Voc> loadVocByTicketId(String ticketId) {
+    public Optional<VocDomain> loadVocByTicketId(String ticketId) {
         return vocJpaRepository.findByTicketId(ticketId)
-                .map(vocPersistenceMapper::toDomain);
+                .map(vocMapper::toDomain);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Voc> loadVocList(
+    public Optional<VocDomain> loadVocByTicketIdAndEmail(String ticketId, String email) {
+        return vocJpaRepository.findByTicketIdAndCustomerEmailIgnoreCase(ticketId, email)
+                .map(vocMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<VocDomain> loadVocList(
             VocStatus status,
             VocPriority priority,
             Long categoryId,
@@ -50,7 +62,7 @@ public class VocPersistenceAdapter implements LoadVocPort, SaveVocPort {
                 status, priority, categoryId, assigneeId, customerEmail, search);
 
         return vocJpaRepository.findAll(spec, pageable)
-                .map(vocPersistenceMapper::toDomain);
+                .map(vocMapper::toDomain);
     }
 
     @Override
@@ -61,10 +73,11 @@ public class VocPersistenceAdapter implements LoadVocPort, SaveVocPort {
 
     @Override
     @Transactional
-    public Voc saveVoc(Voc voc) {
+    public VocDomain saveVoc(VocDomain voc) {
         VocJpaEntity entity;
 
         if (voc.getId() != null) {
+            // Update existing entity
             entity = vocJpaRepository.findById(voc.getId())
                     .orElseThrow(() -> new IllegalArgumentException("VOC를 찾을 수 없습니다: " + voc.getId()));
 
@@ -77,27 +90,30 @@ public class VocPersistenceAdapter implements LoadVocPort, SaveVocPort {
                     voc.getAssigneeId()
             );
 
+            // Update attachments
             entity.getAttachments().clear();
             if (voc.getAttachments() != null) {
                 voc.getAttachments().forEach(attachment -> {
-                    VocAttachmentJpaEntity attachmentEntity = vocPersistenceMapper.toAttachmentEntity(attachment);
+                    VocAttachmentJpaEntity attachmentEntity = vocMapper.toAttachmentEntity(attachment);
                     entity.addAttachment(attachmentEntity);
                 });
             }
 
+            // Update memos
             entity.getMemos().clear();
             if (voc.getMemos() != null) {
                 voc.getMemos().forEach(memo -> {
-                    VocMemoJpaEntity memoEntity = vocPersistenceMapper.toMemoEntity(memo);
+                    VocMemoJpaEntity memoEntity = vocMapper.toMemoEntity(memo);
                     entity.addMemo(memoEntity);
                 });
             }
         } else {
-            entity = vocPersistenceMapper.toEntity(voc);
+            // Create new entity
+            entity = vocMapper.toEntity(voc);
         }
 
         VocJpaEntity savedEntity = vocJpaRepository.save(entity);
-        return vocPersistenceMapper.toDomain(savedEntity);
+        return vocMapper.toDomain(savedEntity);
     }
 
     @Override

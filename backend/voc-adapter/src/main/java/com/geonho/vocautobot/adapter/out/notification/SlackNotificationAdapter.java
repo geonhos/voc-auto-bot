@@ -3,7 +3,7 @@ package com.geonho.vocautobot.adapter.out.notification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
 import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisService.ExtendedNotificationPort;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -32,11 +32,11 @@ public class SlackNotificationAdapter implements ExtendedNotificationPort {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     private final SlackProperties slackProperties;
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     @Override
-    public void notifyVocCreated(Voc voc) {
+    public void notifyVocCreated(VocDomain voc) {
         // 이 메서드는 분석 없이 호출되면 사용됨 (하위 호환성)
         if (!isEnabled()) {
             log.debug("Slack notification disabled, skipping VOC created notification");
@@ -56,7 +56,7 @@ public class SlackNotificationAdapter implements ExtendedNotificationPort {
     }
 
     @Override
-    public void notifyVocCreatedWithAnalysis(Voc voc, VocLogAnalysis analysis) {
+    public void notifyVocCreatedWithAnalysis(VocDomain voc, VocLogAnalysis analysis) {
         if (!isEnabled()) {
             log.debug("Slack notification disabled, skipping VOC created notification with analysis");
             return;
@@ -75,7 +75,7 @@ public class SlackNotificationAdapter implements ExtendedNotificationPort {
     }
 
     @Override
-    public void notifyVocCreatedWithError(Voc voc, String errorMessage) {
+    public void notifyVocCreatedWithError(VocDomain voc, String errorMessage) {
         if (!isEnabled()) {
             log.debug("Slack notification disabled, skipping VOC created notification");
             return;
@@ -94,7 +94,7 @@ public class SlackNotificationAdapter implements ExtendedNotificationPort {
     }
 
     @Override
-    public void notifyVocStatusChanged(Voc voc, String previousStatus) {
+    public void notifyVocStatusChanged(VocDomain voc, String previousStatus) {
         if (!isEnabled()) {
             log.debug("Slack notification disabled, skipping VOC status change notification");
             return;
@@ -114,7 +114,7 @@ public class SlackNotificationAdapter implements ExtendedNotificationPort {
     }
 
     @Override
-    public void notifyVocAssigned(Voc voc, String assigneeName) {
+    public void notifyVocAssigned(VocDomain voc, String assigneeName) {
         if (!isEnabled()) {
             log.debug("Slack notification disabled, skipping VOC assignment notification");
             return;
@@ -137,7 +137,7 @@ public class SlackNotificationAdapter implements ExtendedNotificationPort {
      * Build Slack message for VOC created event with analysis
      * 규격화된 양식: [제목] [내용] [분석결과]
      */
-    private String buildVocCreatedMessage(Voc voc, VocLogAnalysis analysis, String errorMessage) {
+    private String buildVocCreatedMessage(VocDomain voc, VocLogAnalysis analysis, String errorMessage) {
         StringBuilder sb = new StringBuilder();
 
         // ===== [제목] 섹션 =====
@@ -201,7 +201,7 @@ public class SlackNotificationAdapter implements ExtendedNotificationPort {
      * Build Slack message for VOC status changed event
      * 규격화된 양식: [제목] [내용] [분석결과]
      */
-    private String buildVocStatusChangedMessage(Voc voc, String previousStatus) {
+    private String buildVocStatusChangedMessage(VocDomain voc, String previousStatus) {
         StringBuilder sb = new StringBuilder();
 
         // ===== [제목] 섹션 =====
@@ -229,7 +229,7 @@ public class SlackNotificationAdapter implements ExtendedNotificationPort {
      * Build Slack message for VOC assigned event
      * 규격화된 양식: [제목] [내용]
      */
-    private String buildVocAssignedMessage(Voc voc, String assigneeName) {
+    private String buildVocAssignedMessage(VocDomain voc, String assigneeName) {
         StringBuilder sb = new StringBuilder();
 
         // ===== [제목] 섹션 =====

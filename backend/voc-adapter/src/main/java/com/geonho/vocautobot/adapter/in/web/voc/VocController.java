@@ -5,7 +5,7 @@ import com.geonho.vocautobot.adapter.in.web.voc.dto.*;
 import com.geonho.vocautobot.application.analysis.dto.VocAnalysisDto;
 import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisService;
 import com.geonho.vocautobot.application.voc.port.in.*;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.adapter.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -33,6 +34,10 @@ import java.util.List;
 public class VocController {
 
     private static final Logger log = LoggerFactory.getLogger(VocController.class);
+    private static final Long DEV_DEFAULT_USER_ID = 1L;
+
+    @Value("${security.enabled:true}")
+    private boolean securityEnabled;
 
     private final CreateVocUseCase createVocUseCase;
     private final UpdateVocUseCase updateVocUseCase;
@@ -51,7 +56,7 @@ public class VocController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<VocResponse> createVoc(@Valid @RequestBody CreateVocRequest request) {
         // 1. VOC 생성 (즉시 완료)
-        Voc voc = createVocUseCase.createVoc(request.toCommand());
+        VocDomain voc = createVocUseCase.createVoc(request.toCommand());
         log.info("VOC created: {} (ID: {})", voc.getTicketId(), voc.getId());
 
         // 2. 분석 레코드 생성 (PENDING 상태)
@@ -96,7 +101,7 @@ public class VocController {
         filter.setSortBy(sortBy);
         filter.setSortDirection(sortDirection);
 
-        Page<Voc> vocPage = getVocListUseCase.getVocList(filter.toQuery());
+        Page<VocDomain> vocPage = getVocListUseCase.getVocList(filter.toQuery());
         VocListResponse response = VocListResponse.from(vocPage);
 
         return ApiResponse.success(
@@ -111,7 +116,7 @@ public class VocController {
     @Operation(summary = "VOC 상세 조회", description = "ID로 VOC 상세 정보를 조회합니다 (분석 결과 포함)")
     @GetMapping("/{id}")
     public ApiResponse<VocDetailResponse> getVoc(@PathVariable Long id) {
-        Voc voc = getVocDetailUseCase.getVocById(id);
+        VocDomain voc = getVocDetailUseCase.getVocById(id);
 
         // 분석 결과 조회
         VocAnalysisDto analysis = asyncVocAnalysisService.getAnalysis(id).orElse(null);
@@ -138,7 +143,7 @@ public class VocController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateVocRequest request
     ) {
-        Voc voc = updateVocUseCase.updateVoc(request.toCommand(id));
+        VocDomain voc = updateVocUseCase.updateVoc(request.toCommand(id));
         VocResponse response = VocResponse.from(voc);
 
         return ApiResponse.success(response);
@@ -150,7 +155,7 @@ public class VocController {
             @PathVariable Long id,
             @Valid @RequestBody ChangeStatusRequest request
     ) {
-        Voc voc = changeVocStatusUseCase.changeStatus(request.toCommand(id));
+        VocDomain voc = changeVocStatusUseCase.changeStatus(request.toCommand(id));
         VocResponse response = VocResponse.from(voc);
 
         return ApiResponse.success(response);
@@ -162,7 +167,7 @@ public class VocController {
             @PathVariable Long id,
             @Valid @RequestBody AssignRequest request
     ) {
-        Voc voc = assignVocUseCase.assignVoc(request.toCommand(id));
+        VocDomain voc = assignVocUseCase.assignVoc(request.toCommand(id));
         VocResponse response = VocResponse.from(voc);
 
         return ApiResponse.success(response);
@@ -171,7 +176,7 @@ public class VocController {
     @Operation(summary = "VOC 담당자 해제", description = "VOC의 담당자 배정을 해제합니다")
     @PatchMapping("/{id}/unassign")
     public ApiResponse<VocResponse> unassignVoc(@PathVariable Long id) {
-        Voc voc = assignVocUseCase.unassignVoc(id);
+        VocDomain voc = assignVocUseCase.unassignVoc(id);
         VocResponse response = VocResponse.from(voc);
 
         return ApiResponse.success(response);
@@ -184,26 +189,35 @@ public class VocController {
             @PathVariable Long id,
             @Valid @RequestBody AddMemoRequest request
     ) {
-        // Get authenticated user from SecurityContext
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
-        Long authenticatedUserId = securityUser.getUserId();
+        Long authenticatedUserId;
+        boolean hasPrivilegedRole;
+
+        if (securityEnabled) {
+            // Production mode: get user from SecurityContext
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
+            authenticatedUserId = securityUser.getUserId();
+            hasPrivilegedRole = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_MANAGER"));
+        } else {
+            // Development mode (security.enabled=false): use default user
+            log.debug("Security disabled - using default user ID: {}", DEV_DEFAULT_USER_ID);
+            authenticatedUserId = DEV_DEFAULT_USER_ID;
+            hasPrivilegedRole = true;
+        }
 
         // Determine internal flag based on user role
         boolean isInternal = false;
         if (request.isInternal() != null && request.isInternal()) {
             // Only ADMIN and MANAGER can create internal memos
-            boolean hasPrivilegedRole = authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_MANAGER"));
-
             if (hasPrivilegedRole) {
                 isInternal = true;
             }
             // OPERATOR's request for internal memo is silently ignored (isInternal remains false)
         }
 
-        Voc voc = addMemoUseCase.addMemo(
+        VocDomain voc = addMemoUseCase.addMemo(
                 request.toCommand(id, authenticatedUserId, isInternal),
                 authenticatedUserId
         );
@@ -217,10 +231,10 @@ public class VocController {
             description = "현재 VOC와 유사한 VOC 목록을 조회합니다 (향후 구현 예정)"
     )
     @GetMapping("/{id}/similar")
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
     public ApiResponse<List<VocResponse>> getSimilarVocs(@PathVariable Long id) {
-        // TODO: Implement similar VOC search using AI/ML service
-        // This will be implemented in future sprints
-        return ApiResponse.success(List.of());
+        // Feature: Similar VOC search using AI/ML service (planned for future sprint)
+        return ApiResponse.error(HttpStatus.NOT_IMPLEMENTED, "이 기능은 아직 구현되지 않았습니다.");
     }
 
     @Operation(
@@ -228,9 +242,9 @@ public class VocController {
             description = "VOC의 상태 변경 이력을 조회합니다 (향후 구현 예정)"
     )
     @GetMapping("/{id}/history")
+    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
     public ApiResponse<List<Object>> getVocHistory(@PathVariable Long id) {
-        // TODO: Implement VOC status change history
-        // This requires VocStatusHistory entity and repository
-        return ApiResponse.success(List.of());
+        // Feature: VOC status change history (requires VocStatusHistory entity, planned for future sprint)
+        return ApiResponse.error(HttpStatus.NOT_IMPLEMENTED, "이 기능은 아직 구현되지 않았습니다.");
     }
 }

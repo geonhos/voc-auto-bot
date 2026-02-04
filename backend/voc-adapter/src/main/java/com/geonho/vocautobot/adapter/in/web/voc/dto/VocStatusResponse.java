@@ -1,6 +1,6 @@
 package com.geonho.vocautobot.adapter.in.web.voc.dto;
 
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -27,7 +27,7 @@ public record VocStatusResponse(
         @Schema(description = "수정 시간")
         LocalDateTime updatedAt
 ) {
-    public static VocStatusResponse from(Voc voc) {
+    public static VocStatusResponse from(VocDomain voc) {
         return new VocStatusResponse(
                 voc.getTicketId(),
                 voc.getTitle(),

@@ -637,7 +637,7 @@ export default function VocDetailPage() {
                   </div>
                   <div className="flex-grow">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold">{memo.author.name}</span>
+                      <span className="text-sm font-semibold">{memo.author?.name ?? '시스템'}</span>
                       <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded">
                         담당자
                       </span>

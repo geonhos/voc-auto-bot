@@ -16,34 +16,47 @@ export interface VocFormData {
 }
 
 /**
+ * VOC 상수 - 백엔드 VocConstants와 동기화 필요
+ */
+export const VOC_CONSTANTS = {
+  TITLE_MIN_LENGTH: 2,
+  TITLE_MAX_LENGTH: 200,
+  CONTENT_MIN_LENGTH: 10,
+  CONTENT_MAX_LENGTH: 10000,
+  CUSTOMER_NAME_MAX_LENGTH: 100,
+  CUSTOMER_EMAIL_MAX_LENGTH: 100,
+  FILE_SIZE_LIMIT_MB: 10,
+  MAX_FILES_PER_VOC: 5,
+} as const;
+
+/**
  * VOC 입력 폼 검증 스키마
  */
 export const vocFormSchema = z.object({
   title: z
     .string()
-    .min(2, '제목은 2자 이상이어야 합니다')
-    .max(200, '제목은 200자 이하여야 합니다'),
+    .min(VOC_CONSTANTS.TITLE_MIN_LENGTH, `제목은 ${VOC_CONSTANTS.TITLE_MIN_LENGTH}자 이상이어야 합니다`)
+    .max(VOC_CONSTANTS.TITLE_MAX_LENGTH, `제목은 ${VOC_CONSTANTS.TITLE_MAX_LENGTH}자 이하여야 합니다`),
   content: z
     .string()
-    .min(10, '내용은 10자 이상이어야 합니다')
-    .max(5000, '내용은 5000자 이하여야 합니다'),
-  categoryId: z.number({
-    required_error: '카테고리를 선택해주세요',
-    invalid_type_error: '카테고리를 선택해주세요',
-  }).nullable(),
+    .min(VOC_CONSTANTS.CONTENT_MIN_LENGTH, `내용은 ${VOC_CONSTANTS.CONTENT_MIN_LENGTH}자 이상이어야 합니다`)
+    .max(VOC_CONSTANTS.CONTENT_MAX_LENGTH, `내용은 ${VOC_CONSTANTS.CONTENT_MAX_LENGTH}자 이하여야 합니다`),
+  // categoryId is optional - can be null or undefined during initial submission
+  // Category assignment may happen later during VOC processing
+  categoryId: z.number().nullable().optional(),
   priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT'], {
     required_error: '우선순위를 선택해주세요',
   }),
   customerName: z
     .string()
-    .max(100, '고객명은 100자 이하여야 합니다')
+    .max(VOC_CONSTANTS.CUSTOMER_NAME_MAX_LENGTH, `고객명은 ${VOC_CONSTANTS.CUSTOMER_NAME_MAX_LENGTH}자 이하여야 합니다`)
     .optional()
     .or(z.literal('')),
   customerEmail: z
     .string()
     .min(1, '이메일을 입력해주세요')
     .email('올바른 이메일 형식이 아닙니다')
-    .max(100, '이메일은 100자 이하여야 합니다'),
+    .max(VOC_CONSTANTS.CUSTOMER_EMAIL_MAX_LENGTH, `이메일은 ${VOC_CONSTANTS.CUSTOMER_EMAIL_MAX_LENGTH}자 이하여야 합니다`),
 });
 
 export type VocFormSchemaType = z.infer<typeof vocFormSchema>;

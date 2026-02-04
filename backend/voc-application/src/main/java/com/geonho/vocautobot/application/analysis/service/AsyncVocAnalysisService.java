@@ -6,7 +6,7 @@ import com.geonho.vocautobot.application.analysis.dto.VocAnalysisDto;
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
 import com.geonho.vocautobot.application.analysis.port.out.VocAnalysisPersistencePort;
 import com.geonho.vocautobot.application.notification.port.out.NotificationPort;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +52,7 @@ public class AsyncVocAnalysisService {
      * 분석 완료 후 Slack 알림 전송
      */
     @Async("analysisExecutor")
-    public void analyzeVocAsync(Voc voc) {
+    public void analyzeVocAsync(VocDomain voc) {
         Long vocId = voc.getId();
         log.info("Starting async analysis for VOC: {} (ID: {})", voc.getTicketId(), vocId);
 
@@ -105,7 +105,7 @@ public class AsyncVocAnalysisService {
         }
     }
 
-    private void sendSlackNotificationWithAnalysis(Voc voc, VocLogAnalysis analysis) {
+    private void sendSlackNotificationWithAnalysis(VocDomain voc, VocLogAnalysis analysis) {
         if (notificationPort == null) {
             log.debug("NotificationPort not available, skipping Slack notification");
             return;
@@ -124,7 +124,7 @@ public class AsyncVocAnalysisService {
         }
     }
 
-    private void sendSlackNotificationWithoutAnalysis(Voc voc, String errorMessage) {
+    private void sendSlackNotificationWithoutAnalysis(VocDomain voc, String errorMessage) {
         if (notificationPort == null) {
             log.debug("NotificationPort not available, skipping Slack notification");
             return;
@@ -146,7 +146,7 @@ public class AsyncVocAnalysisService {
      * 분석 결과를 포함한 알림 전송 지원
      */
     public interface ExtendedNotificationPort extends NotificationPort {
-        void notifyVocCreatedWithAnalysis(Voc voc, VocLogAnalysis analysis);
-        void notifyVocCreatedWithError(Voc voc, String errorMessage);
+        void notifyVocCreatedWithAnalysis(VocDomain voc, VocLogAnalysis analysis);
+        void notifyVocCreatedWithError(VocDomain voc, String errorMessage);
     }
 }

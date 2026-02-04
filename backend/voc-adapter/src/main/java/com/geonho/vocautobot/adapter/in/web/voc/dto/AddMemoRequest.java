@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.adapter.in.web.voc.dto;
 
+import com.geonho.vocautobot.adapter.common.util.XssProtectionUtil;
 import com.geonho.vocautobot.application.voc.port.in.dto.AddMemoCommand;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -17,10 +18,22 @@ public record AddMemoRequest(
         )
         Boolean isInternal
 ) {
+    /**
+     * Converts this request to a command object with XSS protection applied.
+     * <p>
+     * The content field is HTML sanitized to allow safe formatting (bold, italic, links, etc.)
+     * while removing dangerous elements like scripts and event handlers.
+     * </p>
+     *
+     * @param vocId     the VOC ID
+     * @param authorId  the author's user ID
+     * @param internal  whether this is an internal memo
+     * @return AddMemoCommand with sanitized content
+     */
     public AddMemoCommand toCommand(Long vocId, Long authorId, boolean internal) {
         return new AddMemoCommand(
                 vocId,
-                content,
+                XssProtectionUtil.sanitizeHtml(content),
                 internal,
                 authorId
         );

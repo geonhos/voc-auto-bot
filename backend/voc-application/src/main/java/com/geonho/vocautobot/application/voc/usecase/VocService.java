@@ -12,17 +12,22 @@ import com.geonho.vocautobot.application.voc.port.out.LoadVocPort;
 import com.geonho.vocautobot.application.voc.port.out.SaveVocPort;
 import com.geonho.vocautobot.domain.user.User;
 import com.geonho.vocautobot.domain.user.UserRole;
-import com.geonho.vocautobot.domain.voc.Voc;
-import com.geonho.vocautobot.domain.voc.VocMemo;
+import com.geonho.vocautobot.domain.voc.VocConstants;
+import com.geonho.vocautobot.domain.voc.VocDomain;
+import com.geonho.vocautobot.domain.voc.VocMemoDomain;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 /**
  * Service implementing all VOC-related use cases
  * Follows Hexagonal Architecture pattern
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -35,8 +40,6 @@ public class VocService implements
         GetVocDetailUseCase,
         AddMemoUseCase {
 
-    private static final int MAX_TICKET_ID_RETRIES = 10;
-
     private final LoadVocPort loadVocPort;
     private final SaveVocPort saveVocPort;
     private final GenerateTicketIdPort generateTicketIdPort;
@@ -45,34 +48,35 @@ public class VocService implements
 
     @Override
     @Transactional
-    public Voc createVoc(CreateVocCommand command) {
+    public VocDomain createVoc(CreateVocCommand command) {
         // Generate unique ticket ID with retry limit
         String ticketId = generateUniqueTicketId();
 
-        // Create VOC entity
-        Voc voc = Voc.builder()
-                .ticketId(ticketId)
-                .title(command.title())
-                .content(command.content())
-                .categoryId(command.categoryId())
-                .customerEmail(command.customerEmail())
-                .customerName(command.customerName())
-                .customerPhone(command.customerPhone())
-                .priority(command.priority())
-                .build();
+        // Create VOC domain model using factory method
+        VocDomain voc = VocDomain.create(
+                ticketId,
+                command.title(),
+                command.content(),
+                command.categoryId(),
+                command.customerEmail(),
+                command.customerName(),
+                command.customerPhone(),
+                command.priority()
+        );
 
-        Voc savedVoc = saveVocPort.saveVoc(voc);
+        VocDomain savedVoc = saveVocPort.saveVoc(voc);
 
-        // Send notification
-        notificationPort.notifyVocCreated(savedVoc);
+        // Send notification (non-blocking - failures should not affect VOC creation)
+        sendNotificationSafely(() -> notificationPort.notifyVocCreated(savedVoc),
+                "VOC created notification", savedVoc.getTicketId());
 
         return savedVoc;
     }
 
     @Override
     @Transactional
-    public Voc updateVoc(UpdateVocCommand command) {
-        Voc voc = loadVocPort.loadVocById(command.vocId())
+    public VocDomain updateVoc(UpdateVocCommand command) {
+        VocDomain voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
         // Update basic information
@@ -93,8 +97,8 @@ public class VocService implements
 
     @Override
     @Transactional
-    public Voc changeStatus(ChangeStatusCommand command) {
-        Voc voc = loadVocPort.loadVocById(command.vocId())
+    public VocDomain changeStatus(ChangeStatusCommand command) {
+        VocDomain voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
         // Store previous status for notification
@@ -103,18 +107,19 @@ public class VocService implements
         // Change status (domain logic validates state transition)
         voc.updateStatus(command.newStatus());
 
-        Voc savedVoc = saveVocPort.saveVoc(voc);
+        VocDomain savedVoc = saveVocPort.saveVoc(voc);
 
-        // Send notification
-        notificationPort.notifyVocStatusChanged(savedVoc, previousStatus);
+        // Send notification (non-blocking - failures should not affect status change)
+        sendNotificationSafely(() -> notificationPort.notifyVocStatusChanged(savedVoc, previousStatus),
+                "VOC status change notification", savedVoc.getTicketId());
 
         return savedVoc;
     }
 
     @Override
     @Transactional
-    public Voc assignVoc(AssignVocCommand command) {
-        Voc voc = loadVocPort.loadVocById(command.vocId())
+    public VocDomain assignVoc(AssignVocCommand command) {
+        VocDomain voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
         // Load assignee user
@@ -126,18 +131,19 @@ public class VocService implements
         // Assign to user (domain logic handles status change if needed)
         voc.assign(command.assigneeId());
 
-        Voc savedVoc = saveVocPort.saveVoc(voc);
+        VocDomain savedVoc = saveVocPort.saveVoc(voc);
 
-        // Send notification
-        notificationPort.notifyVocAssigned(savedVoc, assignee.getUsername());
+        // Send notification (non-blocking - failures should not affect assignment)
+        sendNotificationSafely(() -> notificationPort.notifyVocAssigned(savedVoc, assignee.getUsername()),
+                "VOC assignment notification", savedVoc.getTicketId());
 
         return savedVoc;
     }
 
     @Override
     @Transactional
-    public Voc unassignVoc(Long vocId) {
-        Voc voc = loadVocPort.loadVocById(vocId)
+    public VocDomain unassignVoc(Long vocId) {
+        VocDomain voc = loadVocPort.loadVocById(vocId)
                 .orElseThrow(() -> new VocNotFoundException(vocId));
 
         // Unassign from user
@@ -147,7 +153,7 @@ public class VocService implements
     }
 
     @Override
-    public Page<Voc> getVocList(VocListQuery query) {
+    public Page<VocDomain> getVocList(VocListQuery query) {
         return loadVocPort.loadVocList(
                 query.status(),
                 query.priority(),
@@ -160,32 +166,37 @@ public class VocService implements
     }
 
     @Override
-    public Voc getVocById(Long id) {
+    public VocDomain getVocById(Long id) {
         return loadVocPort.loadVocById(id)
                 .orElseThrow(() -> new VocNotFoundException(id));
     }
 
     @Override
-    public Voc getVocByTicketId(String ticketId) {
+    public VocDomain getVocByTicketId(String ticketId) {
         return loadVocPort.loadVocByTicketId(ticketId)
                 .orElseThrow(() -> new VocNotFoundException(ticketId));
     }
 
     @Override
+    public Optional<VocDomain> getVocByTicketIdAndEmail(String ticketId, String email) {
+        return loadVocPort.loadVocByTicketIdAndEmail(ticketId, email);
+    }
+
+    @Override
     @Transactional
-    public Voc addMemo(AddMemoCommand command, Long requestingUserId) {
-        Voc voc = loadVocPort.loadVocById(command.vocId())
+    public VocDomain addMemo(AddMemoCommand command, Long requestingUserId) {
+        VocDomain voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
         // Verify access control
         validateVocAccess(voc, requestingUserId);
 
-        // Create and add memo
-        VocMemo memo = VocMemo.builder()
-                .content(command.content())
-                .internal(command.internal())
-                .authorId(command.authorId())
-                .build();
+        // Create and add memo using domain factory method
+        VocMemoDomain memo = VocMemoDomain.create(
+                command.authorId(),
+                command.content(),
+                command.internal()
+        );
 
         voc.addMemo(memo);
 
@@ -198,13 +209,13 @@ public class VocService implements
      * @throws TicketIdGenerationException if max retries exceeded
      */
     private String generateUniqueTicketId() {
-        for (int attempt = 0; attempt < MAX_TICKET_ID_RETRIES; attempt++) {
+        for (int attempt = 0; attempt < VocConstants.MAX_TICKET_ID_RETRIES; attempt++) {
             String ticketId = generateTicketIdPort.generateTicketId();
             if (!loadVocPort.existsByTicketId(ticketId)) {
                 return ticketId;
             }
         }
-        throw new TicketIdGenerationException(MAX_TICKET_ID_RETRIES);
+        throw new TicketIdGenerationException(VocConstants.MAX_TICKET_ID_RETRIES);
     }
 
     /**
@@ -212,11 +223,11 @@ public class VocService implements
      * - ADMIN and MANAGER: can access all VOCs
      * - OPERATOR: can only access VOCs assigned to them
      *
-     * @param voc VOC to check access for
+     * @param voc VOC domain model to check access for
      * @param userId ID of the user requesting access
      * @throws VocAccessDeniedException if user has no access to the VOC
      */
-    private void validateVocAccess(Voc voc, Long userId) {
+    private void validateVocAccess(VocDomain voc, Long userId) {
         User user = loadUserPort.loadById(userId)
                 .orElseThrow(() -> new VocAccessDeniedException(
                         String.format("사용자(ID: %d)를 찾을 수 없습니다.", userId)
@@ -232,6 +243,22 @@ public class VocService implements
             if (voc.getAssigneeId() == null || !voc.getAssigneeId().equals(userId)) {
                 throw new VocAccessDeniedException(voc.getId(), userId);
             }
+        }
+    }
+
+    /**
+     * Send notification safely without affecting the main business operation.
+     * Notification failures are logged but do not propagate exceptions.
+     *
+     * @param notificationAction the notification action to execute
+     * @param notificationType description of the notification type for logging
+     * @param identifier VOC identifier for logging
+     */
+    private void sendNotificationSafely(Runnable notificationAction, String notificationType, String identifier) {
+        try {
+            notificationAction.run();
+        } catch (Exception e) {
+            log.warn("Failed to send {} for VOC [{}]: {}", notificationType, identifier, e.getMessage());
         }
     }
 }

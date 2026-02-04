@@ -1,8 +1,10 @@
 package com.geonho.vocautobot.adapter.common;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 
@@ -27,6 +29,7 @@ public class ApiResponse<T> {
     @Getter
     @Builder
     public static class Meta {
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
         private final Instant timestamp;
         private final Integer page;
         private final Integer size;
@@ -77,5 +80,16 @@ public class ApiResponse<T> {
                         .build())
                 .meta(Meta.builder().timestamp(Instant.now()).build())
                 .build();
+    }
+
+    /**
+     * Creates an error response using HttpStatus as the error code.
+     *
+     * @param status  the HTTP status
+     * @param message the error message
+     * @return error ApiResponse
+     */
+    public static <T> ApiResponse<T> error(HttpStatus status, String message) {
+        return error(status.name(), message);
     }
 }

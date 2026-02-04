@@ -2,7 +2,7 @@ package com.geonho.vocautobot.adapter.in.web.voc;
 
 import com.geonho.vocautobot.adapter.in.web.voc.dto.VocStatusResponse;
 import com.geonho.vocautobot.application.voc.port.in.GetVocDetailUseCase;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.adapter.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,6 +25,8 @@ public class VocPublicController {
 
     private final GetVocDetailUseCase getVocDetailUseCase;
 
+    private static final String VOC_NOT_FOUND_MESSAGE = "조회 정보가 일치하지 않습니다. 티켓 ID와 이메일을 확인해주세요.";
+
     @Operation(
             summary = "VOC 상태 조회 (공개)",
             description = "티켓 ID와 고객 이메일로 VOC 상태를 조회합니다. 인증이 필요하지 않습니다."
@@ -42,12 +44,10 @@ public class VocPublicController {
             @Email(message = "올바른 이메일 형식이 아닙니다")
             String email
     ) {
-        Voc voc = getVocDetailUseCase.getVocByTicketId(ticketId);
-
-        // Verify that the email matches the customer email
-        if (!voc.getCustomerEmail().equalsIgnoreCase(email)) {
-            throw new IllegalArgumentException("티켓 ID와 이메일이 일치하지 않습니다");
-        }
+        // Query-level validation: ticketId and email are validated together in a single query
+        // This prevents information disclosure about whether a ticketId exists
+        VocDomain voc = getVocDetailUseCase.getVocByTicketIdAndEmail(ticketId, email)
+                .orElseThrow(() -> new IllegalArgumentException(VOC_NOT_FOUND_MESSAGE));
 
         VocStatusResponse response = VocStatusResponse.from(voc);
         return ApiResponse.success(response);

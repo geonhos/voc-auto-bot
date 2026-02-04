@@ -50,8 +50,36 @@ public class Category {
         }
     }
 
+    /**
+     * Creates a new Category with auto-generated code.
+     * The code is generated from the name by converting to uppercase and replacing spaces with underscores.
+     *
+     * @param name        the category name
+     * @param type        the category type (MAIN or SUB)
+     * @param parentId    the parent category ID (required for SUB, must be null for MAIN)
+     * @param description the category description
+     * @param sortOrder   the sort order (must be >= 1)
+     * @return a new Category instance
+     */
     public static Category create(String name, CategoryType type, Long parentId, String description, int sortOrder) {
-        return new Category(null, name, null, type, parentId, description, true, sortOrder, null, null, null);
+        String code = generateCodeFromName(name);
+        return new Category(null, name, code, type, parentId, description, true, sortOrder, null, null, null);
+    }
+
+    /**
+     * Generates a category code from the name.
+     * Converts to uppercase, replaces spaces and hyphens with underscores,
+     * and removes invalid characters.
+     */
+    private static String generateCodeFromName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("카테고리 이름은 필수입니다");
+        }
+        return name.toUpperCase()
+                .replaceAll("[\\s-]+", "_")
+                .replaceAll("[^A-Z0-9_]", "")
+                .replaceAll("_+", "_")
+                .replaceAll("^_|_$", "");
     }
 
     public static Category createRoot(String name, String code, String description, Integer sortOrder) {

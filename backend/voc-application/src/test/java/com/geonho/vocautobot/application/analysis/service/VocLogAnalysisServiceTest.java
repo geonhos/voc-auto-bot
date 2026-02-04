@@ -167,9 +167,12 @@ class VocLogAnalysisServiceTest {
         VocLogAnalysis result = vocLogAnalysisService.analyzeLogsForVoc(vocTitle, vocContent);
 
         // Then
+        // Service gracefully handles per-keyword search errors and returns empty result
+        // when all keyword searches fail (no logs found)
         assertThat(result).isNotNull();
-        assertThat(result.summary()).contains("로그 분석 중 오류가 발생했습니다");
         assertThat(result.confidence()).isEqualTo(0.0);
+        // Implementation catches errors per-keyword, resulting in empty logs and "no logs found" message
+        assertThat(result.summary()).contains("관련 로그를 찾을 수 없습니다");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.adapter.out.security;
 
+import com.geonho.vocautobot.adapter.in.security.SecurityUser;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -10,7 +11,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -83,7 +83,12 @@ public class JwtTokenProvider {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        User principal = new User(claims.getSubject(), "", authorities);
+        // Extract userId from token claims
+        Long userId = claims.get(USER_ID_KEY, Long.class);
+        String username = claims.getSubject();
+
+        // Create SecurityUser with userId for proper authentication context
+        SecurityUser principal = new SecurityUser(userId, username, "", username, authorities);
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 

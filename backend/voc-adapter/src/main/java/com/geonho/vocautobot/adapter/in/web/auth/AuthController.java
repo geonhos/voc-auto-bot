@@ -11,6 +11,7 @@ import com.geonho.vocautobot.adapter.common.ApiResponse;
 import com.geonho.vocautobot.adapter.in.security.SecurityUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,10 +29,35 @@ public class AuthController {
 
     @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인합니다")
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        LoginCommand command = new LoginCommand(request.email(), request.password());
+    public ApiResponse<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        String clientIp = resolveClientIp(httpRequest);
+        LoginCommand command = new LoginCommand(request.email(), request.password(), clientIp);
         LoginResult result = loginUseCase.login(command);
         return ApiResponse.success(LoginResponse.from(result));
+    }
+
+    /**
+     * Resolves the client IP address from the request.
+     * Checks X-Forwarded-For and X-Real-IP headers for proxy scenarios.
+     *
+     * @param request the HTTP request
+     * @return client IP address
+     */
+    private String resolveClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isBlank()) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
     }
 
     @Operation(summary = "로그아웃", description = "현재 세션에서 로그아웃합니다")

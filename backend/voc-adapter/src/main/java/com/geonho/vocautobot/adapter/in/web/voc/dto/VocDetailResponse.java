@@ -1,7 +1,9 @@
 package com.geonho.vocautobot.adapter.in.web.voc.dto;
 
 import com.geonho.vocautobot.application.analysis.dto.VocAnalysisDto;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocAttachmentDomain;
+import com.geonho.vocautobot.domain.voc.VocDomain;
+import com.geonho.vocautobot.domain.voc.VocMemoDomain;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 import com.geonho.vocautobot.domain.voc.VocStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -68,7 +70,7 @@ public record VocDetailResponse(
         @Schema(description = "AI 분석 결과")
         AnalysisDto aiAnalysis
 ) {
-    public static VocDetailResponse from(Voc voc, VocAnalysisDto analysis) {
+    public static VocDetailResponse from(VocDomain voc, VocAnalysisDto analysis) {
         List<AttachmentDto> attachments = voc.getAttachments() != null
                 ? voc.getAttachments().stream().map(AttachmentDto::from).toList()
                 : List.of();
@@ -109,7 +111,7 @@ public record VocDetailResponse(
             String mimeType,
             String downloadUrl
     ) {
-        public static AttachmentDto from(com.geonho.vocautobot.domain.voc.VocAttachment attachment) {
+        public static AttachmentDto from(VocAttachmentDomain attachment) {
             return new AttachmentDto(
                     attachment.getId(),
                     attachment.getOriginalFilename(),
@@ -130,13 +132,13 @@ public record VocDetailResponse(
             boolean isInternal,
             LocalDateTime createdAt
     ) {
-        public static MemoDto from(com.geonho.vocautobot.domain.voc.VocMemo memo) {
+        public static MemoDto from(VocMemoDomain memo) {
             return new MemoDto(
                     memo.getId(),
                     memo.getContent(),
                     memo.getAuthorId(),
                     memo.isInternal(),
-                    null // BaseEntity에서 createdAt을 가져와야 하는데 현재 구조상 직접 접근 불가
+                    memo.getCreatedAt()
             );
         }
     }

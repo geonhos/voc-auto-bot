@@ -2,7 +2,7 @@ package com.geonho.vocautobot.adapter.out.notification;
 
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
 import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisService.ExtendedNotificationPort;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -17,27 +17,27 @@ import org.springframework.stereotype.Component;
 public class NoOpNotificationAdapter implements ExtendedNotificationPort {
 
     @Override
-    public void notifyVocCreated(Voc voc) {
+    public void notifyVocCreated(VocDomain voc) {
         log.debug("Slack notifications disabled, skipping VOC created notification for: {}", voc.getTicketId());
     }
 
     @Override
-    public void notifyVocCreatedWithAnalysis(Voc voc, VocLogAnalysis analysis) {
+    public void notifyVocCreatedWithAnalysis(VocDomain voc, VocLogAnalysis analysis) {
         log.debug("Slack notifications disabled, skipping VOC created notification with analysis for: {}", voc.getTicketId());
     }
 
     @Override
-    public void notifyVocCreatedWithError(Voc voc, String errorMessage) {
+    public void notifyVocCreatedWithError(VocDomain voc, String errorMessage) {
         log.debug("Slack notifications disabled, skipping VOC created notification with error for: {}", voc.getTicketId());
     }
 
     @Override
-    public void notifyVocStatusChanged(Voc voc, String previousStatus) {
+    public void notifyVocStatusChanged(VocDomain voc, String previousStatus) {
         log.debug("Slack notifications disabled, skipping VOC status changed notification for: {}", voc.getTicketId());
     }
 
     @Override
-    public void notifyVocAssigned(Voc voc, String assigneeName) {
+    public void notifyVocAssigned(VocDomain voc, String assigneeName) {
         log.debug("Slack notifications disabled, skipping VOC assigned notification for: {}", voc.getTicketId());
     }
 }

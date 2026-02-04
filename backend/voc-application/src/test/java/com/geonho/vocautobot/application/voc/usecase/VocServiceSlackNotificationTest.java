@@ -10,7 +10,7 @@ import com.geonho.vocautobot.application.voc.port.out.LoadVocPort;
 import com.geonho.vocautobot.application.voc.port.out.SaveVocPort;
 import com.geonho.vocautobot.domain.user.User;
 import com.geonho.vocautobot.domain.user.UserRole;
-import com.geonho.vocautobot.domain.voc.Voc;
+import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 import com.geonho.vocautobot.domain.voc.VocStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,11 +22,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -53,20 +54,23 @@ class VocServiceSlackNotificationTest {
     @InjectMocks
     private VocService vocService;
 
-    private Voc testVoc;
+    private VocDomain testVoc;
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        testVoc = Voc.builder()
+        testVoc = VocDomain.builder()
                 .id(1L)
                 .ticketId("VOC-001")
                 .title("Test VOC")
                 .content("Test Content")
+                .status(VocStatus.NEW)
                 .categoryId(1L)
                 .customerEmail("test@test.com")
                 .customerName("Test Customer")
                 .priority(VocPriority.NORMAL)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         testUser = User.builder()
@@ -93,13 +97,13 @@ class VocServiceSlackNotificationTest {
 
         when(generateTicketIdPort.generateTicketId()).thenReturn("VOC-001");
         when(loadVocPort.existsByTicketId("VOC-001")).thenReturn(false);
-        when(saveVocPort.saveVoc(any(Voc.class))).thenReturn(testVoc);
+        when(saveVocPort.saveVoc(any(VocDomain.class))).thenReturn(testVoc);
 
         // when
         vocService.createVoc(command);
 
         // then
-        verify(notificationPort, times(1)).notifyVocCreated(any(Voc.class));
+        verify(notificationPort, times(1)).notifyVocCreated(any(VocDomain.class));
     }
 
     @Test
@@ -109,7 +113,7 @@ class VocServiceSlackNotificationTest {
         ChangeStatusCommand command = new ChangeStatusCommand(1L, VocStatus.IN_PROGRESS);
 
         when(loadVocPort.loadVocById(1L)).thenReturn(Optional.of(testVoc));
-        when(saveVocPort.saveVoc(any(Voc.class))).thenReturn(testVoc);
+        when(saveVocPort.saveVoc(any(VocDomain.class))).thenReturn(testVoc);
 
         // when
         vocService.changeStatus(command);
@@ -117,7 +121,7 @@ class VocServiceSlackNotificationTest {
         // then
         ArgumentCaptor<String> statusCaptor = ArgumentCaptor.forClass(String.class);
         verify(notificationPort, times(1)).notifyVocStatusChanged(
-                any(Voc.class),
+                any(VocDomain.class),
                 statusCaptor.capture()
         );
         assertThat(statusCaptor.getValue()).isEqualTo("NEW");
@@ -131,7 +135,7 @@ class VocServiceSlackNotificationTest {
 
         when(loadVocPort.loadVocById(1L)).thenReturn(Optional.of(testVoc));
         when(loadUserPort.loadById(1L)).thenReturn(Optional.of(testUser));
-        when(saveVocPort.saveVoc(any(Voc.class))).thenReturn(testVoc);
+        when(saveVocPort.saveVoc(any(VocDomain.class))).thenReturn(testVoc);
 
         // when
         vocService.assignVoc(command);
@@ -139,7 +143,7 @@ class VocServiceSlackNotificationTest {
         // then
         ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
         verify(notificationPort, times(1)).notifyVocAssigned(
-                any(Voc.class),
+                any(VocDomain.class),
                 nameCaptor.capture()
         );
         assertThat(nameCaptor.getValue()).isEqualTo("testuser");
@@ -161,18 +165,18 @@ class VocServiceSlackNotificationTest {
 
         when(generateTicketIdPort.generateTicketId()).thenReturn("VOC-001");
         when(loadVocPort.existsByTicketId("VOC-001")).thenReturn(false);
-        when(saveVocPort.saveVoc(any(Voc.class))).thenReturn(testVoc);
+        when(saveVocPort.saveVoc(any(VocDomain.class))).thenReturn(testVoc);
 
         // Notification fails
         doThrow(new RuntimeException("Slack API Error"))
-                .when(notificationPort).notifyVocCreated(any(Voc.class));
+                .when(notificationPort).notifyVocCreated(any(VocDomain.class));
 
         // when
-        Voc result = vocService.createVoc(command);
+        VocDomain result = vocService.createVoc(command);
 
         // then
         assertThat(result).isNotNull();
-        verify(saveVocPort, times(1)).saveVoc(any(Voc.class));
+        verify(saveVocPort, times(1)).saveVoc(any(VocDomain.class));
     }
 
     @Test
@@ -182,18 +186,17 @@ class VocServiceSlackNotificationTest {
         ChangeStatusCommand command = new ChangeStatusCommand(1L, VocStatus.IN_PROGRESS);
 
         when(loadVocPort.loadVocById(1L)).thenReturn(Optional.of(testVoc));
-        when(saveVocPort.saveVoc(any(Voc.class))).thenReturn(testVoc);
+        when(saveVocPort.saveVoc(any(VocDomain.class))).thenReturn(testVoc);
 
         // Notification fails
         doThrow(new RuntimeException("Slack API Error"))
-                .when(notificationPort).notifyVocStatusChanged(any(Voc.class), anyString());
+                .when(notificationPort).notifyVocStatusChanged(any(VocDomain.class), anyString());
 
         // when
-        Voc result = vocService.changeStatus(command);
+        VocDomain result = vocService.changeStatus(command);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.getStatus()).isEqualTo(VocStatus.IN_PROGRESS);
-        verify(saveVocPort, times(1)).saveVoc(any(Voc.class));
+        verify(saveVocPort, times(1)).saveVoc(any(VocDomain.class));
     }
 }

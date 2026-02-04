@@ -39,19 +39,20 @@ class VectorSearchAdapterTest {
         Long vocId = 1L;
         String text = "VOC 제목과 내용";
         float[] embeddingVector = new float[]{0.1f, 0.2f, 0.3f};
-        String embeddingString = "[0.1,0.2,0.3]";
 
-        VectorEmbeddingEntity entity = new VectorEmbeddingEntity(vocId, embeddingString);
+        // Create entity with mocked ID
+        VectorEmbeddingEntity savedEntity = mock(VectorEmbeddingEntity.class);
+        when(savedEntity.getId()).thenReturn(1L);
 
         when(embeddingService.generateEmbedding(text)).thenReturn(embeddingVector);
         when(vectorEmbeddingRepository.findByVocId(vocId)).thenReturn(Optional.empty());
-        when(vectorEmbeddingRepository.save(any(VectorEmbeddingEntity.class))).thenReturn(entity);
+        when(vectorEmbeddingRepository.save(any(VectorEmbeddingEntity.class))).thenReturn(savedEntity);
 
         // when
         Long result = vectorSearchAdapter.saveEmbedding(vocId, text);
 
         // then
-        assertThat(result).isNotNull();
+        assertThat(result).isNotNull().isEqualTo(1L);
         verify(embeddingService).generateEmbedding(text);
         verify(vectorEmbeddingRepository).findByVocId(vocId);
         verify(vectorEmbeddingRepository).save(any(VectorEmbeddingEntity.class));
@@ -64,9 +65,10 @@ class VectorSearchAdapterTest {
         Long vocId = 1L;
         String text = "VOC 제목과 내용";
         float[] embeddingVector = new float[]{0.1f, 0.2f, 0.3f};
-        String embeddingString = "[0.1,0.2,0.3]";
 
-        VectorEmbeddingEntity existingEntity = new VectorEmbeddingEntity(vocId, "[0.0,0.0,0.0]");
+        // Create mock entity with ID
+        VectorEmbeddingEntity existingEntity = mock(VectorEmbeddingEntity.class);
+        when(existingEntity.getId()).thenReturn(2L);
 
         when(embeddingService.generateEmbedding(text)).thenReturn(embeddingVector);
         when(vectorEmbeddingRepository.findByVocId(vocId)).thenReturn(Optional.of(existingEntity));
@@ -76,9 +78,10 @@ class VectorSearchAdapterTest {
         Long result = vectorSearchAdapter.saveEmbedding(vocId, text);
 
         // then
-        assertThat(result).isNotNull();
+        assertThat(result).isNotNull().isEqualTo(2L);
         verify(embeddingService).generateEmbedding(text);
         verify(vectorEmbeddingRepository).findByVocId(vocId);
+        verify(existingEntity).updateEmbedding(anyString());
         verify(vectorEmbeddingRepository).save(existingEntity);
     }
 
