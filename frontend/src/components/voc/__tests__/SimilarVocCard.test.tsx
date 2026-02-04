@@ -67,7 +67,7 @@ describe('SimilarVocCard', () => {
   });
 
   it('applies correct similarity color for high similarity (>80%)', () => {
-    const { container } = render(<SimilarVocCard voc={mockSimilarVoc} />);
+    render(<SimilarVocCard voc={mockSimilarVoc} />);
 
     const badge = screen.getByText('92%');
     expect(badge).toHaveClass('bg-red-100', 'text-red-700');

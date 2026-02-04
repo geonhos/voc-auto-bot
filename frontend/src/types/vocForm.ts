@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { VocPriority, VocChannel } from './voc';
+import type { VocPriority } from './voc';
 
 /**
  * VOC 입력 폼 데이터 타입

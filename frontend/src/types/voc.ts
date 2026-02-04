@@ -6,6 +6,20 @@ export type VocStatus =
   | 'CLOSED'
   | 'REJECTED';
 
+/**
+ * 최종 상태(Terminal Status) 목록
+ * 이 상태들은 다른 상태로 전이할 수 없습니다.
+ */
+export const TERMINAL_STATUSES: VocStatus[] = ['RESOLVED', 'REJECTED', 'CLOSED'];
+
+/**
+ * 주어진 상태가 최종 상태인지 확인합니다.
+ * 최종 상태는 다른 상태로 변경할 수 없습니다.
+ */
+export function isTerminalStatus(status: VocStatus): boolean {
+  return TERMINAL_STATUSES.includes(status);
+}
+
 export type VocPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
 export type VocChannel = 'WEB' | 'EMAIL' | 'PHONE' | 'CHAT' | 'SNS' | 'OTHER';

@@ -93,6 +93,10 @@ export default function VocKanbanPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">VOC 칸반보드</h1>
           <p className="text-slate-500 dark:text-slate-400">VOC를 드래그앤드롭으로 관리하세요.</p>
+          <div className="mt-3 p-3 bg-info/10 dark:bg-info/5 border border-info/20 rounded-lg text-xs text-slate-600 dark:text-slate-400">
+            <span className="font-semibold text-info">상태 변경 규칙:</span>{' '}
+            접수 → 처리중/완료/반려 | 처리중 → 완료/반려 | <span className="text-slate-400">완료/반려는 변경 불가</span>
+          </div>
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-6">

@@ -38,18 +38,20 @@ export function useDashboardViewModel(): UseDashboardViewModelReturn {
         fromDate = now.toISOString().split('T')[0];
         toDate = fromDate;
         break;
-      case '7days':
+      case '7days': {
         const sevenDaysAgo = new Date(now);
         sevenDaysAgo.setDate(now.getDate() - 6);
         fromDate = sevenDaysAgo.toISOString().split('T')[0];
         toDate = now.toISOString().split('T')[0];
         break;
-      case '30days':
+      }
+      case '30days': {
         const thirtyDaysAgo = new Date(now);
         thirtyDaysAgo.setDate(now.getDate() - 29);
         fromDate = thirtyDaysAgo.toISOString().split('T')[0];
         toDate = now.toISOString().split('T')[0];
         break;
+      }
       case 'custom':
         fromDate = customDateRange.fromDate;
         toDate = customDateRange.toDate;

@@ -8,6 +8,7 @@ import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc } from '@/hooks/useVocs';
 import type { VocStatus, VocMemo, AiAnalysis, RelatedLog } from '@/types';
+import { isTerminalStatus } from '@/types';
 
 const STATUS_MAP: Record<VocStatus, { label: string; icon: string; class: string }> = {
   NEW: { label: '접수', icon: 'inbox', class: 'status-received' },
@@ -187,6 +188,7 @@ export default function VocDetailPage() {
 
   const statusInfo = STATUS_MAP[voc.status];
   const analysis = voc.aiAnalysis;
+  const isTerminal = isTerminalStatus(voc.status);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -659,15 +661,6 @@ export default function VocDetailPage() {
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col sm:flex-row gap-3 justify-end">
-            <button
-              className="px-6 py-3 border border-danger text-danger font-semibold rounded hover:bg-danger/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              type="button"
-              onClick={handleReject}
-              disabled={changeStatusMutation.isPending}
-            >
-              <span className="material-icons-outlined text-sm">block</span>
-              반려
-            </button>
             <Link
               href={`/email/compose?vocId=${voc.id}`}
               className="px-6 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
@@ -676,10 +669,21 @@ export default function VocDetailPage() {
               이메일 발송
             </Link>
             <button
+              className="px-6 py-3 border border-danger text-danger font-semibold rounded hover:bg-danger/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              onClick={handleReject}
+              disabled={changeStatusMutation.isPending || isTerminal}
+              title={isTerminal ? '완료/반려된 VOC는 상태를 변경할 수 없습니다' : undefined}
+            >
+              <span className="material-icons-outlined text-sm">block</span>
+              반려
+            </button>
+            <button
               className="px-6 py-3 bg-success text-white font-semibold rounded hover:bg-success/90 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
               onClick={handleComplete}
-              disabled={changeStatusMutation.isPending}
+              disabled={changeStatusMutation.isPending || isTerminal}
+              title={isTerminal ? '완료/반려된 VOC는 상태를 변경할 수 없습니다' : undefined}
             >
               <span className="material-icons-outlined text-sm">check_circle</span>
               완료 처리

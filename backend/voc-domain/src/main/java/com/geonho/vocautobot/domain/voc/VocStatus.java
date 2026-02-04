@@ -16,14 +16,31 @@ public enum VocStatus {
     private final String displayName;
     private final String description;
 
+    /**
+     * 현재 상태에서 새로운 상태로 전이 가능한지 확인합니다.
+     *
+     * 상태 전이 규칙:
+     * - NEW(접수) → IN_PROGRESS(처리중), RESOLVED(완료), REJECTED(반려)
+     * - IN_PROGRESS(처리중) → RESOLVED(완료), REJECTED(반려)
+     * - PENDING(보류) → RESOLVED(완료), REJECTED(반려) [레거시 호환]
+     * - RESOLVED(완료) → 변경 불가
+     * - CLOSED(종료) → 변경 불가
+     * - REJECTED(반려) → 변경 불가
+     */
     public boolean canTransitionTo(VocStatus newStatus) {
         return switch (this) {
-            case NEW -> newStatus == IN_PROGRESS || newStatus == REJECTED;
-            case IN_PROGRESS -> newStatus == PENDING || newStatus == RESOLVED || newStatus == REJECTED;
-            case PENDING -> newStatus == IN_PROGRESS || newStatus == REJECTED;
-            case RESOLVED -> newStatus == CLOSED || newStatus == IN_PROGRESS;
-            case CLOSED -> false;
-            case REJECTED -> newStatus == IN_PROGRESS;
+            case NEW -> newStatus == IN_PROGRESS || newStatus == RESOLVED || newStatus == REJECTED;
+            case IN_PROGRESS -> newStatus == RESOLVED || newStatus == REJECTED;
+            case PENDING -> newStatus == RESOLVED || newStatus == REJECTED;
+            case RESOLVED, CLOSED, REJECTED -> false;
         };
+    }
+
+    /**
+     * 최종 상태(Terminal State)인지 확인합니다.
+     * 최종 상태는 다른 상태로 전이할 수 없습니다.
+     */
+    public boolean isTerminal() {
+        return this == RESOLVED || this == REJECTED || this == CLOSED;
     }
 }

@@ -45,6 +45,7 @@ export function SimilarVocModal({ vocId, isOpen, onClose }: SimilarVocModalProps
       role="dialog"
       aria-modal="true"
       aria-labelledby="similar-voc-modal-title"
+      tabIndex={-1}
     >
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
