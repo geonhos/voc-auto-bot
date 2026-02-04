@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc } from '@/hooks/useVocs';
-import type { VocStatus, VocMemo, AiAnalysis, RelatedLog } from '@/types';
+import type { VocStatus, VocMemo, RelatedLog } from '@/types';
 import { isTerminalStatus } from '@/types';
 
 const STATUS_MAP: Record<VocStatus, { label: string; icon: string; class: string }> = {
@@ -674,6 +674,7 @@ export default function VocDetailPage() {
               onClick={handleReject}
               disabled={changeStatusMutation.isPending || isTerminal}
               title={isTerminal ? '완료/반려된 VOC는 상태를 변경할 수 없습니다' : undefined}
+              aria-disabled={changeStatusMutation.isPending || isTerminal}
             >
               <span className="material-icons-outlined text-sm">block</span>
               반려
@@ -684,6 +685,7 @@ export default function VocDetailPage() {
               onClick={handleComplete}
               disabled={changeStatusMutation.isPending || isTerminal}
               title={isTerminal ? '완료/반려된 VOC는 상태를 변경할 수 없습니다' : undefined}
+              aria-disabled={changeStatusMutation.isPending || isTerminal}
             >
               <span className="material-icons-outlined text-sm">check_circle</span>
               완료 처리

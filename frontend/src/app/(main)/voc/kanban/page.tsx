@@ -3,16 +3,17 @@
 import Link from 'next/link';
 import { useState } from 'react';
 
-import { useVocs, useChangeVocStatus } from '@/hooks/useVocs';
 import { VocPriorityBadge } from '@/components/voc/VocPriorityBadge';
-import { VocStatus } from '@/types';
+import { useVocs, useChangeVocStatus } from '@/hooks/useVocs';
+import { VocStatus, isTerminalStatus } from '@/types';
 
 const STATUS_COLUMNS: { status: VocStatus; label: string; color: string; bgColor: string }[] = [
   { status: 'NEW', label: '접수', color: 'bg-slate-400', bgColor: 'bg-slate-50 dark:bg-slate-900/50' },
   { status: 'IN_PROGRESS', label: '처리중', color: 'bg-warning', bgColor: 'bg-warning/5 dark:bg-warning/10' },
-  { status: 'PENDING', label: '분석실패', color: 'bg-danger', bgColor: 'bg-danger/5 dark:bg-danger/10' },
+  { status: 'PENDING', label: '보류', color: 'bg-danger', bgColor: 'bg-danger/5 dark:bg-danger/10' },
   { status: 'RESOLVED', label: '완료', color: 'bg-success', bgColor: 'bg-success/5 dark:bg-success/10' },
-  { status: 'CLOSED', label: '반려', color: 'bg-warning', bgColor: 'bg-warning/5 dark:bg-warning/10' },
+  { status: 'REJECTED', label: '반려', color: 'bg-danger', bgColor: 'bg-danger/5 dark:bg-danger/10' },
+  { status: 'CLOSED', label: '종료', color: 'bg-slate-500', bgColor: 'bg-slate-50 dark:bg-slate-900/50' },
 ];
 
 export default function VocKanbanPage() {
@@ -115,7 +116,8 @@ export default function VocKanbanPage() {
                     column.status === 'IN_PROGRESS' ? 'bg-warning/10 dark:bg-warning/20' :
                     column.status === 'PENDING' ? 'bg-danger/10 dark:bg-danger/20' :
                     column.status === 'RESOLVED' ? 'bg-success/10 dark:bg-success/20' :
-                    'bg-warning/10 dark:bg-warning/20'
+                    column.status === 'REJECTED' ? 'bg-danger/10 dark:bg-danger/20' :
+                    'bg-slate-100 dark:bg-slate-800'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -152,12 +154,15 @@ export default function VocKanbanPage() {
                             column.status === 'IN_PROGRESS' ? 'border-warning' :
                             column.status === 'PENDING' ? 'border-danger' :
                             column.status === 'RESOLVED' ? 'border-success' :
-                            'border-warning'
-                          } shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
+                            column.status === 'REJECTED' ? 'border-danger' :
+                            'border-slate-500'
+                          } shadow-sm hover:shadow-md transition-all ${
+                            isTerminalStatus(voc.status) ? 'cursor-not-allowed opacity-70' : 'cursor-grab active:cursor-grabbing'
+                          } ${
                             draggedId === voc.id ? 'opacity-50 scale-95' : ''
                           }`}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, voc.id)}
+                          draggable={!isTerminalStatus(voc.status)}
+                          onDragStart={(e) => !isTerminalStatus(voc.status) && handleDragStart(e, voc.id)}
                           onDragEnd={handleDragEnd}
                         >
                           <Link href={`/voc/${voc.id}`} className="block">

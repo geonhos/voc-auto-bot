@@ -135,6 +135,18 @@ class VocStatusTest {
     }
 
     @Nested
+    @DisplayName("자기 자신으로의 전이")
+    class SelfTransition {
+
+        @ParameterizedTest
+        @EnumSource(VocStatus.class)
+        @DisplayName("같은 상태로 전이 불가")
+        void cannotTransitionToSameStatus(VocStatus status) {
+            assertThat(status.canTransitionTo(status)).isFalse();
+        }
+    }
+
+    @Nested
     @DisplayName("isTerminal() 메서드")
     class IsTerminal {
 
