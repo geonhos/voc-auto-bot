@@ -3,15 +3,24 @@
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
-from app.models.schemas import AnalysisRequest, AnalysisResponse, HealthResponse
+from app.models.schemas import (
+    AnalysisRequest,
+    AnalysisResponse,
+    HealthResponse,
+    SeedRequest,
+    SeedResponse,
+    LearnRequest,
+)
 from app.services.embedding_service import EmbeddingService
 from app.services.analysis_service import AnalysisService
+from app.services.data_seeder import DataSeederService
 
 router = APIRouter()
 
 # Global service instances (initialized on startup)
 embedding_service: Optional[EmbeddingService] = None
 analysis_service: Optional[AnalysisService] = None
+data_seeder_service: Optional[DataSeederService] = None
 
 
 def initialize_services(
@@ -26,7 +35,7 @@ def initialize_services(
         embedding_model: Embedding model name.
         llm_model: LLM model name.
     """
-    global embedding_service, analysis_service
+    global embedding_service, analysis_service, data_seeder_service
 
     # Initialize embedding service
     embedding_service = EmbeddingService(
@@ -44,6 +53,9 @@ def initialize_services(
         ollama_base_url=ollama_base_url,
     )
 
+    # Initialize data seeder service
+    data_seeder_service = DataSeederService(embedding_service=embedding_service)
+
 
 @router.get("/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
@@ -54,7 +66,7 @@ async def health_check() -> HealthResponse:
     """
     return HealthResponse(
         status="healthy",
-        version="1.0.0",
+        version="1.1.0",
         vectorstore_initialized=embedding_service is not None
         and embedding_service.is_initialized(),
     )
@@ -89,3 +101,125 @@ async def analyze_voc(request: AnalysisRequest) -> AnalysisResponse:
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+# Allowed seed sources to prevent path traversal attacks
+ALLOWED_SEED_SOURCES = {"expanded", "templates"}
+
+
+@router.post("/api/v1/seed", response_model=SeedResponse)
+async def seed_data(request: SeedRequest) -> SeedResponse:
+    """Seed vector database with log data.
+
+    Args:
+        request: Seeding request with source type and options.
+            - source: 'expanded' (default seed file) or 'templates' (generate from templates)
+
+    Returns:
+        Seeding result with status and statistics.
+
+    Raises:
+        HTTPException: If seeding fails or invalid source.
+    """
+    if data_seeder_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Data seeder service not initialized.",
+        )
+
+    # Security: Only allow predefined sources
+    if request.source not in ALLOWED_SEED_SOURCES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid source: '{request.source}'. Must be one of: {sorted(ALLOWED_SEED_SOURCES)}",
+        )
+
+    try:
+        if request.source == "expanded":
+            # Use predefined seed file only - no arbitrary file paths allowed
+            result = data_seeder_service.seed_from_file()
+        elif request.source == "templates":
+            result = data_seeder_service.seed_from_templates(
+                count_per_category=request.count_per_category or 10
+            )
+
+        return SeedResponse(
+            status=result.status.value,
+            total_entries=result.total_entries,
+            seeded_entries=result.seeded_entries,
+            failed_entries=result.failed_entries,
+            categories_seeded=result.categories_seeded,
+            started_at=result.started_at,
+            completed_at=result.completed_at,
+            error_message=result.error_message,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Seeding failed: {str(e)}")
+
+
+@router.get("/api/v1/seed/status", response_model=dict)
+async def get_seeding_status() -> dict:
+    """Get current seeding status.
+
+    Returns:
+        Current seeding status and last result.
+
+    Raises:
+        HTTPException: If service not initialized.
+    """
+    if data_seeder_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Data seeder service not initialized.",
+        )
+
+    return data_seeder_service.get_seeding_status()
+
+
+@router.post("/api/v1/learn", response_model=SeedResponse)
+async def learn_from_voc(request: LearnRequest) -> SeedResponse:
+    """Progressive learning: Add resolved VOC to vector database.
+
+    This endpoint allows the system to learn from resolved VOCs,
+    improving future analysis accuracy.
+
+    Args:
+        request: Learning request with VOC details and resolution.
+
+    Returns:
+        Seeding result for the learned data.
+
+    Raises:
+        HTTPException: If learning fails.
+    """
+    if data_seeder_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Data seeder service not initialized.",
+        )
+
+    try:
+        result = data_seeder_service.seed_from_voc_resolution(
+            voc_id=request.voc_id,
+            title=request.title,
+            content=request.content,
+            resolution=request.resolution,
+            analysis_result=request.analysis_result or {},
+        )
+
+        return SeedResponse(
+            status=result.status.value,
+            total_entries=result.total_entries,
+            seeded_entries=result.seeded_entries,
+            failed_entries=result.failed_entries,
+            categories_seeded=result.categories_seeded,
+            started_at=result.started_at,
+            completed_at=result.completed_at,
+            error_message=result.error_message,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Progressive learning failed: {str(e)}"
+        )

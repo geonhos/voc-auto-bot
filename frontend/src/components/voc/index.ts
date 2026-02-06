@@ -5,3 +5,4 @@ export { VocPriorityBadge } from './VocPriorityBadge';
 export { SimilarVocCard } from './SimilarVocCard';
 export { SimilarVocList } from './SimilarVocList';
 export { SimilarVocModal } from './SimilarVocModal';
+export { ConfidenceIndicator, ConfidenceBadge } from './ConfidenceIndicator';
