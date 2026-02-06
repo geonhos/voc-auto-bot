@@ -1,6 +1,10 @@
 package com.geonho.vocautobot.adapter.out.ai;
 
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
+import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis.AnalysisMethod;
+import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis.ConfidenceBreakdown;
+import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis.ConfidenceDetails;
+import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis.ConfidenceLevel;
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis.RelatedLog;
 import com.geonho.vocautobot.application.analysis.port.out.AiAnalysisPort;
 import lombok.RequiredArgsConstructor;
@@ -87,23 +91,90 @@ public class PythonAiServiceAdapter implements AiAnalysisPort {
      * Python AI 서비스 응답을 VocLogAnalysis로 변환
      */
     private VocLogAnalysis convertToVocLogAnalysis(PythonAiResponse response) {
-        List<RelatedLog> relatedLogs = response.relatedLogs.stream()
-            .map(log -> new RelatedLog(
-                log.timestamp,
-                log.logLevel,
-                log.serviceName,
-                log.message,
-                log.relevanceScore
-            ))
-            .collect(Collectors.toList());
+        // 관련 로그 변환
+        List<RelatedLog> relatedLogs = response.relatedLogs != null
+            ? response.relatedLogs.stream()
+                .map(logDto -> new RelatedLog(
+                    logDto.timestamp,
+                    logDto.logLevel,
+                    logDto.serviceName,
+                    logDto.message,
+                    logDto.relevanceScore
+                ))
+                .collect(Collectors.toList())
+            : List.of();
+
+        // 신뢰도 레벨 변환 (null 안전 처리)
+        ConfidenceLevel confidenceLevel = parseConfidenceLevel(response.confidenceLevel);
+
+        // 분석 방법 변환 (null 안전 처리)
+        AnalysisMethod analysisMethod = parseAnalysisMethod(response.analysisMethod);
+
+        // 신뢰도 상세 정보 변환 (null 안전 처리)
+        ConfidenceDetails confidenceDetails = convertConfidenceDetails(response.confidenceDetails);
 
         return new VocLogAnalysis(
             response.summary,
             response.confidence,
-            response.keywords,
-            response.possibleCauses,
+            response.keywords != null ? response.keywords : List.of(),
+            response.possibleCauses != null ? response.possibleCauses : List.of(),
             relatedLogs,
-            response.recommendation
+            response.recommendation,
+            confidenceLevel,
+            analysisMethod,
+            response.vectorMatchCount,
+            confidenceDetails
+        );
+    }
+
+    /**
+     * 문자열에서 ConfidenceLevel 파싱 (null 안전)
+     */
+    private ConfidenceLevel parseConfidenceLevel(String value) {
+        if (value == null) {
+            return null;
+        }
+        return ConfidenceLevel.fromValue(value);
+    }
+
+    /**
+     * 문자열에서 AnalysisMethod 파싱 (null 안전)
+     */
+    private AnalysisMethod parseAnalysisMethod(String value) {
+        if (value == null) {
+            return null;
+        }
+        return AnalysisMethod.fromValue(value);
+    }
+
+    /**
+     * ConfidenceDetails 변환 (null 안전)
+     */
+    private ConfidenceDetails convertConfidenceDetails(ConfidenceDetailsDto dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        ConfidenceLevel level = parseConfidenceLevel(dto.level);
+        List<String> factors = dto.factors != null ? dto.factors : List.of();
+        ConfidenceBreakdown breakdown = convertConfidenceBreakdown(dto.breakdown);
+
+        return new ConfidenceDetails(level, factors, breakdown);
+    }
+
+    /**
+     * ConfidenceBreakdown 변환 (null 안전)
+     */
+    private ConfidenceBreakdown convertConfidenceBreakdown(ConfidenceBreakdownDto dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        return new ConfidenceBreakdown(
+            dto.vectorMatchScore,
+            dto.vectorMatchCountScore,
+            dto.llmResponseScore,
+            dto.methodWeight
         );
     }
 
@@ -117,6 +188,11 @@ public class PythonAiServiceAdapter implements AiAnalysisPort {
         public List<String> possibleCauses;
         public List<RelatedLogDto> relatedLogs;
         public String recommendation;
+        // Enhanced fields
+        public String analysisMethod;
+        public String confidenceLevel;
+        public ConfidenceDetailsDto confidenceDetails;
+        public Integer vectorMatchCount;
     }
 
     /**
@@ -128,5 +204,24 @@ public class PythonAiServiceAdapter implements AiAnalysisPort {
         public String serviceName;
         public String message;
         public Double relevanceScore;
+    }
+
+    /**
+     * 신뢰도 상세 정보 DTO
+     */
+    private static class ConfidenceDetailsDto {
+        public String level;
+        public List<String> factors;
+        public ConfidenceBreakdownDto breakdown;
+    }
+
+    /**
+     * 신뢰도 breakdown DTO
+     */
+    private static class ConfidenceBreakdownDto {
+        public Double vectorMatchScore;
+        public Double vectorMatchCountScore;
+        public Double llmResponseScore;
+        public Double methodWeight;
     }
 }

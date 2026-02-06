@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.application.voc.usecase;
 
+import com.geonho.vocautobot.application.analysis.port.out.ProgressiveLearningPort;
 import com.geonho.vocautobot.application.notification.port.out.NotificationPort;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.voc.exception.TicketIdGenerationException;
@@ -15,6 +16,7 @@ import com.geonho.vocautobot.domain.user.UserRole;
 import com.geonho.vocautobot.domain.voc.VocConstants;
 import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocMemoDomain;
+import com.geonho.vocautobot.domain.voc.VocStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,6 +47,7 @@ public class VocService implements
     private final GenerateTicketIdPort generateTicketIdPort;
     private final LoadUserPort loadUserPort;
     private final NotificationPort notificationPort;
+    private final ProgressiveLearningPort progressiveLearningPort;
 
     @Override
     @Transactional
@@ -113,7 +116,43 @@ public class VocService implements
         sendNotificationSafely(() -> notificationPort.notifyVocStatusChanged(savedVoc, previousStatus),
                 "VOC status change notification", savedVoc.getTicketId());
 
+        // Trigger progressive learning when VOC is resolved
+        if (command.newStatus() == VocStatus.RESOLVED) {
+            triggerProgressiveLearning(savedVoc, command.processingNote());
+        }
+
         return savedVoc;
+    }
+
+    /**
+     * Trigger progressive learning for resolved VOC.
+     * Learning runs asynchronously to not affect the main business flow.
+     *
+     * @param voc Resolved VOC
+     * @param resolution Processing note or resolution description
+     */
+    private void triggerProgressiveLearning(VocDomain voc, String resolution) {
+        try {
+            String category = voc.getCategoryId() != null
+                    ? String.valueOf(voc.getCategoryId())
+                    : "unknown";
+            String resolutionText = resolution != null && !resolution.isBlank()
+                    ? resolution
+                    : "VOC resolved without specific notes";
+
+            progressiveLearningPort.learnFromResolvedVocAsync(
+                    voc.getId(),
+                    voc.getTitle(),
+                    voc.getContent(),
+                    resolutionText,
+                    category
+            );
+            log.debug("Progressive learning triggered for VOC: {}", voc.getTicketId());
+        } catch (Exception e) {
+            // Learning failure should not affect VOC resolution
+            log.warn("Failed to trigger progressive learning for VOC [{}]: {}",
+                    voc.getTicketId(), e.getMessage());
+        }
     }
 
     @Override

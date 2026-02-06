@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
+import { ConfidenceIndicator } from '@/components/voc';
 import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc } from '@/hooks/useVocs';
 import type { VocStatus, VocMemo, RelatedLog } from '@/types';
-import { isTerminalStatus } from '@/types';
+import { isTerminalStatus, getAnalysisMethodLabel } from '@/types';
 
 const STATUS_MAP: Record<VocStatus, { label: string; icon: string; class: string }> = {
   NEW: { label: '접수', icon: 'inbox', class: 'status-received' },
@@ -337,28 +338,18 @@ export default function VocDetailPage() {
             </div>
           ) : (
             <>
-              {/* 신뢰도 */}
+              {/* 분석 신뢰도 - Enhanced ConfidenceIndicator */}
               <div>
                 <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
                   분석 신뢰도
                 </span>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        (analysis.confidence || 0) >= 0.7
-                          ? 'bg-success'
-                          : (analysis.confidence || 0) >= 0.4
-                          ? 'bg-warning'
-                          : 'bg-danger'
-                      }`}
-                      style={{ width: `${(analysis.confidence || 0) * 100}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-sm font-semibold min-w-[50px] text-right">
-                    {Math.round((analysis.confidence || 0) * 100)}%
-                  </span>
-                </div>
+                <ConfidenceIndicator
+                  confidence={analysis.confidence || 0}
+                  confidenceLevel={analysis.confidenceLevel}
+                  analysisMethod={analysis.analysisMethod}
+                  confidenceDetails={analysis.confidenceDetails}
+                  vectorMatchCount={analysis.vectorMatchCount}
+                />
               </div>
 
               {/* 분석 요약 */}

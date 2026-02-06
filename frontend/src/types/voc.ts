@@ -106,6 +106,41 @@ export interface VocMemo {
   createdAt: string;
 }
 
+/**
+ * 신뢰도 레벨 타입
+ * HIGH: 0.7 이상 (RAG 분석 성공)
+ * MEDIUM: 0.4-0.7 (규칙 기반 또는 제한된 RAG)
+ * LOW: 0.4 미만 (직접 LLM 또는 분석 실패)
+ */
+export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+
+/**
+ * 분석 방법 타입
+ * rag: RAG 기반 분석 (벡터 DB + LLM)
+ * rule_based: 규칙 기반 분석 (템플릿 매칭)
+ * direct_llm: 직접 LLM 분석 (컨텍스트 없음)
+ */
+export type AnalysisMethod = 'rag' | 'rule_based' | 'direct_llm';
+
+/**
+ * 신뢰도 계산 breakdown 상세 정보
+ */
+export interface ConfidenceBreakdown {
+  vectorMatchScore: number;
+  vectorMatchCountScore: number;
+  llmResponseScore: number;
+  methodWeight: number;
+}
+
+/**
+ * 신뢰도 상세 정보
+ */
+export interface ConfidenceDetails {
+  level: ConfidenceLevel;
+  factors: string[];
+  breakdown?: ConfidenceBreakdown;
+}
+
 export interface AiAnalysis {
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
   summary?: string;
@@ -116,6 +151,11 @@ export interface AiAnalysis {
   recommendation?: string;
   errorMessage?: string;
   analyzedAt?: string;
+  // Enhanced fields for confidence reporting
+  analysisMethod?: AnalysisMethod;
+  confidenceLevel?: ConfidenceLevel;
+  confidenceDetails?: ConfidenceDetails;
+  vectorMatchCount?: number;
 }
 
 export interface RelatedLog {
@@ -124,6 +164,54 @@ export interface RelatedLog {
   serviceName: string;
   message: string;
   relevanceScore: number;
+}
+
+/**
+ * 신뢰도 레벨에 따른 색상 반환
+ */
+export function getConfidenceLevelColor(level: ConfidenceLevel): string {
+  switch (level) {
+    case 'HIGH':
+      return 'success';
+    case 'MEDIUM':
+      return 'warning';
+    case 'LOW':
+      return 'danger';
+    default:
+      return 'slate';
+  }
+}
+
+/**
+ * 분석 방법의 한국어 라벨 반환
+ */
+export function getAnalysisMethodLabel(method: AnalysisMethod): string {
+  switch (method) {
+    case 'rag':
+      return 'RAG 분석';
+    case 'rule_based':
+      return '규칙 기반';
+    case 'direct_llm':
+      return '직접 LLM';
+    default:
+      return '알 수 없음';
+  }
+}
+
+/**
+ * 신뢰도 레벨의 한국어 라벨 반환
+ */
+export function getConfidenceLevelLabel(level: ConfidenceLevel): string {
+  switch (level) {
+    case 'HIGH':
+      return '높음';
+    case 'MEDIUM':
+      return '보통';
+    case 'LOW':
+      return '낮음';
+    default:
+      return '알 수 없음';
+  }
 }
 
 export interface CreateVocRequest {

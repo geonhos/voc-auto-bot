@@ -1,7 +1,47 @@
 """Pydantic models for VOC log analysis service."""
 
+from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel, Field
+
+
+class ConfidenceLevel(str, Enum):
+    """Confidence level classification."""
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
+class AnalysisMethod(str, Enum):
+    """Analysis method used for generating the response."""
+    RAG = "rag"
+    RULE_BASED = "rule_based"
+    DIRECT_LLM = "direct_llm"
+
+
+class ConfidenceBreakdown(BaseModel):
+    """Breakdown of confidence score factors."""
+    vectorMatchScore: float = Field(
+        ..., description="Score from vector similarity (0.0-1.0)", ge=0.0, le=1.0
+    )
+    vectorMatchCountScore: float = Field(
+        ..., description="Score from number of vector matches (0.0-1.0)", ge=0.0, le=1.0
+    )
+    llmResponseScore: float = Field(
+        ..., description="Score from LLM response completeness (0.0-1.0)", ge=0.0, le=1.0
+    )
+    methodWeight: float = Field(
+        ..., description="Weight based on analysis method (0.0-1.0)", ge=0.0, le=1.0
+    )
+
+
+class ConfidenceDetails(BaseModel):
+    """Detailed confidence information for analysis transparency."""
+    level: ConfidenceLevel = Field(..., description="Confidence level (HIGH, MEDIUM, LOW)")
+    factors: List[str] = Field(..., description="Human-readable factors affecting confidence")
+    breakdown: Optional[ConfidenceBreakdown] = Field(
+        None, description="Detailed breakdown of confidence calculation"
+    )
 
 
 class AnalysisRequest(BaseModel):
@@ -54,6 +94,20 @@ class AnalysisResponse(BaseModel):
     relatedLogs: List[RelatedLog] = Field(..., description="Related log entries")
     recommendation: str = Field(..., description="Recommended actions")
 
+    # New fields for enhanced confidence reporting (Optional for backward compatibility)
+    analysisMethod: Optional[AnalysisMethod] = Field(
+        None, description="Method used for analysis (rag, rule_based, direct_llm)"
+    )
+    confidenceLevel: Optional[ConfidenceLevel] = Field(
+        None, description="Confidence level classification (HIGH, MEDIUM, LOW)"
+    )
+    confidenceDetails: Optional[ConfidenceDetails] = Field(
+        None, description="Detailed confidence information"
+    )
+    vectorMatchCount: Optional[int] = Field(
+        None, description="Number of vector matches found", ge=0
+    )
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -75,6 +129,19 @@ class AnalysisResponse(BaseModel):
                     }
                 ],
                 "recommendation": "결제 게이트웨이 서버 상태 확인 및 네트워크 연결 점검이 필요합니다.",
+                "analysisMethod": "rag",
+                "confidenceLevel": "HIGH",
+                "confidenceDetails": {
+                    "level": "HIGH",
+                    "factors": ["RAG 분석 기반 (높은 신뢰도)", "유사 로그 5건 발견 (충분)"],
+                    "breakdown": {
+                        "vectorMatchScore": 0.85,
+                        "vectorMatchCountScore": 1.0,
+                        "llmResponseScore": 0.9,
+                        "methodWeight": 1.0
+                    }
+                },
+                "vectorMatchCount": 5
             }
         }
 

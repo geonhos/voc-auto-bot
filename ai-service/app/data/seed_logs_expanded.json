@@ -1,0 +1,998 @@
+[
+  {
+    "id": "seed-001",
+    "timestamp": "2026-01-28T10:15:23.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Payment gateway timeout: Connection to PG server failed after 30 seconds. TransactionId: TX-20260128-001",
+    "stackTrace": "java.net.SocketTimeoutException: connect timed out\n\tat payment.gateway.PGClient.connect(PGClient.java:145)",
+    "category": "payment",
+    "severity": "high"
+  },
+  {
+    "id": "seed-002",
+    "timestamp": "2026-01-28T10:16:45.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Card authorization failed: Invalid card number format. CardPrefix: 4111****",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-003",
+    "timestamp": "2026-01-28T10:17:23.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Payment declined: Insufficient funds. UserId: U-789012, Amount: 150000",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-004",
+    "timestamp": "2026-01-28T10:18:56.234Z",
+    "logLevel": "WARN",
+    "serviceName": "payment-service",
+    "message": "Retry attempt 3/3 for payment transaction TX-20260128-002. Previous failures: timeout",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-005",
+    "timestamp": "2026-01-28T10:19:12.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "PG callback validation failed: Invalid signature. CallbackId: CB-001",
+    "category": "payment",
+    "severity": "high"
+  },
+  {
+    "id": "seed-006",
+    "timestamp": "2026-01-28T10:20:34.890Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Duplicate transaction detected: TransactionId TX-20260128-003 already processed",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-007",
+    "timestamp": "2026-01-28T10:21:45.123Z",
+    "logLevel": "WARN",
+    "serviceName": "payment-service",
+    "message": "Payment service circuit breaker OPEN: 5 consecutive failures to PG server",
+    "category": "payment",
+    "severity": "high"
+  },
+  {
+    "id": "seed-008",
+    "timestamp": "2026-01-28T10:22:56.456Z",
+    "logLevel": "INFO",
+    "serviceName": "payment-service",
+    "message": "Refund processed successfully: RefundId R-001, Amount: 50000",
+    "category": "payment",
+    "severity": "low"
+  },
+  {
+    "id": "seed-009",
+    "timestamp": "2026-01-28T10:23:12.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Virtual account creation failed: Bank API returned error code BK-503",
+    "category": "payment",
+    "severity": "high"
+  },
+  {
+    "id": "seed-010",
+    "timestamp": "2026-01-28T10:24:34.012Z",
+    "logLevel": "ERROR",
+    "serviceName": "payment-service",
+    "message": "Escrow release failed: Seller verification pending. OrderId: ORD-123456",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-011",
+    "timestamp": "2026-01-28T09:45:12.234Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "JWT token validation failed: Token expired. UserId: U-123456",
+    "stackTrace": "io.jsonwebtoken.ExpiredJwtException: JWT expired at 2026-01-28T09:30:00Z",
+    "category": "auth",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-012",
+    "timestamp": "2026-01-28T09:46:23.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "Login failed: Invalid credentials for user admin@company.com",
+    "category": "auth",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-013",
+    "timestamp": "2026-01-28T09:47:45.890Z",
+    "logLevel": "WARN",
+    "serviceName": "auth-service",
+    "message": "Session expired: SessionId S-789012 invalidated due to inactivity",
+    "category": "auth",
+    "severity": "low"
+  },
+  {
+    "id": "seed-014",
+    "timestamp": "2026-01-28T09:48:56.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "OAuth2 token exchange failed: Invalid authorization code",
+    "category": "auth",
+    "severity": "high"
+  },
+  {
+    "id": "seed-015",
+    "timestamp": "2026-01-28T09:49:12.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "Refresh token invalid: Token revoked or expired. UserId: U-456789",
+    "category": "auth",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-016",
+    "timestamp": "2026-01-28T09:50:23.789Z",
+    "logLevel": "WARN",
+    "serviceName": "auth-service",
+    "message": "Multiple login attempts detected: 5 attempts from IP 192.168.1.100 in last 60 seconds",
+    "category": "auth",
+    "severity": "high"
+  },
+  {
+    "id": "seed-017",
+    "timestamp": "2026-01-28T09:51:34.012Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "Two-factor authentication failed: Invalid OTP code. UserId: U-111222",
+    "category": "auth",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-018",
+    "timestamp": "2026-01-28T09:52:45.345Z",
+    "logLevel": "INFO",
+    "serviceName": "auth-service",
+    "message": "Password reset email sent successfully to user@example.com",
+    "category": "auth",
+    "severity": "low"
+  },
+  {
+    "id": "seed-019",
+    "timestamp": "2026-01-28T09:53:56.678Z",
+    "logLevel": "ERROR",
+    "serviceName": "auth-service",
+    "message": "SSO assertion validation failed: SAML response signature invalid",
+    "category": "auth",
+    "severity": "high"
+  },
+  {
+    "id": "seed-020",
+    "timestamp": "2026-01-28T09:54:12.901Z",
+    "logLevel": "WARN",
+    "serviceName": "auth-service",
+    "message": "Account locked: Too many failed login attempts for user locked@company.com",
+    "category": "auth",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-021",
+    "timestamp": "2026-01-28T11:20:33.891Z",
+    "logLevel": "ERROR",
+    "serviceName": "database-service",
+    "message": "Connection pool exhausted: All 50 connections are in use. Operation timeout after 5000ms",
+    "stackTrace": "com.zaxxer.hikari.pool.HikariPool$PoolInitializationException: Failed to initialize pool",
+    "category": "database",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-022",
+    "timestamp": "2026-01-28T11:21:45.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "database-service",
+    "message": "Deadlock detected: Transaction T-001 waiting for lock held by T-002",
+    "category": "database",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-023",
+    "timestamp": "2026-01-28T11:22:56.456Z",
+    "logLevel": "WARN",
+    "serviceName": "database-service",
+    "message": "Slow query detected: SELECT * FROM orders took 15.2 seconds",
+    "category": "database",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-024",
+    "timestamp": "2026-01-28T11:23:12.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "database-service",
+    "message": "Replication lag critical: 120 seconds behind master. Slave: replica-01",
+    "category": "database",
+    "severity": "high"
+  },
+  {
+    "id": "seed-025",
+    "timestamp": "2026-01-28T11:24:23.012Z",
+    "logLevel": "ERROR",
+    "serviceName": "database-service",
+    "message": "Query execution failed: Column 'deleted_at' not found in table 'users'",
+    "stackTrace": "org.postgresql.util.PSQLException: ERROR: column \"deleted_at\" does not exist",
+    "category": "database",
+    "severity": "high"
+  },
+  {
+    "id": "seed-026",
+    "timestamp": "2026-01-28T11:25:34.345Z",
+    "logLevel": "WARN",
+    "serviceName": "database-service",
+    "message": "Active connections: 48/50, Idle: 2, Pending: 15. Consider increasing pool size",
+    "category": "database",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-027",
+    "timestamp": "2026-01-28T11:26:45.678Z",
+    "logLevel": "ERROR",
+    "serviceName": "database-service",
+    "message": "Transaction rollback: Constraint violation - duplicate key value violates unique constraint",
+    "category": "database",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-028",
+    "timestamp": "2026-01-28T11:27:56.901Z",
+    "logLevel": "ERROR",
+    "serviceName": "database-service",
+    "message": "Database connection failed: Connection refused to postgres:5432",
+    "category": "database",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-029",
+    "timestamp": "2026-01-28T11:28:12.234Z",
+    "logLevel": "INFO",
+    "serviceName": "database-service",
+    "message": "Database migration completed: v2.3.0 applied successfully",
+    "category": "database",
+    "severity": "low"
+  },
+  {
+    "id": "seed-030",
+    "timestamp": "2026-01-28T11:29:23.567Z",
+    "logLevel": "WARN",
+    "serviceName": "database-service",
+    "message": "Table 'orders' approaching size limit: 95GB / 100GB configured max",
+    "category": "database",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-031",
+    "timestamp": "2026-01-28T08:30:45.678Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "Upstream service unavailable: user-service returned 503 Service Unavailable",
+    "category": "api",
+    "severity": "high"
+  },
+  {
+    "id": "seed-032",
+    "timestamp": "2026-01-28T08:31:56.901Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "Rate limit exceeded: API key AK-001 made 1005 requests (limit: 1000/min)",
+    "category": "api",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-033",
+    "timestamp": "2026-01-28T08:32:12.234Z",
+    "logLevel": "WARN",
+    "serviceName": "api-gateway",
+    "message": "Circuit breaker HALF-OPEN for order-service: testing connectivity",
+    "category": "api",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-034",
+    "timestamp": "2026-01-28T08:33:23.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "Request timeout: /api/v1/products took longer than 30000ms",
+    "category": "api",
+    "severity": "high"
+  },
+  {
+    "id": "seed-035",
+    "timestamp": "2026-01-28T08:34:34.890Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "Invalid API key: Authentication failed for key starting with 'sk_test_'",
+    "category": "api",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-036",
+    "timestamp": "2026-01-28T08:35:45.123Z",
+    "logLevel": "WARN",
+    "serviceName": "api-gateway",
+    "message": "High latency detected: Average response time 2500ms (threshold: 1000ms)",
+    "category": "api",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-037",
+    "timestamp": "2026-01-28T08:36:56.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "Health check failed: inventory-service not responding",
+    "category": "api",
+    "severity": "high"
+  },
+  {
+    "id": "seed-038",
+    "timestamp": "2026-01-28T08:37:12.789Z",
+    "logLevel": "INFO",
+    "serviceName": "api-gateway",
+    "message": "Load balancer updated: Added new instance api-server-03 to pool",
+    "category": "api",
+    "severity": "low"
+  },
+  {
+    "id": "seed-039",
+    "timestamp": "2026-01-28T08:38:23.012Z",
+    "logLevel": "ERROR",
+    "serviceName": "api-gateway",
+    "message": "SSL certificate validation failed: Certificate expired for upstream.example.com",
+    "category": "api",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-040",
+    "timestamp": "2026-01-28T08:39:34.345Z",
+    "logLevel": "WARN",
+    "serviceName": "api-gateway",
+    "message": "Request body too large: 15MB exceeds limit of 10MB for /api/v1/upload",
+    "category": "api",
+    "severity": "low"
+  },
+  {
+    "id": "seed-041",
+    "timestamp": "2026-01-28T13:45:11.234Z",
+    "logLevel": "ERROR",
+    "serviceName": "cache-service",
+    "message": "Redis connection lost: Connection refused (Connection refused)",
+    "stackTrace": "redis.clients.jedis.exceptions.JedisConnectionException: java.net.ConnectException: Connection refused",
+    "category": "cache",
+    "severity": "high"
+  },
+  {
+    "id": "seed-042",
+    "timestamp": "2026-01-28T13:46:22.567Z",
+    "logLevel": "WARN",
+    "serviceName": "cache-service",
+    "message": "Cache miss rate high: 85% miss rate in last 5 minutes",
+    "category": "cache",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-043",
+    "timestamp": "2026-01-28T13:47:33.890Z",
+    "logLevel": "ERROR",
+    "serviceName": "cache-service",
+    "message": "Redis cluster node failed: Node redis-node-02:6379 marked as FAIL",
+    "category": "cache",
+    "severity": "high"
+  },
+  {
+    "id": "seed-044",
+    "timestamp": "2026-01-28T13:48:44.123Z",
+    "logLevel": "WARN",
+    "serviceName": "cache-service",
+    "message": "Memory usage critical: Redis using 7.5GB / 8GB configured max",
+    "category": "cache",
+    "severity": "high"
+  },
+  {
+    "id": "seed-045",
+    "timestamp": "2026-01-28T13:49:55.456Z",
+    "logLevel": "INFO",
+    "serviceName": "cache-service",
+    "message": "Cache eviction completed: 10000 keys removed using LRU policy",
+    "category": "cache",
+    "severity": "low"
+  },
+  {
+    "id": "seed-046",
+    "timestamp": "2026-01-28T13:50:12.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "cache-service",
+    "message": "Cache serialization failed: Object too large for cache entry (>512KB)",
+    "category": "cache",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-047",
+    "timestamp": "2026-01-28T13:51:23.012Z",
+    "logLevel": "WARN",
+    "serviceName": "cache-service",
+    "message": "Falling back to database: Cache unavailable for session store",
+    "category": "cache",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-048",
+    "timestamp": "2026-01-28T13:52:34.345Z",
+    "logLevel": "ERROR",
+    "serviceName": "cache-service",
+    "message": "Distributed lock acquisition failed: Lock 'order-lock-123' timeout after 5000ms",
+    "category": "cache",
+    "severity": "high"
+  },
+  {
+    "id": "seed-049",
+    "timestamp": "2026-01-28T13:53:45.678Z",
+    "logLevel": "INFO",
+    "serviceName": "cache-service",
+    "message": "Cache warmup completed: 5000 product entries preloaded",
+    "category": "cache",
+    "severity": "low"
+  },
+  {
+    "id": "seed-050",
+    "timestamp": "2026-01-28T13:54:56.901Z",
+    "logLevel": "WARN",
+    "serviceName": "cache-service",
+    "message": "Cache TTL expired: Session data for user U-123 invalidated",
+    "category": "cache",
+    "severity": "low"
+  },
+  {
+    "id": "seed-051",
+    "timestamp": "2026-01-28T12:00:15.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "notification-service",
+    "message": "Failed to send email notification: SMTP connection timeout to mail.company.com:587",
+    "category": "notification",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-052",
+    "timestamp": "2026-01-28T12:01:26.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "notification-service",
+    "message": "Push notification failed: FCM server returned error - InvalidRegistration",
+    "category": "notification",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-053",
+    "timestamp": "2026-01-28T12:02:37.012Z",
+    "logLevel": "WARN",
+    "serviceName": "notification-service",
+    "message": "SMS delivery delayed: Message queue backlog at 5000 messages",
+    "category": "notification",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-054",
+    "timestamp": "2026-01-28T12:03:48.345Z",
+    "logLevel": "ERROR",
+    "serviceName": "notification-service",
+    "message": "Slack webhook failed: Rate limited - 429 Too Many Requests",
+    "category": "notification",
+    "severity": "low"
+  },
+  {
+    "id": "seed-055",
+    "timestamp": "2026-01-28T12:04:59.678Z",
+    "logLevel": "INFO",
+    "serviceName": "notification-service",
+    "message": "Notification sent successfully: OrderConfirmation to user@example.com",
+    "category": "notification",
+    "severity": "low"
+  },
+  {
+    "id": "seed-056",
+    "timestamp": "2026-01-28T12:05:12.901Z",
+    "logLevel": "ERROR",
+    "serviceName": "notification-service",
+    "message": "Template rendering failed: Variable 'orderTotal' not found in template order_confirmation",
+    "category": "notification",
+    "severity": "high"
+  },
+  {
+    "id": "seed-057",
+    "timestamp": "2026-01-28T12:06:23.234Z",
+    "logLevel": "WARN",
+    "serviceName": "notification-service",
+    "message": "Email bounce detected: Invalid recipient address bounce@invalid.com",
+    "category": "notification",
+    "severity": "low"
+  },
+  {
+    "id": "seed-058",
+    "timestamp": "2026-01-28T12:07:34.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "notification-service",
+    "message": "KakaoTalk notification failed: API authentication error",
+    "category": "notification",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-059",
+    "timestamp": "2026-01-28T12:08:45.890Z",
+    "logLevel": "INFO",
+    "serviceName": "notification-service",
+    "message": "Retry succeeded: Email notification delivered after 2 attempts",
+    "category": "notification",
+    "severity": "low"
+  },
+  {
+    "id": "seed-060",
+    "timestamp": "2026-01-28T12:09:56.123Z",
+    "logLevel": "WARN",
+    "serviceName": "notification-service",
+    "message": "Daily SMS limit reached: 1000/1000 messages sent today",
+    "category": "notification",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-061",
+    "timestamp": "2026-01-28T15:30:45.890Z",
+    "logLevel": "ERROR",
+    "serviceName": "file-service",
+    "message": "File upload failed: Maximum file size exceeded (uploaded: 15MB, limit: 10MB)",
+    "category": "file",
+    "severity": "low"
+  },
+  {
+    "id": "seed-062",
+    "timestamp": "2026-01-28T15:31:56.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "file-service",
+    "message": "S3 upload failed: AccessDenied - bucket policy does not allow PutObject",
+    "category": "file",
+    "severity": "high"
+  },
+  {
+    "id": "seed-063",
+    "timestamp": "2026-01-28T15:32:12.456Z",
+    "logLevel": "WARN",
+    "serviceName": "file-service",
+    "message": "Invalid file type: .exe files are not allowed for upload",
+    "category": "file",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-064",
+    "timestamp": "2026-01-28T15:33:23.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "file-service",
+    "message": "File download failed: Object not found in storage - key: documents/report.pdf",
+    "category": "file",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-065",
+    "timestamp": "2026-01-28T15:34:34.012Z",
+    "logLevel": "INFO",
+    "serviceName": "file-service",
+    "message": "File uploaded successfully: images/product-001.jpg (2.3MB)",
+    "category": "file",
+    "severity": "low"
+  },
+  {
+    "id": "seed-066",
+    "timestamp": "2026-01-28T15:35:45.345Z",
+    "logLevel": "ERROR",
+    "serviceName": "file-service",
+    "message": "Storage quota exceeded: User U-456 has used 10GB / 10GB allocated",
+    "category": "file",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-067",
+    "timestamp": "2026-01-28T15:36:56.678Z",
+    "logLevel": "WARN",
+    "serviceName": "file-service",
+    "message": "Virus detected in uploaded file: malware.zip quarantined",
+    "category": "file",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-068",
+    "timestamp": "2026-01-28T15:37:12.901Z",
+    "logLevel": "ERROR",
+    "serviceName": "file-service",
+    "message": "Image processing failed: Unsupported format - HEIC conversion not available",
+    "category": "file",
+    "severity": "low"
+  },
+  {
+    "id": "seed-069",
+    "timestamp": "2026-01-28T15:38:23.234Z",
+    "logLevel": "INFO",
+    "serviceName": "file-service",
+    "message": "Scheduled cleanup completed: 500 expired temporary files deleted",
+    "category": "file",
+    "severity": "low"
+  },
+  {
+    "id": "seed-070",
+    "timestamp": "2026-01-28T15:39:34.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "file-service",
+    "message": "CDN cache purge failed: Unable to connect to CDN provider API",
+    "category": "file",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-071",
+    "timestamp": "2026-01-28T11:45:33.890Z",
+    "logLevel": "ERROR",
+    "serviceName": "search-service",
+    "message": "ElasticSearch query timeout: Query took longer than 10000ms",
+    "category": "search",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-072",
+    "timestamp": "2026-01-28T11:46:44.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "search-service",
+    "message": "Index not found: products_v2 does not exist in cluster",
+    "category": "search",
+    "severity": "high"
+  },
+  {
+    "id": "seed-073",
+    "timestamp": "2026-01-28T11:47:55.456Z",
+    "logLevel": "WARN",
+    "serviceName": "search-service",
+    "message": "Search results degraded: Using stale data from cache (ES unavailable)",
+    "category": "search",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-074",
+    "timestamp": "2026-01-28T11:48:12.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "search-service",
+    "message": "Mapping conflict: Field 'price' has conflicting types across indices",
+    "category": "search",
+    "severity": "high"
+  },
+  {
+    "id": "seed-075",
+    "timestamp": "2026-01-28T11:49:23.012Z",
+    "logLevel": "INFO",
+    "serviceName": "search-service",
+    "message": "Index replication completed: products index synced to replica-01",
+    "category": "search",
+    "severity": "low"
+  },
+  {
+    "id": "seed-076",
+    "timestamp": "2026-01-28T11:50:34.345Z",
+    "logLevel": "ERROR",
+    "serviceName": "search-service",
+    "message": "Cluster health RED: 2 of 5 shards unassigned in products index",
+    "category": "search",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-077",
+    "timestamp": "2026-01-28T11:51:45.678Z",
+    "logLevel": "WARN",
+    "serviceName": "search-service",
+    "message": "Query rejected: Too many concurrent searches - queue full",
+    "category": "search",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-078",
+    "timestamp": "2026-01-28T11:52:56.901Z",
+    "logLevel": "ERROR",
+    "serviceName": "search-service",
+    "message": "Aggregation failed: Circuit breaker triggered - request would exceed memory limit",
+    "category": "search",
+    "severity": "high"
+  },
+  {
+    "id": "seed-079",
+    "timestamp": "2026-01-28T11:53:12.234Z",
+    "logLevel": "INFO",
+    "serviceName": "search-service",
+    "message": "Suggest index rebuilt: Autocomplete data refreshed with 50000 terms",
+    "category": "search",
+    "severity": "low"
+  },
+  {
+    "id": "seed-080",
+    "timestamp": "2026-01-28T11:54:23.567Z",
+    "logLevel": "WARN",
+    "serviceName": "search-service",
+    "message": "Relevance score low: No matching documents found for query 'asdfgh'",
+    "category": "search",
+    "severity": "low"
+  },
+  {
+    "id": "seed-081",
+    "timestamp": "2026-01-28T14:30:45.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "batch-service",
+    "message": "Scheduled job failed: VOC daily summary generation. OutOfMemoryError",
+    "stackTrace": "java.lang.OutOfMemoryError: Java heap space\n\tat java.util.Arrays.copyOf(Arrays.java:3332)",
+    "category": "batch",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-082",
+    "timestamp": "2026-01-28T14:31:56.789Z",
+    "logLevel": "ERROR",
+    "serviceName": "batch-service",
+    "message": "Data migration job timeout: Task exceeded 2 hour limit",
+    "category": "batch",
+    "severity": "high"
+  },
+  {
+    "id": "seed-083",
+    "timestamp": "2026-01-28T14:32:12.012Z",
+    "logLevel": "WARN",
+    "serviceName": "batch-service",
+    "message": "Job execution delayed: Previous job still running - skipping this execution",
+    "category": "batch",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-084",
+    "timestamp": "2026-01-28T14:33:23.345Z",
+    "logLevel": "ERROR",
+    "serviceName": "batch-service",
+    "message": "ETL pipeline failed: Source database connection lost during extraction",
+    "category": "batch",
+    "severity": "high"
+  },
+  {
+    "id": "seed-085",
+    "timestamp": "2026-01-28T14:34:34.678Z",
+    "logLevel": "INFO",
+    "serviceName": "batch-service",
+    "message": "Daily report generated successfully: 1500 records processed in 45 minutes",
+    "category": "batch",
+    "severity": "low"
+  },
+  {
+    "id": "seed-086",
+    "timestamp": "2026-01-28T14:35:45.901Z",
+    "logLevel": "ERROR",
+    "serviceName": "batch-service",
+    "message": "Batch item processor failed: Invalid data format in row 5234",
+    "category": "batch",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-087",
+    "timestamp": "2026-01-28T14:36:56.234Z",
+    "logLevel": "WARN",
+    "serviceName": "batch-service",
+    "message": "Resource contention: Batch job waiting for database connection",
+    "category": "batch",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-088",
+    "timestamp": "2026-01-28T14:37:12.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "batch-service",
+    "message": "Cleanup job failed: Unable to delete files older than 30 days - permission denied",
+    "category": "batch",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-089",
+    "timestamp": "2026-01-28T14:38:23.890Z",
+    "logLevel": "INFO",
+    "serviceName": "batch-service",
+    "message": "Scheduled task registered: order-sync-job will run every 15 minutes",
+    "category": "batch",
+    "severity": "low"
+  },
+  {
+    "id": "seed-090",
+    "timestamp": "2026-01-28T14:39:34.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "batch-service",
+    "message": "Kafka consumer lag critical: 100000 messages behind in order-events topic",
+    "category": "batch",
+    "severity": "high"
+  },
+  {
+    "id": "seed-091",
+    "timestamp": "2026-01-28T09:15:44.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "security-service",
+    "message": "Login attempt blocked: Too many failed attempts from IP 192.168.1.100",
+    "category": "security",
+    "severity": "high"
+  },
+  {
+    "id": "seed-092",
+    "timestamp": "2026-01-28T09:16:55.789Z",
+    "logLevel": "WARN",
+    "serviceName": "security-service",
+    "message": "Suspicious activity detected: User U-789 accessed 500 records in 1 minute",
+    "category": "security",
+    "severity": "high"
+  },
+  {
+    "id": "seed-093",
+    "timestamp": "2026-01-28T09:17:12.012Z",
+    "logLevel": "ERROR",
+    "serviceName": "security-service",
+    "message": "SQL injection attempt detected: Blocked malicious query from IP 10.0.0.55",
+    "category": "security",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-094",
+    "timestamp": "2026-01-28T09:18:23.345Z",
+    "logLevel": "ERROR",
+    "serviceName": "security-service",
+    "message": "XSS attack blocked: Script injection detected in comment field",
+    "category": "security",
+    "severity": "high"
+  },
+  {
+    "id": "seed-095",
+    "timestamp": "2026-01-28T09:19:34.678Z",
+    "logLevel": "WARN",
+    "serviceName": "security-service",
+    "message": "Rate limit applied: API requests throttled for client-id CL-001",
+    "category": "security",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-096",
+    "timestamp": "2026-01-28T09:20:45.901Z",
+    "logLevel": "ERROR",
+    "serviceName": "security-service",
+    "message": "DDOS attack suspected: 50000 requests/second from multiple IPs",
+    "category": "security",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-097",
+    "timestamp": "2026-01-28T09:21:56.234Z",
+    "logLevel": "INFO",
+    "serviceName": "security-service",
+    "message": "Security audit completed: No vulnerabilities detected in scan",
+    "category": "security",
+    "severity": "low"
+  },
+  {
+    "id": "seed-098",
+    "timestamp": "2026-01-28T09:22:12.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "security-service",
+    "message": "Certificate chain validation failed: Intermediate CA not trusted",
+    "category": "security",
+    "severity": "high"
+  },
+  {
+    "id": "seed-099",
+    "timestamp": "2026-01-28T09:23:23.890Z",
+    "logLevel": "WARN",
+    "serviceName": "security-service",
+    "message": "Privilege escalation attempt: User U-123 tried accessing admin endpoint",
+    "category": "security",
+    "severity": "high"
+  },
+  {
+    "id": "seed-100",
+    "timestamp": "2026-01-28T09:24:34.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "security-service",
+    "message": "Data exfiltration alert: Large data export request from unusual location",
+    "category": "security",
+    "severity": "critical"
+  },
+  {
+    "id": "seed-101",
+    "timestamp": "2026-01-28T10:25:45.456Z",
+    "logLevel": "ERROR",
+    "serviceName": "order-service",
+    "message": "Order creation failed: Inventory service unavailable",
+    "category": "api",
+    "severity": "high"
+  },
+  {
+    "id": "seed-102",
+    "timestamp": "2026-01-28T10:26:56.789Z",
+    "logLevel": "WARN",
+    "serviceName": "inventory-service",
+    "message": "Stock level critical: Product SKU-001 has only 5 units remaining",
+    "category": "database",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-103",
+    "timestamp": "2026-01-28T10:27:12.012Z",
+    "logLevel": "ERROR",
+    "serviceName": "shipping-service",
+    "message": "Carrier API failed: FedEx service returned 500 Internal Server Error",
+    "category": "api",
+    "severity": "high"
+  },
+  {
+    "id": "seed-104",
+    "timestamp": "2026-01-28T10:28:23.345Z",
+    "logLevel": "INFO",
+    "serviceName": "analytics-service",
+    "message": "Daily metrics calculated: 15000 page views, 500 orders processed",
+    "category": "batch",
+    "severity": "low"
+  },
+  {
+    "id": "seed-105",
+    "timestamp": "2026-01-28T10:29:34.678Z",
+    "logLevel": "ERROR",
+    "serviceName": "recommendation-service",
+    "message": "ML model prediction failed: Model file not found - recommendation_v3.pkl",
+    "category": "file",
+    "severity": "high"
+  },
+  {
+    "id": "seed-106",
+    "timestamp": "2026-01-28T10:30:45.901Z",
+    "logLevel": "WARN",
+    "serviceName": "user-service",
+    "message": "Profile update rate limited: User U-456 exceeded 10 updates per hour",
+    "category": "api",
+    "severity": "low"
+  },
+  {
+    "id": "seed-107",
+    "timestamp": "2026-01-28T10:31:56.234Z",
+    "logLevel": "ERROR",
+    "serviceName": "coupon-service",
+    "message": "Coupon redemption failed: Coupon SAVE20 already used by this user",
+    "category": "payment",
+    "severity": "low"
+  },
+  {
+    "id": "seed-108",
+    "timestamp": "2026-01-28T10:32:12.567Z",
+    "logLevel": "ERROR",
+    "serviceName": "review-service",
+    "message": "Review submission blocked: Profanity filter triggered",
+    "category": "security",
+    "severity": "low"
+  },
+  {
+    "id": "seed-109",
+    "timestamp": "2026-01-28T10:33:23.890Z",
+    "logLevel": "WARN",
+    "serviceName": "subscription-service",
+    "message": "Payment retry scheduled: Subscription SUB-001 billing failed, retry in 24h",
+    "category": "payment",
+    "severity": "medium"
+  },
+  {
+    "id": "seed-110",
+    "timestamp": "2026-01-28T10:34:34.123Z",
+    "logLevel": "ERROR",
+    "serviceName": "webhook-service",
+    "message": "Webhook delivery failed: Endpoint https://customer.com/webhook returned 404",
+    "category": "notification",
+    "severity": "medium"
+  }
+]
