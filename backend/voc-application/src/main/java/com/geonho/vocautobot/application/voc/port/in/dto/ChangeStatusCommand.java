@@ -11,6 +11,18 @@ public record ChangeStatusCommand(
         Long vocId,
 
         @NotNull(message = "변경할 상태를 선택해주세요")
-        VocStatus newStatus
+        VocStatus newStatus,
+
+        /**
+         * Processing note or resolution description (optional).
+         * Used for progressive learning when VOC is resolved.
+         */
+        String processingNote
 ) {
+    /**
+     * Convenience constructor without processing note.
+     */
+    public ChangeStatusCommand(Long vocId, VocStatus newStatus) {
+        this(vocId, newStatus, null);
+    }
 }

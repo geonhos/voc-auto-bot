@@ -52,8 +52,8 @@ class TestRuleBasedAnalyzer:
     def test_analyze_database_issue(self, analyzer: RuleBasedAnalyzer):
         """Test analysis of database-related VOC."""
         result = analyzer.analyze(
-            title="DB 연결 오류",
-            content="데이터베이스 커넥션 풀이 고갈되어 쿼리 실행이 타임아웃됩니다.",
+            title="DB connection error",
+            content="Database connection pool exhausted. Query timeout occurred. Hikari pool deadlock detected.",
         )
 
         assert result.detected_category == "database"

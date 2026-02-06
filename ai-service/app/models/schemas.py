@@ -2,7 +2,7 @@
 
 from typing import List, Optional
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ConfidenceLevelEnum(str, Enum):
@@ -50,8 +50,8 @@ class ConfidenceDetails(BaseModel):
         default_factory=list, description="Factors affecting confidence"
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "level": "HIGH",
                 "score": 0.85,
@@ -68,6 +68,7 @@ class ConfidenceDetails(BaseModel):
                 ],
             }
         }
+    )
 
 
 class AnalysisRequest(BaseModel):
@@ -76,13 +77,14 @@ class AnalysisRequest(BaseModel):
     title: str = Field(..., description="VOC title", min_length=1, max_length=500)
     content: str = Field(..., description="VOC content", min_length=1, max_length=5000)
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "title": "결제 오류 발생",
                 "content": "결제 진행 중 타임아웃 오류가 발생했습니다. 30초 후 연결 실패 메시지가 표시됩니다.",
             }
         }
+    )
 
 
 class RelatedLog(BaseModel):
@@ -96,8 +98,8 @@ class RelatedLog(BaseModel):
         ..., description="Relevance score to VOC (0.0 to 1.0)", ge=0.0, le=1.0
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "timestamp": "2026-01-28T10:15:23.456Z",
                 "logLevel": "ERROR",
@@ -106,6 +108,7 @@ class RelatedLog(BaseModel):
                 "relevanceScore": 0.95,
             }
         }
+    )
 
 
 class AnalysisResponse(BaseModel):
@@ -131,8 +134,8 @@ class AnalysisResponse(BaseModel):
         None, description="Number of vector matches found", ge=0
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "summary": "결제 게이트웨이 연결 타임아웃으로 인한 결제 실패가 발생했습니다.",
                 "confidence": 0.92,
@@ -170,6 +173,7 @@ class AnalysisResponse(BaseModel):
                 "vectorMatchCount": 5,
             }
         }
+    )
 
 
 class HealthResponse(BaseModel):
@@ -230,12 +234,13 @@ class SeedRequest(BaseModel):
         10, description="Entries per category (for source='templates')", ge=1, le=100
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "source": "expanded",
             }
         }
+    )
 
 
 class SeedResponse(BaseModel):
@@ -252,8 +257,8 @@ class SeedResponse(BaseModel):
     completed_at: Optional[str] = Field(None, description="Completion timestamp")
     error_message: Optional[str] = Field(None, description="Error message if failed")
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "status": "completed",
                 "total_entries": 100,
@@ -270,6 +275,7 @@ class SeedResponse(BaseModel):
                 "completed_at": "2026-01-28T10:00:05.000Z",
             }
         }
+    )
 
 
 class LearnRequest(BaseModel):
@@ -283,8 +289,8 @@ class LearnRequest(BaseModel):
         None, description="Original AI analysis result"
     )
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "voc_id": "VOC-2026-001",
                 "title": "결제 타임아웃 오류",
@@ -296,3 +302,4 @@ class LearnRequest(BaseModel):
                 },
             }
         }
+    )

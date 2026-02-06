@@ -1,7 +1,8 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+
+import type { ConfidenceDetails } from '@/types/voc';
+
 import { ConfidenceIndicator, ConfidenceBadge } from '../ConfidenceIndicator';
-import type { ConfidenceLevel, AnalysisMethod, ConfidenceDetails } from '@/types/voc';
 
 describe('ConfidenceIndicator', () => {
   describe('Confidence Level Rendering', () => {

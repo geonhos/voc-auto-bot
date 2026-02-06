@@ -81,7 +81,7 @@ public class ProgressiveLearningAdapter implements ProgressiveLearningPort {
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
             // Python AI 서비스의 learn 엔드포인트 호출
-            String learnUrl = config.getBaseUrl() + "/api/v1/learn";
+            String learnUrl = config.getUrl() + "/api/v1/learn";
             log.debug("Calling progressive learning API at: {}", learnUrl);
 
             ResponseEntity<LearnResponse> response = aiServiceRestTemplate.postForEntity(
@@ -132,7 +132,7 @@ public class ProgressiveLearningAdapter implements ProgressiveLearningPort {
     @Override
     public boolean isAvailable() {
         try {
-            String healthUrl = config.getBaseUrl() + "/health";
+            String healthUrl = config.getUrl() + "/health";
             ResponseEntity<Map> response = aiServiceRestTemplate.getForEntity(
                 healthUrl,
                 Map.class
