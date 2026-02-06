@@ -68,15 +68,18 @@ public class AsyncVocAnalysisService {
             }
         }
 
-        // 분석 결과 초기화
-        vocAnalysisPersistencePort.resetAnalysis(vocId);
-
-        // VOC 도메인 조회 후 비동기 분석 재시작
-        VocDomain voc = getVocDetailUseCase.getVocById(vocId);
-        analyzeVocAsync(voc);
-
-        log.info("Reanalysis triggered for VOC ID: {}", vocId);
-        return true;
+        // 분석 결과 초기화 후 비동기 분석 재시작
+        try {
+            vocAnalysisPersistencePort.resetAnalysis(vocId);
+            VocDomain voc = getVocDetailUseCase.getVocById(vocId);
+            analyzeVocAsync(voc);
+            log.info("Reanalysis triggered for VOC ID: {}", vocId);
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to start reanalysis for VOC ID: {}", vocId, e);
+            vocAnalysisPersistencePort.failAnalysis(vocId, "재분석 요청 실패: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
