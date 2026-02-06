@@ -128,7 +128,14 @@ export function useEmailComposeViewModel({
 
   const updateField = useCallback(
     <K extends keyof EmailComposeFormState>(field: K, value: EmailComposeFormState[K]) => {
-      setForm((prev) => ({ ...prev, [field]: value }));
+      setForm((prev) => {
+        const newState = { ...prev, [field]: value };
+        // 템플릿 선택 상태에서 제목/본문을 직접 수정하면 템플릿 연결 해제
+        if (prev.templateId && (field === 'subject' || field === 'body')) {
+          newState.templateId = null;
+        }
+        return newState;
+      });
     },
     []
   );
