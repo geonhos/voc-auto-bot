@@ -243,7 +243,7 @@ public class VocController {
     @GetMapping("/{id}/similar")
     public ApiResponse<List<SimilarVocResponse>> getSimilarVocs(
             @PathVariable Long id,
-            @Parameter(description = "최대 결과 수") @RequestParam(defaultValue = "5") int limit
+            @Parameter(description = "최대 결과 수 (1~50)") @RequestParam(defaultValue = "5") @jakarta.validation.constraints.Max(50) @jakarta.validation.constraints.Min(1) int limit
     ) {
         List<SimilarVocResult> results = getSimilarVocsUseCase.getSimilarVocs(id, limit);
         List<SimilarVocResponse> response = results.stream()

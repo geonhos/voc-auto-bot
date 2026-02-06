@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service implementing similar VOC search use case.
@@ -39,16 +41,24 @@ public class GetSimilarVocsService implements GetSimilarVocsUseCase {
         List<SimilarVocPort.SimilarVocResult> aiResults =
                 similarVocPort.findSimilarVocs(vocId, searchContent, limit + 1);
 
-        // 3. Enrich results with VOC metadata
+        // 3. Batch load VOC metadata to avoid N+1 queries
+        List<Long> similarVocIds = aiResults.stream()
+                .map(SimilarVocPort.SimilarVocResult::vocId)
+                .filter(id -> !id.equals(vocId))
+                .toList();
+
+        Map<Long, VocDomain> vocMap = loadVocPort.loadVocsByIds(similarVocIds).stream()
+                .collect(Collectors.toMap(VocDomain::getId, v -> v));
+
+        // 4. Enrich results with VOC metadata
         List<SimilarVocResult> enrichedResults = new ArrayList<>();
         for (SimilarVocPort.SimilarVocResult aiResult : aiResults) {
-            // Skip the source VOC itself
             if (aiResult.vocId().equals(vocId)) {
                 continue;
             }
 
-            // Load VOC metadata
-            loadVocPort.loadVocById(aiResult.vocId()).ifPresent(voc ->
+            VocDomain voc = vocMap.get(aiResult.vocId());
+            if (voc != null) {
                 enrichedResults.add(new SimilarVocResult(
                         voc.getId(),
                         voc.getTicketId(),
@@ -56,10 +66,9 @@ public class GetSimilarVocsService implements GetSimilarVocsUseCase {
                         voc.getStatus(),
                         aiResult.similarity(),
                         voc.getCreatedAt()
-                ))
-            );
+                ));
+            }
 
-            // Respect the limit
             if (enrichedResults.size() >= limit) {
                 break;
             }
