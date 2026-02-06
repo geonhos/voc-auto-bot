@@ -315,7 +315,7 @@ public class VocLogAnalysisService {
                 ))
                 .collect(Collectors.toList());
 
-            return new VocLogAnalysis(
+            return VocLogAnalysis.of(
                 summary,
                 confidence,
                 keywords,

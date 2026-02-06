@@ -45,6 +45,36 @@ export type VocPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
 export type VocChannel = 'WEB' | 'EMAIL' | 'PHONE' | 'CHAT' | 'SNS' | 'OTHER';
 
+/**
+ * 신뢰도 레벨 타입
+ */
+export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+
+/**
+ * 분석 방법 타입
+ */
+export type AnalysisMethod = 'rag' | 'rule_based' | 'direct_llm';
+
+/**
+ * 신뢰도 점수 breakdown
+ */
+export interface ConfidenceBreakdown {
+  vectorMatchScore: number;
+  similarityScore: number;
+  responseCompleteness: number;
+  categoryMatchScore: number;
+}
+
+/**
+ * 신뢰도 상세 정보
+ */
+export interface ConfidenceDetails {
+  level: ConfidenceLevel;
+  score: number;
+  breakdown?: ConfidenceBreakdown;
+  factors: string[];
+}
+
 export interface Voc {
   id: number;
   ticketId: string;
@@ -116,6 +146,11 @@ export interface AiAnalysis {
   recommendation?: string;
   errorMessage?: string;
   analyzedAt?: string;
+  // Enhanced fields for confidence display
+  confidenceLevel?: ConfidenceLevel;
+  analysisMethod?: AnalysisMethod;
+  vectorMatchCount?: number;
+  confidenceDetails?: ConfidenceDetails;
 }
 
 export interface RelatedLog {
@@ -124,6 +159,64 @@ export interface RelatedLog {
   serviceName: string;
   message: string;
   relevanceScore: number;
+}
+
+/**
+ * 신뢰도 레벨에 따른 색상 반환
+ * @param level - 신뢰도 레벨 (null/undefined인 경우 'gray' 반환)
+ */
+export function getConfidenceLevelColor(level: ConfidenceLevel | null | undefined): string {
+  if (!level) return 'gray';
+  switch (level) {
+    case 'HIGH':
+      return 'green';
+    case 'MEDIUM':
+      return 'yellow';
+    case 'LOW':
+      return 'red';
+    default:
+      return 'gray';
+  }
+}
+
+/**
+ * 신뢰도 점수를 기반으로 레벨 결정
+ * @param score - 신뢰도 점수 (0.0 ~ 1.0, null/undefined인 경우 'LOW' 반환)
+ */
+export function getConfidenceLevelFromScore(score: number | null | undefined): ConfidenceLevel {
+  if (score == null || isNaN(score)) return 'LOW';
+  if (score >= 0.7) return 'HIGH';
+  if (score >= 0.4) return 'MEDIUM';
+  return 'LOW';
+}
+
+/**
+ * 분석 방법에 대한 한국어 레이블 반환
+ * @param method - 분석 방법 (null/undefined인 경우 '알 수 없음' 반환)
+ */
+export function getAnalysisMethodLabel(method: AnalysisMethod | null | undefined): string {
+  if (!method) return '알 수 없음';
+  switch (method) {
+    case 'rag':
+      return 'RAG 기반';
+    case 'rule_based':
+      return '규칙 기반';
+    case 'direct_llm':
+      return 'LLM 직접';
+    default:
+      return '알 수 없음';
+  }
+}
+
+/**
+ * 신뢰도가 낮은지 확인
+ * @param analysis - AI 분석 결과 (null/undefined인 경우 false 반환)
+ */
+export function isLowConfidence(analysis: AiAnalysis | null | undefined): boolean {
+  if (!analysis) return false;
+  if (analysis.confidenceLevel === 'LOW') return true;
+  if (analysis.confidence != null && analysis.confidence < 0.4) return true;
+  return false;
 }
 
 export interface CreateVocRequest {

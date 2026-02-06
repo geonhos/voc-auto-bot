@@ -1,5 +1,7 @@
 package com.geonho.vocautobot.application.voc.usecase;
 
+import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
+import com.geonho.vocautobot.application.analysis.port.out.ProgressiveLearningPort;
 import com.geonho.vocautobot.application.notification.port.out.NotificationPort;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.voc.exception.TicketIdGenerationException;
@@ -15,6 +17,7 @@ import com.geonho.vocautobot.domain.user.UserRole;
 import com.geonho.vocautobot.domain.voc.VocConstants;
 import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocMemoDomain;
+import com.geonho.vocautobot.domain.voc.VocStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -45,6 +48,7 @@ public class VocService implements
     private final GenerateTicketIdPort generateTicketIdPort;
     private final LoadUserPort loadUserPort;
     private final NotificationPort notificationPort;
+    private final ProgressiveLearningPort progressiveLearningPort;
 
     @Override
     @Transactional
@@ -103,9 +107,10 @@ public class VocService implements
 
         // Store previous status for notification
         String previousStatus = voc.getStatus().name();
+        VocStatus newStatus = command.newStatus();
 
         // Change status (domain logic validates state transition)
-        voc.updateStatus(command.newStatus());
+        voc.updateStatus(newStatus);
 
         VocDomain savedVoc = saveVocPort.saveVoc(voc);
 
@@ -113,7 +118,65 @@ public class VocService implements
         sendNotificationSafely(() -> notificationPort.notifyVocStatusChanged(savedVoc, previousStatus),
                 "VOC status change notification", savedVoc.getTicketId());
 
+        // Trigger progressive learning for resolved VOCs (async, non-blocking)
+        if (isResolvedStatus(newStatus)) {
+            triggerProgressiveLearning(savedVoc, command.processingNote());
+        }
+
         return savedVoc;
+    }
+
+    /**
+     * Check if the status indicates a resolved/completed VOC
+     */
+    private boolean isResolvedStatus(VocStatus status) {
+        return status == VocStatus.RESOLVED || status == VocStatus.CLOSED;
+    }
+
+    /**
+     * Trigger progressive learning asynchronously for resolved VOCs.
+     * This allows the system to learn from resolved cases to improve future analysis.
+     *
+     * @param voc the resolved VOC
+     * @param resolution the resolution/processing note
+     */
+    private void triggerProgressiveLearning(VocDomain voc, String resolution) {
+        if (!progressiveLearningPort.isAvailable()) {
+            log.debug("Progressive learning service not available, skipping for VOC: {}",
+                    voc.getTicketId());
+            return;
+        }
+
+        try {
+            // Get the AI analysis result if available
+            VocLogAnalysis analysisResult = getAnalysisResultForVoc(voc);
+
+            // Trigger async learning (non-blocking)
+            progressiveLearningPort.learnFromResolvedVoc(
+                    voc.getTicketId(),
+                    voc.getTitle(),
+                    voc.getContent(),
+                    resolution != null ? resolution : "해결됨",
+                    analysisResult
+            );
+
+            log.info("Progressive learning triggered for VOC: {}", voc.getTicketId());
+        } catch (Exception e) {
+            // Log but don't fail - progressive learning is optional
+            log.warn("Failed to trigger progressive learning for VOC {}: {}",
+                    voc.getTicketId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Get the AI analysis result for a VOC if available.
+     * This is used to include the original analysis in progressive learning.
+     */
+    private VocLogAnalysis getAnalysisResultForVoc(VocDomain voc) {
+        // Note: In the current implementation, the AI analysis result
+        // is stored separately and may need to be fetched from a different port.
+        // For now, return null and rely on the seeder to reconstruct from title/content.
+        return null;
     }
 
     @Override
