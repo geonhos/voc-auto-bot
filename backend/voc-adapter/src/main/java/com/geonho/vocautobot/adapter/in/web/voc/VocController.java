@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -135,6 +136,23 @@ public class VocController {
         }
 
         return ApiResponse.success(VocAnalysisResponse.from(analysis));
+    }
+
+    @Operation(
+            summary = "VOC 재분석",
+            description = "VOC의 AI 분석을 다시 수행합니다. 이미 분석 중인 경우 409 Conflict를 반환합니다."
+    )
+    @PostMapping("/{id}/reanalyze")
+    public ResponseEntity<ApiResponse<Void>> reanalyzeVoc(@PathVariable Long id) {
+        boolean started = asyncVocAnalysisService.reanalyzeVoc(id);
+
+        if (!started) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponse.error(HttpStatus.CONFLICT, "이미 분석이 진행 중입니다."));
+        }
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(ApiResponse.success(null));
     }
 
     @Operation(summary = "VOC 수정", description = "VOC 정보를 수정합니다")

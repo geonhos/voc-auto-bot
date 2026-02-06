@@ -106,3 +106,17 @@ export function useAddVocMemo() {
     },
   });
 }
+
+export function useReanalyzeVoc() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (vocId: number) => {
+      const response = await api.post<void>(`/vocs/${vocId}/reanalyze`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [VOCS_QUERY_KEY] });
+    },
+  });
+}

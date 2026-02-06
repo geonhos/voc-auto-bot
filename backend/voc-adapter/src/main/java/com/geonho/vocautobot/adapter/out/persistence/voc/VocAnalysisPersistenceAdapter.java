@@ -61,6 +61,12 @@ public class VocAnalysisPersistenceAdapter implements VocAnalysisPersistencePort
         repository.findByVocId(vocId).ifPresent(entity -> entity.failAnalysis(errorMessage));
     }
 
+    @Override
+    @Transactional
+    public void resetAnalysis(Long vocId) {
+        repository.findByVocId(vocId).ifPresent(VocAnalysisJpaEntity::resetAnalysis);
+    }
+
     private VocAnalysisDto toDto(VocAnalysisJpaEntity entity) {
         List<String> keywords = parseJsonList(entity.getKeywords());
         List<String> possibleCauses = parseJsonList(entity.getPossibleCauses());

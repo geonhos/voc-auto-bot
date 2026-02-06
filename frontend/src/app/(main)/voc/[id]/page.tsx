@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
-import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc } from '@/hooks/useVocs';
+import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc, useReanalyzeVoc } from '@/hooks/useVocs';
 import type { VocStatus, VocMemo, RelatedLog } from '@/types';
 import { isTerminalStatus, isLowConfidence, getAnalysisMethodLabel } from '@/types';
 import { ConfidenceIndicator } from '@/components/voc/ConfidenceIndicator';
@@ -31,6 +31,7 @@ export default function VocDetailPage() {
   const changeStatusMutation = useChangeVocStatus();
   const addMemoMutation = useAddVocMemo();
   const updateVocMutation = useUpdateVoc();
+  const reanalyzeMutation = useReanalyzeVoc();
 
   const [newMemo, setNewMemo] = useState('');
   const [selectedMainCategory, setSelectedMainCategory] = useState<number | ''>('');
@@ -148,6 +149,24 @@ export default function VocDetailPage() {
     } catch (err) {
       console.error('Failed to complete:', err);
       alert('VOC 완료 처리 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleReanalyze = async () => {
+    if (!voc) return;
+    if (!confirm('AI 분석을 다시 수행하시겠습니까? 기존 분석 결과가 초기화됩니다.')) return;
+
+    try {
+      await reanalyzeMutation.mutateAsync(voc.id);
+      alert('재분석이 시작되었습니다. 잠시 후 결과가 업데이트됩니다.');
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { status?: number } };
+      if (axiosError.response?.status === 409) {
+        alert('이미 분석이 진행 중입니다.');
+      } else {
+        console.error('Failed to reanalyze:', err);
+        alert('재분석 요청 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -303,7 +322,7 @@ export default function VocDetailPage() {
 
       {/* 2. AI 분석 결과 */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
-        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
           <h2 className="text-lg font-bold flex items-center gap-2">
             <span className="material-icons-outlined text-primary">psychology</span>
             AI 분석 결과
@@ -314,6 +333,17 @@ export default function VocDetailPage() {
               </span>
             ) : null}
           </h2>
+          {(analysis?.status === 'COMPLETED' || analysis?.status === 'FAILED') && (
+            <button
+              type="button"
+              className="px-4 py-2 text-sm font-semibold border border-primary text-primary rounded hover:bg-primary/10 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleReanalyze}
+              disabled={reanalyzeMutation.isPending}
+            >
+              <span className="material-icons-outlined text-sm">refresh</span>
+              {reanalyzeMutation.isPending ? '요청 중...' : '재분석'}
+            </button>
+          )}
         </div>
         <div className="p-6 space-y-6">
           {!analysis ? (
