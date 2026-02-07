@@ -3,6 +3,7 @@ package com.geonho.vocautobot.adapter.in.web.voc;
 import com.geonho.vocautobot.adapter.in.security.SecurityUser;
 import com.geonho.vocautobot.adapter.in.web.voc.dto.*;
 import com.geonho.vocautobot.application.analysis.dto.VocAnalysisDto;
+import com.geonho.vocautobot.application.analysis.port.out.VectorSearchPort;
 import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisService;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.application.voc.port.in.dto.SimilarVocResult;
@@ -12,9 +13,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * VOC management REST controller
@@ -32,7 +36,6 @@ import java.util.List;
 @Tag(name = "VOC", description = "VOC 관리 API (인증 필요)")
 @RestController
 @RequestMapping("/v1/vocs")
-@RequiredArgsConstructor
 public class VocController {
 
     private static final Logger log = LoggerFactory.getLogger(VocController.class);
@@ -50,7 +53,34 @@ public class VocController {
     private final AddMemoUseCase addMemoUseCase;
     private final AsyncVocAnalysisService asyncVocAnalysisService;
     private final GetSimilarVocsUseCase getSimilarVocsUseCase;
-    private final com.geonho.vocautobot.application.voc.port.out.SimilarVocPort similarVocPort;
+    private final VectorSearchPort vectorSearchPort;
+    private final Executor vocIndexingExecutor;
+
+    public VocController(
+            CreateVocUseCase createVocUseCase,
+            UpdateVocUseCase updateVocUseCase,
+            GetVocListUseCase getVocListUseCase,
+            GetVocDetailUseCase getVocDetailUseCase,
+            ChangeVocStatusUseCase changeVocStatusUseCase,
+            AssignVocUseCase assignVocUseCase,
+            AddMemoUseCase addMemoUseCase,
+            AsyncVocAnalysisService asyncVocAnalysisService,
+            GetSimilarVocsUseCase getSimilarVocsUseCase,
+            VectorSearchPort vectorSearchPort,
+            @Qualifier("vocIndexingExecutor") Executor vocIndexingExecutor
+    ) {
+        this.createVocUseCase = createVocUseCase;
+        this.updateVocUseCase = updateVocUseCase;
+        this.getVocListUseCase = getVocListUseCase;
+        this.getVocDetailUseCase = getVocDetailUseCase;
+        this.changeVocStatusUseCase = changeVocStatusUseCase;
+        this.assignVocUseCase = assignVocUseCase;
+        this.addMemoUseCase = addMemoUseCase;
+        this.asyncVocAnalysisService = asyncVocAnalysisService;
+        this.getSimilarVocsUseCase = getSimilarVocsUseCase;
+        this.vectorSearchPort = vectorSearchPort;
+        this.vocIndexingExecutor = vocIndexingExecutor;
+    }
 
     @Operation(
             summary = "VOC 생성 (즉시 응답, 분석은 백그라운드)",
@@ -70,12 +100,14 @@ public class VocController {
         asyncVocAnalysisService.analyzeVocAsync(voc);
         log.info("Background analysis triggered for VOC: {}", voc.getTicketId());
 
-        // 4. 벡터 DB에 VOC 인덱싱 (비동기, 유사 VOC 검색용)
-        try {
-            similarVocPort.indexVoc(voc.getId(), voc.getTitle(), voc.getContent(), null);
-        } catch (Exception e) {
-            log.warn("Failed to index VOC for similarity search: {}", e.getMessage());
-        }
+        // 4. pgvector에 VOC 임베딩 저장 (비동기, 유사 VOC 검색용)
+        CompletableFuture.runAsync(() -> {
+            try {
+                vectorSearchPort.saveEmbedding(voc.getId(), voc.getTitle() + "\n" + voc.getContent());
+            } catch (Exception e) {
+                log.warn("Failed to save VOC embedding for similarity search: {}", e.getMessage());
+            }
+        }, vocIndexingExecutor);
 
         // 5. 즉시 응답 (분석 대기 중 상태)
         VocResponse response = VocResponse.from(voc);

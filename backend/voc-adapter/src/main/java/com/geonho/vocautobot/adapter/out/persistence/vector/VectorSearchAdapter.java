@@ -151,6 +151,7 @@ public class VectorSearchAdapter implements VectorSearchPort {
      * @param vocId VOC ID
      * @return 존재 여부
      */
+    @Override
     public boolean hasEmbedding(Long vocId) {
         return vectorEmbeddingRepository.findByVocId(vocId).isPresent();
     }

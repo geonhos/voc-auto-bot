@@ -7,7 +7,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router, initialize_services
-from app.api.voc_routes import voc_router, initialize_voc_embedding_service
 
 
 @asynccontextmanager
@@ -30,15 +29,6 @@ async def lifespan(app: FastAPI):
         ollama_base_url=ollama_base_url,
         embedding_model=embedding_model,
         llm_model=llm_model,
-    )
-
-    # Initialize VOC embedding service for similarity search
-    chroma_persist_dir = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
-    print(f"Initializing VOC embedding service (persist: {chroma_persist_dir})...")
-    initialize_voc_embedding_service(
-        ollama_base_url=ollama_base_url,
-        embedding_model=embedding_model,
-        persist_directory=chroma_persist_dir,
     )
 
     print("Services initialized successfully!")
@@ -68,7 +58,6 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(router)
-app.include_router(voc_router)
 
 
 @app.get("/")
