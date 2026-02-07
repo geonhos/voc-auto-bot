@@ -39,7 +39,7 @@ venv/
 .env
 .env.local
 
-# ChromaDB
+# Legacy ChromaDB (removed in #153)
 chroma_db/
 test_chroma_db/
 *.sqlite3

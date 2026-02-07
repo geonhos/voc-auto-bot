@@ -8,8 +8,10 @@ pydantic-settings>=2.1.0
 langchain>=0.1.0
 langchain-community>=0.0.16
 
-# Vector stores
-chromadb>=0.4.22
+# Vector stores (PostgreSQL pgvector)
+psycopg[binary]>=3.1.0
+psycopg-pool>=3.1.0
+pgvector>=0.3.0
 
 # Embeddings and LLM (Ollama)
 ollama>=0.1.6

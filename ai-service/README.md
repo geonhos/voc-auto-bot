@@ -4,7 +4,7 @@ Python + FastAPI 기반 VOC 로그 분석 서비스입니다. LangChain과 Ollam
 
 ## 주요 기능
 
-- **벡터 기반 유사도 검색**: ChromaDB를 사용한 로그 벡터화 및 유사도 검색
+- **벡터 기반 유사도 검색**: PostgreSQL(pgvector)를 사용한 로그 벡터화 및 유사도 검색
 - **RAG 패턴**: 유사 로그를 컨텍스트로 LLM에 전달하여 정확한 분석
 - **Ollama 통합**: 로컬 LLM 모델 사용 (프라이버시 보장)
 - **Mock 데이터**: 30개 시나리오의 다양한 로그 데이터 포함
@@ -15,7 +15,7 @@ Python + FastAPI 기반 VOC 로그 분석 서비스입니다. LangChain과 Ollam
 - **FastAPI**: REST API 서버
 - **LangChain**: RAG 파이프라인 구성
 - **Ollama**: 로컬 LLM 및 Embeddings
-- **ChromaDB**: Vector Store
+- **PostgreSQL + pgvector**: Vector Store
 - **Pydantic**: 데이터 검증
 
 ## 프로젝트 구조
@@ -29,12 +29,15 @@ ai-service/
 ├── README.md
 └── app/
     ├── __init__.py
+    ├── config/
+    │   ├── __init__.py
+    │   └── database.py    # PostgreSQL 커넥션 풀 설정
     ├── api/
     │   ├── __init__.py
     │   └── routes.py      # API 엔드포인트
     ├── services/
     │   ├── __init__.py
-    │   ├── embedding_service.py   # 벡터화 및 검색
+    │   ├── embedding_service.py   # 벡터화 및 검색 (pgvector)
     │   └── analysis_service.py    # RAG 분석
     ├── models/
     │   ├── __init__.py
@@ -284,12 +287,11 @@ ollama pull llama3.2:latest
 ollama pull nomic-embed-text
 ```
 
-### ChromaDB 초기화 오류
+### 벡터 스토어 초기화 오류
 
 ```bash
-# ChromaDB 디렉토리 삭제 후 재시작
-rm -rf chroma_db/
-python main.py
+# 벡터 스토어 리셋 API 호출
+curl -X POST http://localhost:8001/api/v1/seed/reset
 ```
 
 ## 성능 최적화
@@ -307,4 +309,4 @@ MIT License
 - [LangChain Documentation](https://python.langchain.com/)
 - [Ollama](https://ollama.ai/)
 - [FastAPI](https://fastapi.tiangolo.com/)
-- [ChromaDB](https://www.trychroma.com/)
+- [pgvector](https://github.com/pgvector/pgvector)

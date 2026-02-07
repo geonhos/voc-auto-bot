@@ -27,6 +27,7 @@ def initialize_services(
     ollama_base_url: str = "http://localhost:11434",
     embedding_model: str = "nomic-embed-text",
     llm_model: str = "gpt-oss:20b",
+    db_pool=None,
 ) -> None:
     """Initialize services and load seed data (idempotent).
 
@@ -37,12 +38,13 @@ def initialize_services(
         ollama_base_url: Ollama server base URL.
         embedding_model: Embedding model name.
         llm_model: LLM model name.
+        db_pool: psycopg ConnectionPool for PostgreSQL pgvector.
     """
     global embedding_service, analysis_service, data_seeder_service
 
     # Initialize embedding service
     embedding_service = EmbeddingService(
-        model_name=embedding_model, ollama_base_url=ollama_base_url
+        model_name=embedding_model, ollama_base_url=ollama_base_url, db_pool=db_pool
     )
 
     # Load all seed data (mock + expanded) and initialize vector store
@@ -177,7 +179,7 @@ async def seed_data(request: SeedRequest) -> SeedResponse:
 
 @router.post("/api/v1/seed/reset")
 async def reset_and_reseed() -> dict:
-    """Reset ChromaDB collections and re-seed from scratch.
+    """Reset vector store and re-seed from scratch.
 
     Deletes all existing vector data and re-initializes with seed files.
     Useful for first-time setup or fixing corrupted data.
