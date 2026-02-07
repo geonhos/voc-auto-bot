@@ -38,6 +38,22 @@ public interface VectorSearchPort {
     List<SimilarVocResult> searchByText(String text, int limit, double threshold);
 
     /**
+     * VOC의 임베딩이 존재하는지 확인
+     *
+     * @param vocId VOC ID
+     * @return 존재 여부
+     */
+    boolean hasEmbedding(Long vocId);
+
+    /**
+     * 임베딩이 존재하는 VOC ID 목록 조회 (배치)
+     *
+     * @param vocIds 확인할 VOC ID 목록
+     * @return 임베딩이 존재하는 VOC ID 집합
+     */
+    java.util.Set<Long> findVocIdsWithEmbeddings(java.util.Collection<Long> vocIds);
+
+    /**
      * VOC의 임베딩 삭제
      *
      * @param vocId VOC ID

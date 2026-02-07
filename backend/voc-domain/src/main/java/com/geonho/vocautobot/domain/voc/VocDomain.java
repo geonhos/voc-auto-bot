@@ -235,6 +235,14 @@ public class VocDomain implements Auditable {
         return id == null;
     }
 
+    /**
+     * Returns the text used for embedding vector generation.
+     * Single source of truth for embedding text construction.
+     */
+    public String getEmbeddingSourceText() {
+        return title + "\n" + content;
+    }
+
     private static void validateRequired(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + " is required");

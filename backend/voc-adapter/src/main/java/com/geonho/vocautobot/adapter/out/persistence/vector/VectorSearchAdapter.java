@@ -7,8 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -151,8 +150,18 @@ public class VectorSearchAdapter implements VectorSearchPort {
      * @param vocId VOC ID
      * @return 존재 여부
      */
+    @Override
     public boolean hasEmbedding(Long vocId) {
         return vectorEmbeddingRepository.findByVocId(vocId).isPresent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<Long> findVocIdsWithEmbeddings(Collection<Long> vocIds) {
+        if (vocIds == null || vocIds.isEmpty()) {
+            return Set.of();
+        }
+        return new HashSet<>(vectorEmbeddingRepository.findVocIdsByVocIdIn(vocIds));
     }
 
     /**
