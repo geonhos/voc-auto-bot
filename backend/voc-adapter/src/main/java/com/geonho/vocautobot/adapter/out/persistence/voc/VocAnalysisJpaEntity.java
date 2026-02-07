@@ -84,4 +84,16 @@ public class VocAnalysisJpaEntity {
         this.errorMessage = errorMessage;
         this.analyzedAt = LocalDateTime.now();
     }
+
+    public void resetAnalysis() {
+        this.status = VocAnalysis.AnalysisStatus.IN_PROGRESS;
+        this.summary = null;
+        this.confidence = null;
+        this.keywords = null;
+        this.possibleCauses = null;
+        this.relatedLogs = null;
+        this.recommendation = null;
+        this.errorMessage = null;
+        this.analyzedAt = null;
+    }
 }

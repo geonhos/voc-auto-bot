@@ -34,4 +34,9 @@ public interface VocAnalysisPersistencePort {
      * 분석 실패 저장
      */
     void failAnalysis(Long vocId, String errorMessage);
+
+    /**
+     * 분석 결과 초기화 (재분석용)
+     */
+    void resetAnalysis(Long vocId);
 }

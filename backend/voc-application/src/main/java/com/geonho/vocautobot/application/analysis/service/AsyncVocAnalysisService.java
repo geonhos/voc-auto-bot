@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.geonho.vocautobot.application.voc.port.in.GetVocDetailUseCase;
+
 import java.util.Optional;
 
 /**
@@ -27,6 +29,7 @@ public class AsyncVocAnalysisService {
 
     private final VocLogAnalysisService vocLogAnalysisService;
     private final VocAnalysisPersistencePort vocAnalysisPersistencePort;
+    private final GetVocDetailUseCase getVocDetailUseCase;
     private final ObjectMapper objectMapper;
 
     @Autowired(required = false)
@@ -45,6 +48,38 @@ public class AsyncVocAnalysisService {
      */
     public Optional<VocAnalysisDto> getAnalysis(Long vocId) {
         return vocAnalysisPersistencePort.findByVocId(vocId);
+    }
+
+    /**
+     * VOC 재분석 요청
+     * 기존 분석 결과를 초기화하고 다시 분석 수행
+     *
+     * @param vocId VOC ID
+     * @return true: 재분석 시작, false: 이미 분석 중 (409 충돌)
+     */
+    public boolean reanalyzeVoc(Long vocId) {
+        Optional<VocAnalysisDto> existingAnalysis = vocAnalysisPersistencePort.findByVocId(vocId);
+
+        if (existingAnalysis.isPresent()) {
+            String status = existingAnalysis.get().status();
+            if ("PENDING".equals(status) || "IN_PROGRESS".equals(status)) {
+                log.warn("VOC {} is already being analyzed (status: {})", vocId, status);
+                return false;
+            }
+        }
+
+        // 분석 결과 초기화 후 비동기 분석 재시작
+        try {
+            vocAnalysisPersistencePort.resetAnalysis(vocId);
+            VocDomain voc = getVocDetailUseCase.getVocById(vocId);
+            analyzeVocAsync(voc);
+            log.info("Reanalysis triggered for VOC ID: {}", vocId);
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to start reanalysis for VOC ID: {}", vocId, e);
+            vocAnalysisPersistencePort.failAnalysis(vocId, "재분석 요청 실패: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
