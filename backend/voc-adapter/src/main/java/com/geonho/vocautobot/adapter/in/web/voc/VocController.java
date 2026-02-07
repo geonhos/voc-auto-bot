@@ -5,6 +5,7 @@ import com.geonho.vocautobot.adapter.in.web.voc.dto.*;
 import com.geonho.vocautobot.application.analysis.dto.VocAnalysisDto;
 import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisService;
 import com.geonho.vocautobot.application.voc.port.in.*;
+import com.geonho.vocautobot.application.voc.port.in.dto.SimilarVocResult;
 import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.adapter.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,6 +49,8 @@ public class VocController {
     private final AssignVocUseCase assignVocUseCase;
     private final AddMemoUseCase addMemoUseCase;
     private final AsyncVocAnalysisService asyncVocAnalysisService;
+    private final GetSimilarVocsUseCase getSimilarVocsUseCase;
+    private final com.geonho.vocautobot.application.voc.port.out.SimilarVocPort similarVocPort;
 
     @Operation(
             summary = "VOC 생성 (즉시 응답, 분석은 백그라운드)",
@@ -67,7 +70,14 @@ public class VocController {
         asyncVocAnalysisService.analyzeVocAsync(voc);
         log.info("Background analysis triggered for VOC: {}", voc.getTicketId());
 
-        // 4. 즉시 응답 (분석 대기 중 상태)
+        // 4. 벡터 DB에 VOC 인덱싱 (비동기, 유사 VOC 검색용)
+        try {
+            similarVocPort.indexVoc(voc.getId(), voc.getTitle(), voc.getContent(), null);
+        } catch (Exception e) {
+            log.warn("Failed to index VOC for similarity search: {}", e.getMessage());
+        }
+
+        // 5. 즉시 응답 (분석 대기 중 상태)
         VocResponse response = VocResponse.from(voc);
         return ApiResponse.success(response);
     }
@@ -246,13 +256,18 @@ public class VocController {
 
     @Operation(
             summary = "유사 VOC 조회",
-            description = "현재 VOC와 유사한 VOC 목록을 조회합니다 (향후 구현 예정)"
+            description = "현재 VOC와 유사한 VOC 목록을 AI 벡터 검색으로 조회합니다"
     )
     @GetMapping("/{id}/similar")
-    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
-    public ApiResponse<List<VocResponse>> getSimilarVocs(@PathVariable Long id) {
-        // Feature: Similar VOC search using AI/ML service (planned for future sprint)
-        return ApiResponse.error(HttpStatus.NOT_IMPLEMENTED, "이 기능은 아직 구현되지 않았습니다.");
+    public ApiResponse<List<SimilarVocResponse>> getSimilarVocs(
+            @PathVariable Long id,
+            @Parameter(description = "최대 결과 수 (1~50)") @RequestParam(defaultValue = "5") @jakarta.validation.constraints.Max(50) @jakarta.validation.constraints.Min(1) int limit
+    ) {
+        List<SimilarVocResult> results = getSimilarVocsUseCase.getSimilarVocs(id, limit);
+        List<SimilarVocResponse> response = results.stream()
+                .map(SimilarVocResponse::from)
+                .toList();
+        return ApiResponse.success(response);
     }
 
     @Operation(

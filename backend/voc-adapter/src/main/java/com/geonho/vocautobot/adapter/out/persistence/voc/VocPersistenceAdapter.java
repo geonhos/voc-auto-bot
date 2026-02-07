@@ -13,6 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -63,6 +64,14 @@ public class VocPersistenceAdapter implements LoadVocPort, SaveVocPort {
 
         return vocJpaRepository.findAll(spec, pageable)
                 .map(vocMapper::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VocDomain> loadVocsByIds(List<Long> ids) {
+        return vocJpaRepository.findAllById(ids).stream()
+                .map(vocMapper::toDomain)
+                .toList();
     }
 
     @Override
