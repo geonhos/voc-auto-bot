@@ -183,9 +183,16 @@ gen/
 # Claude Code
 # =========================
 .claude/
+.mcp.json
 
 # =========================
 # Temporary Plans & Reviews
 # =========================
 plans/
 reviews/
+
+# =========================
+# Figma Plugin
+# =========================
+figma-plugin/node_modules/
+figma-plugin/dist/

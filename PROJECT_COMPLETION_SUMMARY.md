@@ -144,6 +144,24 @@ VOC(Voice of Customer) 자동화 봇 시스템의 Backend(Spring Boot)와 Fronte
 
 ---
 
+## 추가 완료 (Post-Launch)
+
+### ChromaDB → pgvector 마이그레이션
+| 항목 | 설명 | 상태 |
+|------|------|------|
+| Backend | 유사 VOC 검색 pgvector 전환 | ✅ (commit 170aed8) |
+| AI Service | 로그 임베딩 pgvector 전환 | ✅ (PR #154) |
+
+### Figma Plugin — Design Generator
+| 항목 | 설명 | 상태 |
+|------|------|------|
+| 디자인 시스템 | Color Palette, Typography, Components | ✅ |
+| 화면 와이어프레임 | 10개 화면 자동 생성 | ✅ |
+| Flow Diagram | 유저 플로우 배치 + 화살표 커넥터 | ✅ |
+| 기능 메모 | AI/기능/UX/API/기술 태그 주석 | ✅ |
+
+---
+
 ## 다음 단계
 
 1. **통합 테스트**: E2E 테스트 작성
@@ -154,28 +172,5 @@ VOC(Voice of Customer) 자동화 봇 시스템의 Backend(Spring Boot)와 Fronte
 
 ---
 
-## 프로젝트 구조
-
-```
-voc-auto-bot/
-├── backend/
-│   ├── voc-domain/          # 도메인 레이어
-│   ├── voc-application/     # 애플리케이션 레이어
-│   ├── voc-adapter/         # 어댑터 레이어
-│   └── voc-bootstrap/       # 부트스트랩 모듈
-├── frontend/
-│   ├── src/
-│   │   ├── app/             # Next.js App Router
-│   │   ├── components/      # UI 컴포넌트
-│   │   ├── hooks/           # 커스텀 훅 (ViewModel)
-│   │   ├── lib/             # 유틸리티
-│   │   └── types/           # TypeScript 타입
-│   └── ...
-├── docker/                   # Docker 설정
-├── docs/                     # 문서
-└── reviews/                  # PR 리뷰
-```
-
----
-
 **프로젝트 완료일**: 2026-01-25
+**최종 업데이트**: 2026-02-07 (Figma Plugin, pgvector 마이그레이션)

@@ -1,0 +1,184 @@
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px;
+    color: #1c1917;
+    padding: 16px;
+    background: #ffffff;
+  }
+  h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #556780;
+  }
+  .section {
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #78716c;
+    margin-bottom: 8px;
+  }
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    cursor: pointer;
+  }
+  label:hover { background: #f5f5f4; border-radius: 4px; padding-left: 4px; }
+  input[type="checkbox"], input[type="radio"] {
+    width: 14px;
+    height: 14px;
+    accent-color: #556780;
+  }
+  .layout-desc {
+    font-size: 11px;
+    color: #a8a29e;
+    margin-left: 22px;
+    margin-top: -2px;
+    margin-bottom: 4px;
+  }
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  button {
+    flex: 1;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+  }
+  .btn-primary {
+    background: #556780;
+    color: white;
+  }
+  .btn-primary:hover { background: #2d3745; }
+  .btn-secondary {
+    background: #f5f5f4;
+    color: #1c1917;
+    border: 1px solid #e7e5e4;
+  }
+  .btn-secondary:hover { background: #e7e5e4; }
+  .select-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .select-actions a {
+    font-size: 11px;
+    color: #556780;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .status {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #78716c;
+    display: none;
+  }
+  .status.visible { display: block; }
+</style>
+
+<h2>VOC Auto Bot Design Generator</h2>
+
+<div class="section">
+  <div class="section-title">Layout</div>
+  <label><input type="radio" name="layout" value="row" checked> Row (horizontal)</label>
+  <div class="layout-desc">프레임을 한 줄로 나란히 배치</div>
+  <label><input type="radio" name="layout" value="flow"> Flow Diagram</label>
+  <div class="layout-desc">유저 플로우에 따라 배치 + 화살표 + 설명</div>
+</div>
+
+<div class="section">
+  <div class="section-title">Design System</div>
+  <label><input type="checkbox" id="ds-colors" checked> Color Palette & PaintStyles</label>
+  <label><input type="checkbox" id="ds-typography" checked> Typography Scale & TextStyles</label>
+  <label><input type="checkbox" id="ds-components" checked> Component Library</label>
+</div>
+
+<div class="section">
+  <div class="section-title">Options</div>
+  <label><input type="checkbox" id="opt-annotations" checked> 기능 메모 (AI/기능/UX/API 주석)</label>
+</div>
+
+<div class="section">
+  <div class="section-title">Screens</div>
+  <div class="select-actions">
+    <a id="select-all">Select All</a>
+    <a id="select-none">Select None</a>
+  </div>
+  <label><input type="checkbox" class="screen-cb" value="login" checked> Login</label>
+  <label><input type="checkbox" class="screen-cb" value="dashboard" checked> Dashboard</label>
+  <label><input type="checkbox" class="screen-cb" value="voc-input" checked> VOC Input</label>
+  <label><input type="checkbox" class="screen-cb" value="voc-list" checked> VOC List (Table)</label>
+  <label><input type="checkbox" class="screen-cb" value="voc-kanban" checked> VOC Kanban</label>
+  <label><input type="checkbox" class="screen-cb" value="voc-detail" checked> VOC Detail</label>
+  <label><input type="checkbox" class="screen-cb" value="email-compose" checked> Email Compose</label>
+  <label><input type="checkbox" class="screen-cb" value="admin-users" checked> Admin Users</label>
+  <label><input type="checkbox" class="screen-cb" value="admin-categories" checked> Admin Categories</label>
+  <label><input type="checkbox" class="screen-cb" value="public-status" checked> Public Status</label>
+</div>
+
+<div class="actions">
+  <button class="btn-primary" id="generate">Generate</button>
+  <button class="btn-secondary" id="cancel">Cancel</button>
+</div>
+
+<div class="status" id="status">Generating...</div>
+
+<script>
+  const screenCheckboxes = document.querySelectorAll('.screen-cb');
+
+  document.getElementById('select-all').onclick = () => {
+    screenCheckboxes.forEach(cb => cb.checked = true);
+  };
+  document.getElementById('select-none').onclick = () => {
+    screenCheckboxes.forEach(cb => cb.checked = false);
+  };
+
+  document.getElementById('generate').onclick = () => {
+    const selections = {
+      layout: document.querySelector('input[name="layout"]:checked').value,
+      designSystem: {
+        colors: document.getElementById('ds-colors').checked,
+        typography: document.getElementById('ds-typography').checked,
+        components: document.getElementById('ds-components').checked,
+      },
+      annotations: document.getElementById('opt-annotations').checked,
+      screens: Array.from(screenCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value),
+    };
+
+    document.getElementById('status').classList.add('visible');
+    document.getElementById('status').textContent = 'Generating...';
+    document.getElementById('generate').disabled = true;
+
+    parent.postMessage({ pluginMessage: { type: 'generate', selections } }, '*');
+  };
+
+  document.getElementById('cancel').onclick = () => {
+    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
+  };
+
+  window.onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+    if (msg?.type === 'progress') {
+      document.getElementById('status').textContent = msg.message;
+    }
+    if (msg?.type === 'done') {
+      document.getElementById('status').textContent = msg.message || 'Done!';
+      document.getElementById('generate').disabled = false;
+    }
+  };
+</script>

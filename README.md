@@ -89,10 +89,17 @@
 ### Backend
 | 구분 | 기술 | 설명 |
 |------|------|------|
-| API Server | Java 17+ / Spring Boot 3.x | 메인 API 서버, 인증, 비즈니스 로직, AI 기능 통합 |
+| API Server | Java 21 / Spring Boot 3.x | 메인 API 서버, 인증, 비즈니스 로직, AI 기능 통합 |
 | Security | Spring Security + JWT | 인증/인가 처리 |
 | LLM | Ollama (nomic-embed-text) | 로컬 LLM 서버, 임베딩 생성 |
 | Vector Search | pgvector | 코사인 유사도 기반 유사 VOC 검색 |
+
+### AI Service
+| 구분 | 기술 | 설명 |
+|------|------|------|
+| Framework | Python 3.11 / FastAPI | 로그 분석 전용 서비스 |
+| Embedding | OpenAI / LangChain | 텍스트 임베딩 생성 |
+| Vector Store | PostgreSQL + pgvector | 로그 임베딩 저장 및 유사도 검색 |
 
 ### Frontend
 | 구분 | 기술 | 설명 |
@@ -132,14 +139,68 @@ voc-auto-bot/
 │   │   ├── hooks/                    # React Hooks (useSimilarVocs 등)
 │   │   └── ...
 │   └── e2e/                          # Playwright E2E 테스트
-├── infra/                            # 인프라 설정
-├── docs/                             # 프로젝트 문서
-└── docker-compose.yml                # Docker 개발 환경
+├── ai-service/                      # FastAPI AI 분석 서비스
+│   ├── app/
+│   │   ├── embedding_service.py     # 로그 임베딩 (pgvector)
+│   │   └── ...
+│   └── requirements.txt
+├── figma-plugin/                    # Figma 디자인 생성 플러그인
+│   ├── src/                         # TypeScript 소스
+│   └── dist/                        # 빌드 산출물
+├── infra/                           # 인프라 설정
+├── docs/                            # 프로젝트 문서
+│   ├── screens/                     # 화면별 기능 명세 (SC-01~11)
+│   ├── api/openapi.yaml             # OpenAPI 스펙
+│   ├── REQUIREMENTS.md              # 요구사항 정의서
+│   └── testing/                     # 테스트 문서
+└── docker-compose.yml               # Docker 개발 환경
+```
+
+## AI Service (FastAPI)
+
+VOC 로그 분석을 위한 독립 서비스. Backend에서 HTTP로 호출.
+
+| 기능 | 설명 |
+|------|------|
+| 로그 임베딩 | OpenAI Embedding → pgvector 저장 |
+| 로그 분석 | LLM 기반 로그 원인 분석 |
+| 유사 로그 검색 | pgvector 코사인 유사도 검색 |
+
+## Figma Plugin — Design Generator
+
+프론트엔드 디자인 토큰(`tailwind.config.ts`, `globals.css`)을 기반으로 Figma에서 디자인 에셋을 자동 생성하는 플러그인.
+
+### 생성 가능 항목
+- **Design System**: Color Palette (PaintStyles), Typography Scale (TextStyles), Component Library
+- **화면 와이어프레임** (10개): Login, Dashboard, VOC Input/List/Kanban/Detail, Email Compose, Admin Users/Categories, Public Status
+- **레이아웃 모드**: Row (수평 나열) / Flow Diagram (유저 플로우 + 화살표)
+- **기능 메모**: 화면별 AI/기능/UX/API/기술 주석 패널
+
+### 빌드 & 사용
+```bash
+cd figma-plugin
+npm install
+npm run build          # dist/code.js 생성
+# Figma > Plugins > Development > Import plugin from manifest
 ```
 
 ## 시작하기
 
-(추후 업데이트 예정)
+### 개발 환경
+```bash
+# 인프라 (PostgreSQL, Redis, OpenSearch, Ollama)
+docker compose up -d
+
+# Backend
+cd backend && ./gradlew bootRun
+
+# Frontend
+cd frontend && npm install && npm run dev
+
+# AI Service
+cd ai-service && python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt && uvicorn app.main:app --reload
+```
 
 ## 라이선스
 
