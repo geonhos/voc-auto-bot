@@ -1,12 +1,11 @@
 """Pytest configuration and fixtures for VOC AI Service tests."""
 
+import os
 import pytest
-from typing import Generator
 from pathlib import Path
 import json
 
 from app.models.schemas import LogDocument
-from app.services.embedding_service import EmbeddingService
 
 
 @pytest.fixture
@@ -32,6 +31,40 @@ def log_documents(mock_logs_data: list[dict]) -> list[LogDocument]:
         List of LogDocument objects.
     """
     return [LogDocument(**log) for log in mock_logs_data]
+
+
+@pytest.fixture
+def db_pool():
+    """Create a database connection pool for integration tests.
+
+    Requires TEST_DATABASE_URL or DATABASE_URL environment variable.
+    Truncates log_embeddings table before and after tests.
+    """
+    from app.config.database import init_pool, close_pool, ensure_log_embeddings_table, get_pool
+
+    database_url = os.getenv(
+        "TEST_DATABASE_URL",
+        os.getenv("DATABASE_URL", "postgresql://voc_user:voc_password@localhost:5432/vocautobot"),
+    )
+
+    pool = init_pool(database_url)
+    ensure_log_embeddings_table()
+
+    # Truncate before test
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("TRUNCATE log_embeddings RESTART IDENTITY")
+        conn.commit()
+
+    yield pool
+
+    # Truncate after test
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("TRUNCATE log_embeddings RESTART IDENTITY")
+        conn.commit()
+
+    close_pool()
 
 
 @pytest.fixture

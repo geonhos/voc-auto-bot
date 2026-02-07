@@ -2,13 +2,14 @@
 
 import pytest
 from pathlib import Path
+from unittest.mock import Mock, patch, MagicMock
 
 from app.models.schemas import LogDocument
 from app.services.embedding_service import EmbeddingService
 
 
 class TestEmbeddingService:
-    """Tests for EmbeddingService."""
+    """Unit tests for EmbeddingService (no external dependencies)."""
 
     def test_load_mock_logs(self):
         """Test loading mock logs from JSON."""
@@ -31,7 +32,7 @@ class TestEmbeddingService:
 
         logs = service.load_mock_logs(str(mock_logs_path))
 
-        assert len(logs) >= 30  # We have 30 mock logs
+        assert len(logs) >= 30
 
     def test_is_initialized_false_by_default(self):
         """Test that vector store is not initialized by default."""
@@ -39,24 +40,18 @@ class TestEmbeddingService:
 
         assert service.is_initialized() is False
 
-    def test_is_initialized_true_after_init(self, log_documents):
-        """Test that vector store is initialized after initialization."""
+    def test_get_collection_count_no_pool(self):
+        """Test that collection count returns 0 without pool."""
         service = EmbeddingService()
 
-        # Mock initialization without actual Ollama call
-        # This would require actual Ollama running, so we skip in unit tests
-        pytest.skip(
-            "Requires Ollama server running. Use integration tests instead."
-        )
+        assert service.get_collection_count() == 0
 
-    def test_reset_vectorstore(self):
-        """Test resetting vector store."""
+    def test_reset_vectorstore_no_pool_raises(self):
+        """Test that reset without pool raises error."""
         service = EmbeddingService()
 
-        service.reset_vectorstore()
-
-        assert service.is_initialized() is False
-        assert service.vectorstore is None
+        with pytest.raises(RuntimeError, match="Database pool not provided"):
+            service.reset_vectorstore()
 
     def test_search_similar_logs_not_initialized_raises_error(self):
         """Test that searching without initialization raises error."""
@@ -65,17 +60,25 @@ class TestEmbeddingService:
         with pytest.raises(RuntimeError, match="Vector store not initialized"):
             service.search_similar_logs("결제 오류")
 
+    def test_add_logs_no_pool_raises(self):
+        """Test that adding logs without pool raises error."""
+        service = EmbeddingService()
+
+        with pytest.raises(RuntimeError, match="Database pool not provided"):
+            service.add_logs([])
+
 
 @pytest.mark.integration
 class TestEmbeddingServiceIntegration:
-    """Integration tests for EmbeddingService (requires Ollama)."""
+    """Integration tests for EmbeddingService (requires Ollama + PostgreSQL)."""
 
     @pytest.fixture
-    def embedding_service(self, log_documents):
+    def embedding_service(self, log_documents, db_pool):
         """Create and initialize embedding service.
 
         Args:
             log_documents: List of log documents.
+            db_pool: PostgreSQL connection pool.
 
         Returns:
             Initialized EmbeddingService.
@@ -83,23 +86,20 @@ class TestEmbeddingServiceIntegration:
         service = EmbeddingService(
             model_name="nomic-embed-text",
             ollama_base_url="http://localhost:11434",
-            persist_directory="./test_chroma_db",
+            db_pool=db_pool,
         )
 
         try:
             service.initialize_vectorstore(log_documents)
         except Exception as e:
-            pytest.skip(f"Ollama not available: {e}")
+            pytest.skip(f"Ollama or PostgreSQL not available: {e}")
 
         yield service
-
-        # Cleanup
-        service.reset_vectorstore()
 
     def test_initialize_vectorstore(self, embedding_service):
         """Test vector store initialization."""
         assert embedding_service.is_initialized() is True
-        assert embedding_service.vectorstore is not None
+        assert embedding_service.get_collection_count() > 0
 
     def test_search_similar_logs_payment(
         self, embedding_service, sample_voc_payment
@@ -114,7 +114,6 @@ class TestEmbeddingServiceIntegration:
         assert all(isinstance(log, LogDocument) for log, _ in results)
         assert all(isinstance(score, float) for _, score in results)
 
-        # Results should contain semantically relevant logs (payment, timeout, error related)
         all_text = " ".join([
             f"{log.message} {log.serviceName} {log.category}".lower()
             for log, _ in results
@@ -129,7 +128,6 @@ class TestEmbeddingServiceIntegration:
         results = embedding_service.search_similar_logs(query, k=5)
 
         assert len(results) > 0
-        # Verify results are LogDocument instances with valid scores
         assert all(isinstance(log, LogDocument) for log, _ in results)
         assert all(isinstance(score, float) for _, score in results)
 
@@ -143,7 +141,6 @@ class TestEmbeddingServiceIntegration:
 
         assert len(results) > 0
         assert len(results) <= 3
-        # Verify results are LogDocument instances with valid scores
         assert all(isinstance(log, LogDocument) for log, _ in results)
         assert all(isinstance(score, float) for _, score in results)
 
@@ -155,7 +152,7 @@ class TestEmbeddingServiceIntegration:
 
         scores = [score for _, score in results]
 
-        # Scores should be in descending order
+        # Scores should be in descending order (highest similarity first)
         assert scores == sorted(scores, reverse=True)
 
     def test_search_with_different_k_values(self, embedding_service):
@@ -168,3 +165,10 @@ class TestEmbeddingServiceIntegration:
         assert len(results_3) <= 3
         assert len(results_5) <= 5
         assert len(results_5) >= len(results_3)
+
+    def test_scores_in_valid_range(self, embedding_service):
+        """Test that similarity scores are in [0, 1] range."""
+        results = embedding_service.search_similar_logs("결제 오류", k=5)
+
+        for _, score in results:
+            assert 0.0 <= score <= 1.0, f"Score {score} out of [0, 1] range"

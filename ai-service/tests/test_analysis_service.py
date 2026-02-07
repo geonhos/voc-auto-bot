@@ -232,14 +232,15 @@ class TestAnalysisService:
 
 @pytest.mark.integration
 class TestAnalysisServiceIntegration:
-    """Integration tests for AnalysisService (requires Ollama)."""
+    """Integration tests for AnalysisService (requires Ollama + PostgreSQL)."""
 
     @pytest.fixture
-    def embedding_service(self, log_documents):
+    def embedding_service(self, log_documents, db_pool):
         """Create and initialize embedding service.
 
         Args:
             log_documents: List of log documents.
+            db_pool: PostgreSQL connection pool.
 
         Returns:
             Initialized EmbeddingService.
@@ -247,13 +248,13 @@ class TestAnalysisServiceIntegration:
         service = EmbeddingService(
             model_name="nomic-embed-text",
             ollama_base_url="http://localhost:11434",
-            persist_directory="./test_chroma_db",
+            db_pool=db_pool,
         )
 
         try:
             service.initialize_vectorstore(log_documents)
         except Exception as e:
-            pytest.skip(f"Ollama not available: {e}")
+            pytest.skip(f"Ollama or PostgreSQL not available: {e}")
 
         return service
 
@@ -292,7 +293,6 @@ class TestAnalysisServiceIntegration:
         assert len(response.relatedLogs) > 0
         assert response.recommendation != ""
 
-        # Should mention relevant keywords (case-insensitive)
         keywords_lower = [k.lower() for k in response.keywords]
         all_text = " ".join(keywords_lower + [response.summary.lower()])
         assert any(
@@ -310,7 +310,6 @@ class TestAnalysisServiceIntegration:
         assert response.confidence > 0.0
         assert len(response.relatedLogs) > 0
 
-        # Should mention relevant keywords (case-insensitive)
         keywords_lower = [k.lower() for k in response.keywords]
         all_text = " ".join(keywords_lower + [response.summary.lower()])
         assert any(
@@ -330,7 +329,6 @@ class TestAnalysisServiceIntegration:
         assert response.confidence > 0.0
         assert len(response.relatedLogs) > 0
 
-        # Should mention relevant keywords (case-insensitive)
         keywords_lower = [k.lower() for k in response.keywords]
         all_text = " ".join(keywords_lower + [response.summary.lower()])
         assert any(
@@ -346,7 +344,6 @@ class TestAnalysisServiceIntegration:
 
         response = analysis_service.analyze_voc(request)
 
-        # Validate response structure
         assert hasattr(response, "summary")
         assert hasattr(response, "confidence")
         assert hasattr(response, "keywords")
@@ -354,7 +351,6 @@ class TestAnalysisServiceIntegration:
         assert hasattr(response, "relatedLogs")
         assert hasattr(response, "recommendation")
 
-        # Validate types
         assert isinstance(response.summary, str)
         assert isinstance(response.confidence, float)
         assert isinstance(response.keywords, list)
@@ -362,9 +358,7 @@ class TestAnalysisServiceIntegration:
         assert isinstance(response.relatedLogs, list)
         assert isinstance(response.recommendation, str)
 
-        # Validate confidence bounds
         assert 0.0 <= response.confidence <= 1.0
 
-        # Validate related logs have relevance scores
         for log in response.relatedLogs:
             assert 0.0 <= log.relevanceScore <= 1.0

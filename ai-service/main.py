@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router, initialize_services
+from app.config.database import init_pool, close_pool, ensure_log_embeddings_table, get_pool
 
 
 @asynccontextmanager
@@ -16,6 +17,15 @@ async def lifespan(app: FastAPI):
     Args:
         app: FastAPI application instance.
     """
+    # Startup: Initialize database pool
+    database_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql://voc_user:voc_password@localhost:5432/vocautobot",
+    )
+    print(f"Initializing database pool: {database_url.split('@')[-1]}")
+    init_pool(database_url)
+    ensure_log_embeddings_table()
+
     # Startup: Initialize services
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
@@ -29,14 +39,16 @@ async def lifespan(app: FastAPI):
         ollama_base_url=ollama_base_url,
         embedding_model=embedding_model,
         llm_model=llm_model,
+        db_pool=get_pool(),
     )
 
     print("Services initialized successfully!")
 
     yield
 
-    # Shutdown: Cleanup if needed
+    # Shutdown: Close database pool
     print("Shutting down services...")
+    close_pool()
 
 
 # Create FastAPI app

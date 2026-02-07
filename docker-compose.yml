@@ -56,11 +56,13 @@ services:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
       LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-voc_user}:${POSTGRES_PASSWORD:-voc_password}@postgres:5432/${POSTGRES_DB:-vocautobot}
       PORT: 8001
     ports:
       - "8001:8001"
-    volumes:
-      - ai_service_chroma:/app/chroma_db
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - voc-network
     profiles:
@@ -185,8 +187,6 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
-  ai_service_chroma:
-
 networks:
   voc-network:
     driver: bridge
