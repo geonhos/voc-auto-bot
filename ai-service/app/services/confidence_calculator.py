@@ -141,21 +141,15 @@ class ConfidenceCalculator:
     def _normalize_similarity(self, avg_similarity: float) -> float:
         """Normalize similarity score to 0-1 range.
 
+        With cosine distance metric, scores are already in [0, 1].
+
         Args:
             avg_similarity: Average similarity score.
 
         Returns:
             Normalized score.
         """
-        # Handle different scoring systems
-        if avg_similarity < 0:
-            # ChromaDB can return negative scores; normalize
-            return max(0.0, min(1.0, (avg_similarity + 300) / 600))
-        elif avg_similarity > 1.0:
-            # Some systems return percentage-like scores
-            return min(1.0, avg_similarity / 100)
-        else:
-            return max(0.0, min(1.0, avg_similarity))
+        return max(0.0, min(1.0, avg_similarity))
 
     def _calculate_response_completeness(
         self, response_fields: Optional[Dict[str, Any]]

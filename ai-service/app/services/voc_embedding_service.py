@@ -9,6 +9,8 @@ from langchain_core.documents import Document
 
 logger = logging.getLogger(__name__)
 
+COSINE_METADATA = {"hnsw:space": "cosine"}
+
 
 class VocEmbeddingService:
     """Service for embedding VOCs and performing similarity search.
@@ -49,6 +51,7 @@ class VocEmbeddingService:
                 collection_name=self.VOC_COLLECTION_NAME,
                 embedding_function=self.embeddings,
                 persist_directory=self.persist_directory,
+                collection_metadata=COSINE_METADATA,
             )
             self._initialized = True
             logger.info(

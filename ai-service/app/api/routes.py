@@ -28,7 +28,10 @@ def initialize_services(
     embedding_model: str = "nomic-embed-text",
     llm_model: str = "gpt-oss:20b",
 ) -> None:
-    """Initialize services and load mock data.
+    """Initialize services and load seed data (idempotent).
+
+    On first run, seeds both mock_logs and seed_logs_expanded.
+    On subsequent runs, reuses existing collection data.
 
     Args:
         ollama_base_url: Ollama server base URL.
@@ -42,9 +45,22 @@ def initialize_services(
         model_name=embedding_model, ollama_base_url=ollama_base_url
     )
 
-    # Load mock logs and initialize vector store
-    logs = embedding_service.load_mock_logs()
-    embedding_service.initialize_vectorstore(logs)
+    # Load all seed data (mock + expanded) and initialize vector store
+    mock_logs = embedding_service.load_mock_logs()
+    expanded_logs = embedding_service.load_mock_logs(
+        mock_logs_path="app/data/seed_logs_expanded.json"
+    )
+
+    # Deduplicate by ID
+    seen_ids = set()
+    all_logs = []
+    for log in mock_logs + expanded_logs:
+        if log.id not in seen_ids:
+            seen_ids.add(log.id)
+            all_logs.append(log)
+
+    # Initialize vector store (idempotent - skips if data exists)
+    embedding_service.initialize_vectorstore(all_logs)
 
     # Initialize analysis service
     analysis_service = AnalysisService(
@@ -157,6 +173,47 @@ async def seed_data(request: SeedRequest) -> SeedResponse:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Seeding failed: {str(e)}")
+
+
+@router.post("/api/v1/seed/reset")
+async def reset_and_reseed() -> dict:
+    """Reset ChromaDB collections and re-seed from scratch.
+
+    Deletes all existing vector data and re-initializes with seed files.
+    Useful for first-time setup or fixing corrupted data.
+
+    Returns:
+        Status and document count after re-seeding.
+    """
+    if embedding_service is None:
+        raise HTTPException(status_code=503, detail="Service not initialized.")
+
+    try:
+        # 1. Reset (delete all collections)
+        embedding_service.reset_vectorstore()
+
+        # 2. Re-seed with all data
+        mock_logs = embedding_service.load_mock_logs()
+        expanded_logs = embedding_service.load_mock_logs(
+            mock_logs_path="app/data/seed_logs_expanded.json"
+        )
+
+        seen_ids = set()
+        all_logs = []
+        for log in mock_logs + expanded_logs:
+            if log.id not in seen_ids:
+                seen_ids.add(log.id)
+                all_logs.append(log)
+
+        embedding_service.initialize_vectorstore(all_logs)
+
+        return {
+            "status": "success",
+            "message": f"Reset and re-seeded {len(all_logs)} unique documents",
+            "collection_count": embedding_service.get_collection_count(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
 
 
 @router.get("/api/v1/seed/status", response_model=dict)

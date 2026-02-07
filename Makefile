@@ -1,4 +1,4 @@
-.PHONY: help up down up-infra down-infra build logs ps clean
+.PHONY: help up down up-infra down-infra build logs ps clean seed seed-reset seed-status seed-vocs setup
 
 COMPOSE = docker compose
 
@@ -45,6 +45,36 @@ logs-backend: ## Tail backend logs
 
 logs-ai: ## Tail AI service logs
 	$(COMPOSE) logs -f --tail=100 ai-service
+
+# ── Seed (Vector DB) ──
+
+seed-reset: ## Reset ChromaDB and re-seed from scratch (first-time setup)
+	@echo "Resetting ChromaDB and re-seeding..."
+	@curl -s -X POST http://localhost:8001/api/v1/seed/reset | python3 -m json.tool
+
+seed: ## Add expanded seed data to ChromaDB
+	@curl -s -X POST http://localhost:8001/api/v1/seed \
+		-H 'Content-Type: application/json' \
+		-d '{"source": "expanded"}' | python3 -m json.tool
+
+seed-status: ## Check ChromaDB seeding status
+	@curl -s http://localhost:8001/api/v1/seed/status | python3 -m json.tool
+
+seed-vocs: ## Index existing VOCs from DB into ChromaDB
+	@echo "Indexing existing VOCs..."
+	@docker exec voc-postgres psql -U $${POSTGRES_USER:-voc_user} -d $${POSTGRES_DB:-vocautobot} -t -c \
+		"SELECT json_agg(json_build_object('id',id,'title',title,'content',content)) FROM vocs" \
+		| python3 -c "\
+	import sys,json,subprocess; \
+	data=json.loads(sys.stdin.read().strip()); \
+	[print(f'VOC {v[\"id\"]}: '+json.loads(subprocess.run(['curl','-s','-X','POST','http://localhost:8001/api/v1/voc/index','-H','Content-Type: application/json','-d',json.dumps({'voc_id':v['id'],'title':v['title'],'content':v['content']})],capture_output=True,text=True).stdout).get('status','error')) for v in data]"
+
+setup: up ## Full setup: start services + seed ChromaDB + index VOCs
+	@echo "Waiting for services to start..."
+	@sleep 10
+	@$(MAKE) seed-reset
+	@$(MAKE) seed-vocs
+	@echo "Setup complete!"
 
 # ── Utils ──
 

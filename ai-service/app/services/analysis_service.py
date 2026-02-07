@@ -471,18 +471,15 @@ Important:
     def _normalize_score(self, score: float) -> float:
         """Normalize relevance score to 0-1 range.
 
+        With cosine distance metric, scores are already in [0, 1].
+
         Args:
-            score: Raw relevance score from vector store.
+            score: Relevance score from vector store.
 
         Returns:
             Normalized score in [0, 1] range.
         """
-        # If score is already in [0, 1] range, keep it
-        if 0.0 <= score <= 1.0:
-            return score
-        # ChromaDB can return negative scores; normalize from [-300, 300] to [0, 1]
-        normalized = (score + 300) / 600
-        return max(0.0, min(1.0, normalized))
+        return max(0.0, min(1.0, score))
 
     def _create_empty_response(self, reason: str) -> AnalysisResponse:
         """Create empty response when analysis cannot be performed.
