@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 
 import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
+import { useToast } from '@/hooks/useToast';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc, useReanalyzeVoc } from '@/hooks/useVocs';
 import type { VocStatus, VocMemo, RelatedLog } from '@/types';
 import { isTerminalStatus, isLowConfidence, getAnalysisMethodLabel } from '@/types';
@@ -32,6 +33,7 @@ export default function VocDetailPage() {
   const addMemoMutation = useAddVocMemo();
   const updateVocMutation = useUpdateVoc();
   const reanalyzeMutation = useReanalyzeVoc();
+  const { toast } = useToast();
 
   const [newMemo, setNewMemo] = useState('');
   const [selectedMainCategory, setSelectedMainCategory] = useState<number | ''>('');
@@ -158,14 +160,15 @@ export default function VocDetailPage() {
 
     try {
       await reanalyzeMutation.mutateAsync(voc.id);
-      alert('재분석이 시작되었습니다. 잠시 후 결과가 업데이트됩니다.');
+      await refetch();
+      toast({ title: '재분석이 시작되었습니다', description: '잠시 후 결과가 업데이트됩니다.', variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as { response?: { status?: number } };
       if (axiosError.response?.status === 409) {
-        alert('이미 분석이 진행 중입니다.');
+        toast({ title: '이미 분석이 진행 중입니다', variant: 'warning' });
       } else {
         console.error('Failed to reanalyze:', err);
-        alert('재분석 요청 중 오류가 발생했습니다.');
+        toast({ title: '재분석 요청 실패', description: '오류가 발생했습니다.', variant: 'error' });
       }
     }
   };
@@ -340,7 +343,11 @@ export default function VocDetailPage() {
               onClick={handleReanalyze}
               disabled={reanalyzeMutation.isPending}
             >
-              <span className="material-icons-outlined text-sm">refresh</span>
+              {reanalyzeMutation.isPending ? (
+                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
+              ) : (
+                <span className="material-icons-outlined text-sm">refresh</span>
+              )}
               {reanalyzeMutation.isPending ? '요청 중...' : '재분석'}
             </button>
           )}

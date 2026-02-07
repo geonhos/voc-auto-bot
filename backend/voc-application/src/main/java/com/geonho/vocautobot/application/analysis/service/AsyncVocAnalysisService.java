@@ -10,6 +10,7 @@ import com.geonho.vocautobot.domain.voc.VocDomain;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,10 @@ public class AsyncVocAnalysisService {
     private final VocAnalysisPersistencePort vocAnalysisPersistencePort;
     private final GetVocDetailUseCase getVocDetailUseCase;
     private final ObjectMapper objectMapper;
+
+    @Lazy
+    @Autowired
+    private AsyncVocAnalysisService self;
 
     @Autowired(required = false)
     private NotificationPort notificationPort;
@@ -72,7 +77,7 @@ public class AsyncVocAnalysisService {
         try {
             vocAnalysisPersistencePort.resetAnalysis(vocId);
             VocDomain voc = getVocDetailUseCase.getVocById(vocId);
-            analyzeVocAsync(voc);
+            self.analyzeVocAsync(voc);
             log.info("Reanalysis triggered for VOC ID: {}", vocId);
             return true;
         } catch (Exception e) {

@@ -115,7 +115,16 @@ export function useReanalyzeVoc() {
       const response = await api.post<void>(`/vocs/${vocId}/reanalyze`);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, vocId) => {
+      queryClient.setQueryData<Voc>([VOCS_QUERY_KEY, vocId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          aiAnalysis: old.aiAnalysis
+            ? { ...old.aiAnalysis, status: 'IN_PROGRESS' as const, summary: null, confidence: null, keywords: null, possibleCauses: null, relatedLogs: null, recommendation: null, errorMessage: null, analyzedAt: null }
+            : { status: 'IN_PROGRESS' as const },
+        } as Voc;
+      });
       queryClient.invalidateQueries({ queryKey: [VOCS_QUERY_KEY] });
     },
   });
