@@ -37,6 +37,7 @@ public class VectorEmbeddingEntity {
      * JPA에서는 문자열 또는 실수 배열로 매핑하여 사용
      */
     @Column(name = "embedding", columnDefinition = "vector(768)", nullable = false)
+    @org.hibernate.annotations.ColumnTransformer(write = "CAST(? AS vector)")
     private String embedding;
 
     @CreatedDate
