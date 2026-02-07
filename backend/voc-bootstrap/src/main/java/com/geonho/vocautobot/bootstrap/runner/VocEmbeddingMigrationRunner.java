@@ -13,6 +13,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * VOC 임베딩 마이그레이션 Runner
  * 애플리케이션 시작 시 임베딩이 없는 VOC에 대해 pgvector 임베딩을 생성합니다.
@@ -51,21 +54,21 @@ public class VocEmbeddingMigrationRunner implements ApplicationRunner {
                 Pageable pageable = PageRequest.of(pageNumber, PAGE_SIZE);
                 page = loadVocPort.loadVocList(null, null, null, null, null, null, pageable);
 
-                for (VocDomain voc : page.getContent()) {
+                List<VocDomain> vocs = page.getContent();
+
+                // Batch check: find VOC IDs that already have embeddings
+                List<Long> vocIds = vocs.stream().map(VocDomain::getId).toList();
+                Set<Long> existingIds = vectorSearchPort.findVocIdsWithEmbeddings(vocIds);
+
+                for (VocDomain voc : vocs) {
+                    if (existingIds.contains(voc.getId())) {
+                        totalSkipped++;
+                        continue;
+                    }
+
                     try {
-                        if (vectorSearchPort.hasEmbedding(voc.getId())) {
-                            totalSkipped++;
-                            continue;
-                        }
-
-                        String text = voc.getTitle() + "\n" + voc.getContent();
-                        vectorSearchPort.saveEmbedding(voc.getId(), text);
+                        vectorSearchPort.saveEmbedding(voc.getId(), voc.getEmbeddingSourceText());
                         totalProcessed++;
-
-                        if (totalProcessed % 10 == 0) {
-                            log.info("Migration progress: {} embedded, {} skipped, {} failed",
-                                    totalProcessed, totalSkipped, totalFailed);
-                        }
                     } catch (Exception e) {
                         totalFailed++;
                         log.warn("Failed to migrate embedding for VOC ID: {}: {}",

@@ -106,6 +106,15 @@ public interface VectorEmbeddingRepository extends JpaRepository<VectorEmbedding
     );
 
     /**
+     * 임베딩이 존재하는 VOC ID 목록 조회 (배치)
+     *
+     * @param vocIds 확인할 VOC ID 목록
+     * @return 임베딩이 존재하는 VOC ID 리스트
+     */
+    @Query("SELECT ve.vocId FROM VectorEmbeddingEntity ve WHERE ve.vocId IN :vocIds")
+    List<Long> findVocIdsByVocIdIn(@Param("vocIds") java.util.Collection<Long> vocIds);
+
+    /**
      * 유사도 검색 결과 Projection
      */
     interface VectorSimilarityProjection {

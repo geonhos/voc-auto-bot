@@ -103,7 +103,7 @@ public class VocController {
         // 4. pgvector에 VOC 임베딩 저장 (비동기, 유사 VOC 검색용)
         CompletableFuture.runAsync(() -> {
             try {
-                vectorSearchPort.saveEmbedding(voc.getId(), voc.getTitle() + "\n" + voc.getContent());
+                vectorSearchPort.saveEmbedding(voc.getId(), voc.getEmbeddingSourceText());
             } catch (Exception e) {
                 log.warn("Failed to save VOC embedding for similarity search: {}", e.getMessage());
             }
