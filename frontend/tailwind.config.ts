@@ -64,21 +64,21 @@ const config: Config = {
         'surface-dark': '#2d3745',
         'border-light': '#e7e5e4',
         'border-dark': '#373330',
-        // VOC Status Colors
+        // VOC Status Colors (muted earthy tones)
         status: {
-          received: '#3B82F6', // blue-500
-          analyzing: '#F59E0B', // amber-500
-          'analysis-failed': '#EF4444', // red-500
-          processing: '#8B5CF6', // violet-500
-          completed: '#10B981', // emerald-500
-          rejected: '#6B7280', // gray-500
+          received: '#e7e5e4',
+          analyzing: '#dde8f0',
+          'analysis-failed': '#ebe2e0',
+          processing: '#f0e8d9',
+          completed: '#e1e9e0',
+          rejected: '#ebe2e0',
         },
-        // Priority Colors
+        // Priority Colors (muted earthy tones)
         priority: {
-          low: '#6B7280', // gray-500
-          medium: '#3B82F6', // blue-500
-          high: '#F59E0B', // amber-500
-          urgent: '#EF4444', // red-500
+          low: '#7C8590',
+          medium: '#5878A0',
+          high: '#B89350',
+          urgent: '#B85C5C',
         },
       },
       borderRadius: {

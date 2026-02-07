@@ -75,8 +75,8 @@ export const priorityLabels: Record<VocPriority, string> = {
  * 우선순위 색상 매핑 (Tailwind classes)
  */
 export const priorityColors: Record<VocPriority, string> = {
-  LOW: 'text-gray-600 bg-gray-100',
-  NORMAL: 'text-blue-600 bg-blue-100',
-  HIGH: 'text-orange-600 bg-orange-100',
-  URGENT: 'text-red-600 bg-red-100',
+  LOW: 'text-[#7C8590] bg-[#7C8590]/10',
+  NORMAL: 'text-[#5878A0] bg-[#5878A0]/10',
+  HIGH: 'text-[#B89350] bg-[#B89350]/10',
+  URGENT: 'text-[#B85C5C] bg-[#B85C5C]/10',
 };

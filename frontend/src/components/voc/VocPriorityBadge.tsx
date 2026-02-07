@@ -16,10 +16,10 @@ const priorityLabels: Record<VocPriority, string> = {
 };
 
 const priorityColors: Record<VocPriority, string> = {
-  LOW: 'text-primary-light',
-  NORMAL: 'text-warning',
-  HIGH: 'text-warning',
-  URGENT: 'text-danger',
+  LOW: 'text-[#7C8590]',
+  NORMAL: 'text-[#5878A0]',
+  HIGH: 'text-[#B89350]',
+  URGENT: 'text-[#B85C5C]',
 };
 
 export function VocPriorityBadge({ priority, className }: VocPriorityBadgeProps) {

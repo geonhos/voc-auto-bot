@@ -10,10 +10,10 @@ interface PriorityChartProps {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: '#ef4444',
-  HIGH: '#f59e0b',
-  NORMAL: '#3b82f6',
-  LOW: '#10b981',
+  URGENT: '#B85C5C',
+  HIGH: '#B89350',
+  NORMAL: '#5878A0',
+  LOW: '#7C8590',
 };
 
 /**
