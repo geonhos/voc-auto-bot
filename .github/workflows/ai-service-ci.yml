@@ -1,0 +1,61 @@
+name: AI Service CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['ai-service/**']
+  pull_request:
+    branches: [main]
+    paths: ['ai-service/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: vocautobot_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - '5432:5432'
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: ai-service/requirements.txt
+
+      - name: Install
+        working-directory: ai-service
+        run: pip install -r requirements.txt
+
+      - name: Init pgvector extension
+        run: |
+          PGPASSWORD=test_password psql -h localhost -U test_user -d vocautobot_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+        env:
+          PGPASSWORD: test_password
+
+      - name: Lint
+        working-directory: ai-service
+        run: ruff check .
+
+      - name: Create tests directory if missing
+        working-directory: ai-service
+        run: mkdir -p tests && touch tests/__init__.py
+
+      - name: Test
+        working-directory: ai-service
+        run: python -m pytest tests/ -v --tb=short
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/vocautobot_test
