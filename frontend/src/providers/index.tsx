@@ -2,6 +2,7 @@
 
 import { type ReactNode } from 'react';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from '@/components/ui/Toaster';
 import { ToastContextProvider } from '@/hooks/useToast';
 
@@ -16,10 +17,12 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <MSWProvider>
       <QueryProvider>
-        <ToastContextProvider>
-          {children}
-          <Toaster />
-        </ToastContextProvider>
+        <ErrorBoundary>
+          <ToastContextProvider>
+            {children}
+            <Toaster />
+          </ToastContextProvider>
+        </ErrorBoundary>
       </QueryProvider>
     </MSWProvider>
   );
