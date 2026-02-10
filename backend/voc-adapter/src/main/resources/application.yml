@@ -21,6 +21,7 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
       port: ${SPRING_DATA_REDIS_PORT:6379}
+      password: ${SPRING_DATA_REDIS_PASSWORD:}
 
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
@@ -39,7 +40,7 @@ server:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:my-secret-key-for-development-only-change-in-production}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
 
 # OpenSearch
@@ -60,6 +61,7 @@ ai:
     url: ${AI_SERVICE_URL:http://localhost:8001}
     analyze-endpoint: /api/v1/analyze
     timeout: ${AI_SERVICE_TIMEOUT:30000}
+    api-key: ${AI_SERVICE_API_KEY:}
 
 # Slack Notification
 slack:
