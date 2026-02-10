@@ -2,15 +2,17 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
+import { EmailComposeSheet } from '@/components/email/EmailComposeSheet';
+import { ConfidenceIndicator } from '@/components/voc/ConfidenceIndicator';
 import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
 import { useToast } from '@/hooks/useToast';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc, useReanalyzeVoc } from '@/hooks/useVocs';
-import type { VocStatus, VocMemo, RelatedLog } from '@/types';
+import { api } from '@/lib/api/client';
+import type { Voc, VocStatus, VocMemo, RelatedLog } from '@/types';
 import { isTerminalStatus, isLowConfidence, getAnalysisMethodLabel } from '@/types';
-import { ConfidenceIndicator } from '@/components/voc/ConfidenceIndicator';
 
 const STATUS_MAP: Record<VocStatus, { label: string; icon: string; class: string }> = {
   NEW: { label: '접수', icon: 'inbox', class: 'status-received' },
@@ -38,6 +40,29 @@ export default function VocDetailPage() {
   const [newMemo, setNewMemo] = useState('');
   const [selectedMainCategory, setSelectedMainCategory] = useState<number | ''>('');
   const [selectedSubCategory, setSelectedSubCategory] = useState<number | ''>('');
+  const [isEmailSheetOpen, setIsEmailSheetOpen] = useState(false);
+  const [applyingSolutionId, setApplyingSolutionId] = useState<number | null>(null);
+
+  const handleApplySolution = useCallback(async (similarVocId: number) => {
+    setApplyingSolutionId(similarVocId);
+    try {
+      const response = await api.get<Voc>(`/vocs/${similarVocId}`);
+      const similarVocDetail = response.data;
+      const solution = similarVocDetail.aiAnalysis?.recommendation
+        || similarVocDetail.processingNote
+        || '';
+      if (!solution) {
+        toast({ title: '적용할 솔루션이 없습니다', description: '해당 VOC에 권장 조치 또는 처리 내용이 없습니다.', variant: 'warning' });
+        return;
+      }
+      setNewMemo((prev) => prev ? `${prev}\n\n[유사 VOC #${similarVocDetail.ticketId} 솔루션]\n${solution}` : `[유사 VOC #${similarVocDetail.ticketId} 솔루션]\n${solution}`);
+      toast({ title: '솔루션이 적용되었습니다', description: '메모 필드에 솔루션이 추가되었습니다. 저장 버튼을 눌러 확정하세요.', variant: 'success' });
+    } catch {
+      toast({ title: '솔루션 적용 실패', description: '유사 VOC 정보를 불러올 수 없습니다.', variant: 'error' });
+    } finally {
+      setApplyingSolutionId(null);
+    }
+  }, [toast]);
 
   // 분석 진행 중이면 주기적으로 새로고침
   useEffect(() => {
@@ -517,17 +542,19 @@ export default function VocDetailPage() {
           <div className="p-6">
             <div className="space-y-2">
               {similarVocs.map((similar) => (
-                <Link
+                <div
                   key={similar.id}
-                  href={`/voc/${similar.id}`}
-                  className="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 px-4 py-3 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 px-4 py-3 rounded border border-slate-200 dark:border-slate-700"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="material-icons-outlined text-primary text-sm">open_in_new</span>
-                    <span className="text-sm font-mono">{similar.ticketId}</span>
-                    <span className="text-sm text-slate-500 dark:text-slate-400">{similar.title}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
+                  <Link
+                    href={`/voc/${similar.id}`}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity min-w-0 flex-1"
+                  >
+                    <span className="material-icons-outlined text-primary text-sm flex-shrink-0">open_in_new</span>
+                    <span className="text-sm font-mono flex-shrink-0">{similar.ticketId}</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400 truncate">{similar.title}</span>
+                  </Link>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-3">
                     <span
                       className={`text-xs font-semibold ${
                         similar.similarity >= 0.8 ? 'text-success' : 'text-warning'
@@ -535,9 +562,21 @@ export default function VocDetailPage() {
                     >
                       유사도 {similar.similarity.toFixed(2)}
                     </span>
-                    <span className="material-icons-outlined text-slate-400 text-sm">chevron_right</span>
+                    <button
+                      type="button"
+                      onClick={() => handleApplySolution(similar.id)}
+                      disabled={applyingSolutionId === similar.id}
+                      className="px-3 py-1.5 text-xs font-medium border border-primary text-primary rounded hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {applyingSolutionId === similar.id ? (
+                        <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></span>
+                      ) : (
+                        <span className="material-icons-outlined text-xs">content_paste</span>
+                      )}
+                      솔루션 적용
+                    </button>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
           </div>
@@ -692,13 +731,14 @@ export default function VocDetailPage() {
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col sm:flex-row gap-3 justify-end">
-            <Link
-              href={`/email/compose?vocId=${voc.id}`}
+            <button
+              type="button"
+              onClick={() => setIsEmailSheetOpen(true)}
               className="px-6 py-3 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
             >
               <span className="material-icons-outlined text-sm">email</span>
               이메일 발송
-            </Link>
+            </button>
             <button
               className="px-6 py-3 border border-danger text-danger font-semibold rounded hover:bg-danger/10 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               type="button"
@@ -733,6 +773,12 @@ export default function VocDetailPage() {
         </p>
       </div>
 
+      {/* Email Compose Sheet */}
+      <EmailComposeSheet
+        vocId={voc.id}
+        open={isEmailSheetOpen}
+        onOpenChange={setIsEmailSheetOpen}
+      />
     </div>
   );
 }

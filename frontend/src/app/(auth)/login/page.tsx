@@ -11,18 +11,8 @@ export default function LoginPage() {
   const { isAuthenticated, user } = useAuthStore();
 
   useEffect(() => {
-    // Redirect if already authenticated
     if (isAuthenticated && user) {
-      switch (user.role) {
-        case 'ADMIN':
-          router.push('/dashboard');
-          break;
-        case 'MANAGER':
-        case 'OPERATOR':
-        default:
-          router.push('/voc/kanban');
-          break;
-      }
+      router.push('/dashboard');
     }
   }, [isAuthenticated, user, router]);
 
