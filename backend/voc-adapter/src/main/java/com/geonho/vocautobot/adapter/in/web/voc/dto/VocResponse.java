@@ -53,7 +53,13 @@ public record VocResponse(
         LocalDateTime createdAt,
 
         @Schema(description = "수정 시간")
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+
+        @Schema(description = "감성 분석 결과 (positive, negative, neutral)")
+        String sentiment,
+
+        @Schema(description = "감성 분석 신뢰도 (0.0 ~ 1.0)")
+        Double sentimentConfidence
 ) {
     public static VocResponse from(VocDomain voc) {
         return new VocResponse(
@@ -71,7 +77,9 @@ public record VocResponse(
                 voc.getResolvedAt(),
                 voc.getClosedAt(),
                 voc.getCreatedAt(),
-                voc.getUpdatedAt()
+                voc.getUpdatedAt(),
+                voc.getSentiment(),
+                voc.getSentimentConfidence()
         );
     }
 }

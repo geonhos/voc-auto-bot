@@ -11,10 +11,13 @@ from app.models.schemas import (
     SeedRequest,
     SeedResponse,
     LearnRequest,
+    SentimentRequest,
+    SentimentResponse,
 )
 from app.services.embedding_service import EmbeddingService
 from app.services.analysis_service import AnalysisService
 from app.services.data_seeder import DataSeederService
+from app.services.sentiment_service import SentimentService
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -22,6 +25,7 @@ router = APIRouter(dependencies=[Depends(verify_api_key)])
 embedding_service: Optional[EmbeddingService] = None
 analysis_service: Optional[AnalysisService] = None
 data_seeder_service: Optional[DataSeederService] = None
+sentiment_service: Optional[SentimentService] = None
 
 
 def initialize_services(
@@ -41,7 +45,7 @@ def initialize_services(
         llm_model: LLM model name.
         db_pool: psycopg ConnectionPool for PostgreSQL pgvector.
     """
-    global embedding_service, analysis_service, data_seeder_service
+    global embedding_service, analysis_service, data_seeder_service, sentiment_service
 
     # Initialize embedding service
     embedding_service = EmbeddingService(
@@ -74,6 +78,12 @@ def initialize_services(
 
     # Initialize data seeder service
     data_seeder_service = DataSeederService(embedding_service=embedding_service)
+
+    # Initialize sentiment service
+    sentiment_service = SentimentService(
+        model_name=llm_model,
+        ollama_base_url=ollama_base_url,
+    )
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -120,6 +130,38 @@ async def analyze_voc(request: AnalysisRequest) -> AnalysisResponse:
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@router.post("/api/v1/sentiment", response_model=SentimentResponse)
+async def analyze_sentiment(request: SentimentRequest) -> SentimentResponse:
+    """Analyze sentiment of VOC text.
+
+    Args:
+        request: Sentiment analysis request with text.
+
+    Returns:
+        Sentiment classification with confidence and emotions.
+
+    Raises:
+        HTTPException: If sentiment service is not initialized.
+    """
+    if sentiment_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Sentiment service not initialized.",
+        )
+
+    try:
+        result = sentiment_service.analyze(request.text)
+        return SentimentResponse(
+            sentiment=result["sentiment"],
+            confidence=result["confidence"],
+            emotions=result["emotions"],
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Sentiment analysis failed: {str(e)}"
+        )
 
 
 # Allowed seed sources to prevent path traversal attacks

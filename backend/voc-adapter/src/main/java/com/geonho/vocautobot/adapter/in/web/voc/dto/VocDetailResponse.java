@@ -68,7 +68,13 @@ public record VocDetailResponse(
         List<MemoDto> memos,
 
         @Schema(description = "AI 분석 결과")
-        AnalysisDto aiAnalysis
+        AnalysisDto aiAnalysis,
+
+        @Schema(description = "감성 분석 결과 (positive, negative, neutral)")
+        String sentiment,
+
+        @Schema(description = "감성 분석 신뢰도 (0.0 ~ 1.0)")
+        Double sentimentConfidence
 ) {
     public static VocDetailResponse from(VocDomain voc, VocAnalysisDto analysis) {
         List<AttachmentDto> attachments = voc.getAttachments() != null
@@ -97,7 +103,9 @@ public record VocDetailResponse(
                 voc.getUpdatedAt(),
                 attachments,
                 memos,
-                analysis != null ? AnalysisDto.from(analysis) : null
+                analysis != null ? AnalysisDto.from(analysis) : null,
+                voc.getSentiment(),
+                voc.getSentimentConfidence()
         );
     }
 

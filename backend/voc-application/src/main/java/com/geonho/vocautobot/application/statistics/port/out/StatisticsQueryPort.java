@@ -54,4 +54,11 @@ public interface StatisticsQueryPort {
      * @return 우선순위별 VOC 건수 맵
      */
     Map<VocPriority, Long> countVocsByPriority();
+
+    /**
+     * 감성 분석 분포를 조회합니다.
+     *
+     * @return 감성별 VOC 건수 맵 (positive, negative, neutral)
+     */
+    Map<String, Long> countVocsBySentiment();
 }

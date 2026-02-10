@@ -9,7 +9,7 @@ import { useSimilarVocs } from '@/hooks/useSimilarVocs';
 import { useToast } from '@/hooks/useToast';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc, useReanalyzeVoc } from '@/hooks/useVocs';
 import type { VocStatus, VocMemo, RelatedLog } from '@/types';
-import { isTerminalStatus, isLowConfidence, getAnalysisMethodLabel } from '@/types';
+import { isTerminalStatus, isLowConfidence, getAnalysisMethodLabel, getSentimentLabel, getSentimentColor } from '@/types';
 import { ConfidenceIndicator } from '@/components/voc/ConfidenceIndicator';
 
 const STATUS_MAP: Record<VocStatus, { label: string; icon: string; class: string }> = {
@@ -243,10 +243,22 @@ export default function VocDetailPage() {
               <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
                 상태
               </span>
-              <span className={`status-badge ${statusInfo.class}`}>
-                <span className="material-icons-outlined text-sm">{statusInfo.icon}</span>
-                {statusInfo.label}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`status-badge ${statusInfo.class}`}>
+                  <span className="material-icons-outlined text-sm">{statusInfo.icon}</span>
+                  {statusInfo.label}
+                </span>
+                {voc.sentiment && (
+                  <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getSentimentColor(voc.sentiment)}`}>
+                    {getSentimentLabel(voc.sentiment)}
+                    {voc.sentimentConfidence != null && (
+                      <span className="ml-1 opacity-75">
+                        {Math.round(voc.sentimentConfidence * 100)}%
+                      </span>
+                    )}
+                  </span>
+                )}
+              </div>
             </div>
             <div>
               <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">

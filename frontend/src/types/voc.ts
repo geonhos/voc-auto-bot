@@ -75,6 +75,28 @@ export interface ConfidenceDetails {
   factors: string[];
 }
 
+export type Sentiment = 'positive' | 'negative' | 'neutral';
+
+export function getSentimentLabel(sentiment: Sentiment | null | undefined): string {
+  if (!sentiment) return '미분석';
+  switch (sentiment) {
+    case 'positive': return '긍정';
+    case 'negative': return '부정';
+    case 'neutral': return '중립';
+    default: return '미분석';
+  }
+}
+
+export function getSentimentColor(sentiment: Sentiment | null | undefined): string {
+  if (!sentiment) return 'bg-gray-100 text-gray-600';
+  switch (sentiment) {
+    case 'positive': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+    case 'negative': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+    case 'neutral': return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+    default: return 'bg-gray-100 text-gray-600';
+  }
+}
+
 export interface Voc {
   id: number;
   ticketId: string;
@@ -94,6 +116,8 @@ export interface Voc {
   closedAt?: string;
   processingNote?: string;
   rejectReason?: string;
+  sentiment?: Sentiment;
+  sentimentConfidence?: number;
   attachments: VocAttachment[];
   memos: VocMemo[];
   aiAnalysis?: AiAnalysis;

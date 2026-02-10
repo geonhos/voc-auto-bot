@@ -278,6 +278,50 @@ class SeedResponse(BaseModel):
     )
 
 
+class SentimentRequest(BaseModel):
+    """Request model for sentiment analysis."""
+
+    text: str = Field(..., description="Text to analyze", min_length=1, max_length=5000)
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "text": "결제가 계속 실패합니다. 이미 3번이나 시도했는데 매번 오류가 발생합니다. 매우 불편합니다.",
+            }
+        }
+    )
+
+
+class SentimentResponse(BaseModel):
+    """Response model for sentiment analysis."""
+
+    sentiment: str = Field(
+        ..., description="Sentiment classification: positive, negative, or neutral"
+    )
+    confidence: float = Field(
+        ..., description="Confidence score (0.0 to 1.0)", ge=0.0, le=1.0
+    )
+    emotions: dict = Field(
+        default_factory=dict,
+        description="Detected emotion intensities (anger, frustration, satisfaction, urgency)",
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "sentiment": "negative",
+                "confidence": 0.88,
+                "emotions": {
+                    "anger": 0.3,
+                    "frustration": 0.8,
+                    "satisfaction": 0.0,
+                    "urgency": 0.6,
+                },
+            }
+        }
+    )
+
+
 class LearnRequest(BaseModel):
     """Request model for progressive learning from resolved VOC."""
 
