@@ -30,7 +30,7 @@ describe('KpiCard', () => {
 
     expect(screen.getByText('+12%')).toBeInTheDocument();
     const changeElement = screen.getByText('+12%').closest('p');
-    expect(changeElement).toHaveClass('text-green-600');
+    expect(changeElement).toHaveClass('text-info');
   });
 
   it('displays decrease change correctly', () => {
@@ -45,7 +45,7 @@ describe('KpiCard', () => {
 
     expect(screen.getByText('5%')).toBeInTheDocument();
     const changeElement = screen.getByText('5%').closest('p');
-    expect(changeElement).toHaveClass('text-red-600');
+    expect(changeElement).toHaveClass('text-success');
   });
 
   it('displays neutral change correctly', () => {
@@ -60,7 +60,7 @@ describe('KpiCard', () => {
 
     expect(screen.getByText('2.5%')).toBeInTheDocument();
     const changeElement = screen.getByText('2.5%').closest('p');
-    expect(changeElement).toHaveClass('text-gray-600');
+    expect(changeElement).toHaveClass('text-slate-500');
   });
 
   it('renders without change indicator', () => {
