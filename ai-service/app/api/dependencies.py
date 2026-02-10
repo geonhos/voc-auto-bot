@@ -1,5 +1,6 @@
 """API dependencies for authentication and authorization."""
 
+import hmac
 import os
 
 from fastapi import Depends, HTTPException, Security, status
@@ -34,7 +35,7 @@ def verify_api_key(api_key: str = Security(API_KEY_HEADER)) -> str:
             detail="Missing API key. Provide X-API-Key header.",
         )
 
-    if api_key != expected_key:
+    if not hmac.compare_digest(api_key, expected_key):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid API key.",
