@@ -4,7 +4,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { Sidebar, Header } from '@/components/layout';
-import { useRefreshToken, useTokenStatus } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 
@@ -15,37 +14,17 @@ export default function MainLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, accessToken } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { isCollapsed } = useSidebarStore();
-  const { isExpired, isExpiring } = useTokenStatus();
-  const refreshToken = useRefreshToken();
 
   // Check authentication on mount and route change
   useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
+    if (!isAuthenticated) {
       router.replace('/login');
-      return;
     }
+  }, [isAuthenticated, pathname, router]);
 
-    // If token is expired, try to refresh
-    if (isExpired) {
-      refreshToken.mutate(undefined, {
-        onError: () => {
-          router.replace('/login');
-        },
-      });
-    }
-    // If token is expiring soon, refresh proactively
-    else if (isExpiring) {
-      refreshToken.mutate(undefined, {
-        onError: (error) => {
-          console.error('Failed to refresh token on route change:', error);
-        },
-      });
-    }
-  }, [isAuthenticated, accessToken, pathname, isExpired, isExpiring, router, refreshToken]);
-
-  if (!isAuthenticated || !accessToken) {
+  if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

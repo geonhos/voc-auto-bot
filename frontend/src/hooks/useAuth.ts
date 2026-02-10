@@ -4,13 +4,8 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
 import { api } from '@/lib/api/client';
-import {
-  isTokenExpired,
-  isTokenExpiring,
-  getTokenRemainingMinutes,
-} from '@/lib/utils/tokenUtils';
 import { useAuthStore } from '@/store/authStore';
-import type { LoginRequest, LoginResponse, RefreshTokenRequest, RefreshTokenResponse } from '@/types';
+import type { LoginRequest, LoginResponse } from '@/types';
 
 // Login mutation
 export function useLogin() {
@@ -23,7 +18,7 @@ export function useLogin() {
       return response.data;
     },
     onSuccess: (data) => {
-      login(data.accessToken, data.refreshToken, data.user);
+      login(data.user);
 
       // Redirect based on role
       switch (data.user.role) {
@@ -45,13 +40,11 @@ export function useLogin() {
 // Logout mutation
 export function useLogout() {
   const router = useRouter();
-  const { logout, refreshToken } = useAuthStore();
+  const { logout } = useAuthStore();
 
   return useMutation({
     mutationFn: async () => {
-      if (refreshToken) {
-        await api.post('/auth/logout', { refreshToken });
-      }
+      await api.post('/auth/logout');
     },
     onSettled: () => {
       logout();
@@ -60,32 +53,11 @@ export function useLogout() {
   });
 }
 
-// Refresh token mutation
+// Refresh token mutation (cookie-based, no client-side token handling)
 export function useRefreshToken() {
-  const { setTokens, refreshToken } = useAuthStore();
-
   return useMutation({
     mutationFn: async () => {
-      if (!refreshToken) {
-        throw new Error('No refresh token');
-      }
-      const data: RefreshTokenRequest = { refreshToken };
-      const response = await api.post<RefreshTokenResponse>('/auth/refresh', data);
-      return response.data;
-    },
-    onSuccess: (data) => {
-      setTokens(data.accessToken, data.refreshToken);
+      await api.post('/auth/refresh');
     },
   });
-}
-
-// Token validation utilities
-export function useTokenStatus() {
-  const { accessToken } = useAuthStore();
-
-  return {
-    isExpired: accessToken ? isTokenExpired(accessToken) : true,
-    isExpiring: accessToken ? isTokenExpiring(accessToken, 5) : true,
-    remainingMinutes: accessToken ? getTokenRemainingMinutes(accessToken) : 0,
-  };
 }

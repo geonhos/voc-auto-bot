@@ -4,15 +4,12 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { UserInfo, UserRole } from '@/types/auth';
 
 interface AuthState {
-  accessToken: string | null;
-  refreshToken: string | null;
   user: UserInfo | null;
   isAuthenticated: boolean;
 
   // Actions
-  setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: UserInfo) => void;
-  login: (accessToken: string, refreshToken: string, user: UserInfo) => void;
+  login: (user: UserInfo) => void;
   logout: () => void;
 
   // Selectors
@@ -23,28 +20,19 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      accessToken: null,
-      refreshToken: null,
       user: null,
       isAuthenticated: false,
 
-      setTokens: (accessToken, refreshToken) =>
-        set({ accessToken, refreshToken, isAuthenticated: true }),
-
       setUser: (user) => set({ user }),
 
-      login: (accessToken, refreshToken, user) =>
+      login: (user) =>
         set({
-          accessToken,
-          refreshToken,
           user,
           isAuthenticated: true,
         }),
 
       logout: () =>
         set({
-          accessToken: null,
-          refreshToken: null,
           user: null,
           isAuthenticated: false,
         }),
@@ -61,10 +49,8 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'voc-auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
