@@ -47,6 +47,12 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Init pgvector extension
+        run: |
+          PGPASSWORD=test_password psql -h localhost -U test_user -d vocautobot_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+        env:
+          PGPASSWORD: test_password
+
       - name: Build and Test
         working-directory: backend
         run: ./gradlew build test

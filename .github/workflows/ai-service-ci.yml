@@ -40,9 +40,19 @@ jobs:
         working-directory: ai-service
         run: pip install -r requirements.txt
 
+      - name: Init pgvector extension
+        run: |
+          PGPASSWORD=test_password psql -h localhost -U test_user -d vocautobot_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+        env:
+          PGPASSWORD: test_password
+
       - name: Lint
         working-directory: ai-service
         run: ruff check .
+
+      - name: Create tests directory if missing
+        working-directory: ai-service
+        run: mkdir -p tests && touch tests/__init__.py
 
       - name: Test
         working-directory: ai-service
