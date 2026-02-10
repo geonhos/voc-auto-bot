@@ -40,7 +40,7 @@ server:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:my-secret-key-for-development-only-change-in-production}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
 
 # OpenSearch
