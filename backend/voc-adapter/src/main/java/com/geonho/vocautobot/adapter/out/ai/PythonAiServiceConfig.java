@@ -33,12 +33,27 @@ public class PythonAiServiceConfig {
      */
     private int timeout = 30000;
 
+    /**
+     * AI Service API Key (X-API-Key 헤더로 전송)
+     */
+    private String apiKey = "";
+
     @Bean
     public RestTemplate aiServiceRestTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(timeout);
         factory.setReadTimeout(timeout);
-        return new RestTemplate(factory);
+        RestTemplate restTemplate = new RestTemplate(factory);
+
+        // Add API Key interceptor if configured
+        if (apiKey != null && !apiKey.isBlank()) {
+            restTemplate.getInterceptors().add((request, body, execution) -> {
+                request.getHeaders().set("X-API-Key", apiKey);
+                return execution.execute(request, body);
+            });
+        }
+
+        return restTemplate;
     }
 
     /**

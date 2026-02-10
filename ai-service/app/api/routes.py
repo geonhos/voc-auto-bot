@@ -2,7 +2,8 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.api.dependencies import verify_api_key
 from app.models.schemas import (
     AnalysisRequest,
     AnalysisResponse,
@@ -15,7 +16,7 @@ from app.services.embedding_service import EmbeddingService
 from app.services.analysis_service import AnalysisService
 from app.services.data_seeder import DataSeederService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_api_key)])
 
 # Global service instances (initialized on startup)
 embedding_service: Optional[EmbeddingService] = None
