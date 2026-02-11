@@ -66,6 +66,12 @@ public class VocJpaEntity extends BaseJpaEntity {
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
 
+    @Column(name = "sentiment", length = 20)
+    private String sentiment;
+
+    @Column(name = "sentiment_confidence")
+    private Double sentimentConfidence;
+
     @OneToMany(mappedBy = "voc", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VocAttachmentJpaEntity> attachments = new ArrayList<>();
 
@@ -85,6 +91,11 @@ public class VocJpaEntity extends BaseJpaEntity {
         this.customerName = customerName;
         this.customerPhone = customerPhone;
         this.assigneeId = assigneeId;
+    }
+
+    public void updateSentiment(String sentiment, Double sentimentConfidence) {
+        this.sentiment = sentiment;
+        this.sentimentConfidence = sentimentConfidence;
     }
 
     public void update(String title, String content, VocStatus status, VocPriority priority,

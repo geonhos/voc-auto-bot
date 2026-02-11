@@ -10,6 +10,13 @@ import type { Voc } from '@/types/voc';
 
 import { api } from './client';
 
+export interface SentimentStats {
+  positive: number;
+  negative: number;
+  neutral: number;
+  [key: string]: number;
+}
+
 export const statisticsApi = {
   /**
    * Fetch complete dashboard data including KPI, trends, and distributions
@@ -56,6 +63,14 @@ export const statisticsApi = {
    */
   getRecentVocs: async (limit = 10): Promise<Voc[]> => {
     const response = await api.get<Voc[]>('/statistics/recent-vocs', { limit });
+    return response.data;
+  },
+
+  /**
+   * Fetch sentiment distribution statistics
+   */
+  getSentimentStats: async (): Promise<SentimentStats> => {
+    const response = await api.get<SentimentStats>('/statistics/sentiment');
     return response.data;
   },
 };

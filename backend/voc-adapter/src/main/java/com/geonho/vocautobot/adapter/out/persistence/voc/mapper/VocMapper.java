@@ -44,6 +44,8 @@ public class VocMapper {
                 .assigneeId(entity.getAssigneeId())
                 .resolvedAt(entity.getResolvedAt())
                 .closedAt(entity.getClosedAt())
+                .sentiment(entity.getSentiment())
+                .sentimentConfidence(entity.getSentimentConfidence())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .attachments(new ArrayList<>())

@@ -1,8 +1,9 @@
 'use client';
 
-import { LogOutIcon, UserIcon, BellIcon } from 'lucide-react';
+import { LogOutIcon, UserIcon } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
+import { NotificationBell } from '@/components/notification/NotificationBell';
 import { useLogout } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
 
@@ -38,13 +39,7 @@ export function Header() {
         {/* Right side - notifications and user menu */}
         <div className="flex items-center gap-4">
           {/* Notifications */}
-          <button
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative"
-            aria-label="알림"
-          >
-            <BellIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <NotificationBell />
 
           {/* User menu */}
           <div className="relative" ref={dropdownRef}>

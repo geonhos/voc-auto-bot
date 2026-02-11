@@ -3,8 +3,12 @@ package com.geonho.vocautobot.adapter.in.web.voc;
 import com.geonho.vocautobot.adapter.in.security.SecurityUser;
 import com.geonho.vocautobot.adapter.in.web.voc.dto.*;
 import com.geonho.vocautobot.application.analysis.dto.VocAnalysisDto;
+import com.geonho.vocautobot.application.analysis.port.out.SentimentAnalysisPort;
 import com.geonho.vocautobot.application.analysis.port.out.VectorSearchPort;
 import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisService;
+import com.geonho.vocautobot.application.notification.usecase.NotificationService;
+import com.geonho.vocautobot.application.voc.port.out.UpdateVocSentimentPort;
+import com.geonho.vocautobot.domain.notification.NotificationType;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.application.voc.port.in.dto.SimilarVocResult;
 import com.geonho.vocautobot.domain.voc.VocDomain;
@@ -54,6 +58,9 @@ public class VocController {
     private final AsyncVocAnalysisService asyncVocAnalysisService;
     private final GetSimilarVocsUseCase getSimilarVocsUseCase;
     private final VectorSearchPort vectorSearchPort;
+    private final SentimentAnalysisPort sentimentAnalysisPort;
+    private final UpdateVocSentimentPort updateVocSentimentPort;
+    private final NotificationService notificationService;
     private final Executor vocIndexingExecutor;
 
     public VocController(
@@ -67,6 +74,9 @@ public class VocController {
             AsyncVocAnalysisService asyncVocAnalysisService,
             GetSimilarVocsUseCase getSimilarVocsUseCase,
             VectorSearchPort vectorSearchPort,
+            SentimentAnalysisPort sentimentAnalysisPort,
+            UpdateVocSentimentPort updateVocSentimentPort,
+            NotificationService notificationService,
             @Qualifier("vocIndexingExecutor") Executor vocIndexingExecutor
     ) {
         this.createVocUseCase = createVocUseCase;
@@ -79,6 +89,9 @@ public class VocController {
         this.asyncVocAnalysisService = asyncVocAnalysisService;
         this.getSimilarVocsUseCase = getSimilarVocsUseCase;
         this.vectorSearchPort = vectorSearchPort;
+        this.sentimentAnalysisPort = sentimentAnalysisPort;
+        this.updateVocSentimentPort = updateVocSentimentPort;
+        this.notificationService = notificationService;
         this.vocIndexingExecutor = vocIndexingExecutor;
     }
 
@@ -109,7 +122,33 @@ public class VocController {
             }
         }, vocIndexingExecutor);
 
-        // 5. 즉시 응답 (분석 대기 중 상태)
+        // 5. 감성 분석 (비동기)
+        CompletableFuture.runAsync(() -> {
+            try {
+                String text = voc.getTitle() + " " + voc.getContent();
+                SentimentAnalysisPort.SentimentResult sentiment = sentimentAnalysisPort.analyze(text);
+                updateVocSentimentPort.updateSentiment(voc.getId(), sentiment.sentiment(), sentiment.confidence());
+                log.info("Sentiment analysis completed for VOC {}: {}", voc.getTicketId(), sentiment.sentiment());
+            } catch (Exception e) {
+                log.warn("Failed to perform sentiment analysis for VOC {}: {}", voc.getTicketId(), e.getMessage());
+            }
+        }, vocIndexingExecutor);
+
+        // 6. 실시간 알림 발송 (비동기)
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationService.broadcast(
+                        NotificationType.VOC_CREATED,
+                        "새 VOC 접수",
+                        String.format("[%s] %s", voc.getTicketId(), voc.getTitle()),
+                        voc.getId()
+                );
+            } catch (Exception e) {
+                log.warn("Failed to send VOC creation notification: {}", e.getMessage());
+            }
+        }, vocIndexingExecutor);
+
+        // 7. 즉시 응답 (분석 대기 중 상태)
         VocResponse response = VocResponse.from(voc);
         return ApiResponse.success(response);
     }
@@ -216,8 +255,22 @@ public class VocController {
             @Valid @RequestBody ChangeStatusRequest request
     ) {
         VocDomain voc = changeVocStatusUseCase.changeStatus(request.toCommand(id));
-        VocResponse response = VocResponse.from(voc);
 
+        // 상태 변경 알림 (비동기)
+        CompletableFuture.runAsync(() -> {
+            try {
+                notificationService.broadcast(
+                        NotificationType.STATUS_CHANGED,
+                        "VOC 상태 변경",
+                        String.format("[%s] 상태가 %s(으)로 변경됨", voc.getTicketId(), voc.getStatus()),
+                        voc.getId()
+                );
+            } catch (Exception e) {
+                log.warn("Failed to send status change notification: {}", e.getMessage());
+            }
+        }, vocIndexingExecutor);
+
+        VocResponse response = VocResponse.from(voc);
         return ApiResponse.success(response);
     }
 

@@ -159,4 +159,28 @@ public class StatisticsQueryAdapter implements StatisticsQueryPort {
 
         return result;
     }
+
+    @Override
+    public Map<String, Long> countVocsBySentiment() {
+        TypedQuery<Object[]> query = entityManager.createQuery(
+                "SELECT COALESCE(v.sentiment, 'unknown'), COUNT(v) FROM VocJpaEntity v " +
+                        "GROUP BY COALESCE(v.sentiment, 'unknown')",
+                Object[].class);
+
+        Map<String, Long> result = new HashMap<>();
+        List<Object[]> results = query.getResultList();
+
+        for (Object[] row : results) {
+            String sentiment = (String) row[0];
+            Long count = (Long) row[1];
+            result.put(sentiment, count);
+        }
+
+        // Ensure all sentiment types have entries
+        result.putIfAbsent("positive", 0L);
+        result.putIfAbsent("negative", 0L);
+        result.putIfAbsent("neutral", 0L);
+
+        return result;
+    }
 }

@@ -30,6 +30,8 @@ public class VocDomain implements Auditable {
     private Long assigneeId;
     private LocalDateTime resolvedAt;
     private LocalDateTime closedAt;
+    private String sentiment;
+    private Double sentimentConfidence;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
@@ -140,6 +142,14 @@ public class VocDomain implements Auditable {
      */
     public void unassign() {
         this.assigneeId = null;
+    }
+
+    /**
+     * Updates sentiment analysis result.
+     */
+    public void updateSentiment(String sentiment, Double sentimentConfidence) {
+        this.sentiment = sentiment;
+        this.sentimentConfidence = sentimentConfidence;
     }
 
     /**

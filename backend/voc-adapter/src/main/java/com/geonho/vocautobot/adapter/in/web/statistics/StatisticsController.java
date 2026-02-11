@@ -9,6 +9,7 @@ import com.geonho.vocautobot.application.statistics.port.in.GetCategoryStatsUseC
 import com.geonho.vocautobot.application.statistics.port.in.GetKpiUseCase;
 import com.geonho.vocautobot.application.statistics.port.in.GetPriorityStatsUseCase;
 import com.geonho.vocautobot.application.statistics.port.in.GetTrendUseCase;
+import com.geonho.vocautobot.application.statistics.port.out.StatisticsQueryPort;
 import com.geonho.vocautobot.application.statistics.port.in.dto.CategoryStatsResult;
 import com.geonho.vocautobot.application.statistics.port.in.dto.KpiResult;
 import com.geonho.vocautobot.application.statistics.port.in.dto.PriorityStatsResult;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +40,7 @@ public class StatisticsController {
     private final GetTrendUseCase getTrendUseCase;
     private final GetCategoryStatsUseCase getCategoryStatsUseCase;
     private final GetPriorityStatsUseCase getPriorityStatsUseCase;
+    private final StatisticsQueryPort statisticsQueryPort;
 
     @Operation(
             summary = "대시보드 통합 조회",
@@ -192,5 +195,15 @@ public class StatisticsController {
         PriorityStatsResponse response = PriorityStatsResponse.from(result);
 
         return ApiResponse.success(response);
+    }
+
+    @Operation(
+            summary = "감성 분석 분포 조회",
+            description = "긍정/부정/중립 감성 분포를 조회합니다"
+    )
+    @GetMapping("/sentiment")
+    public ApiResponse<Map<String, Long>> getSentimentStats() {
+        Map<String, Long> sentimentStats = statisticsQueryPort.countVocsBySentiment();
+        return ApiResponse.success(sentimentStats);
     }
 }

@@ -3,6 +3,7 @@ package com.geonho.vocautobot.adapter.out.persistence.voc;
 import com.geonho.vocautobot.adapter.out.persistence.voc.mapper.VocMapper;
 import com.geonho.vocautobot.application.voc.port.out.LoadVocPort;
 import com.geonho.vocautobot.application.voc.port.out.SaveVocPort;
+import com.geonho.vocautobot.application.voc.port.out.UpdateVocSentimentPort;
 import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 import com.geonho.vocautobot.domain.voc.VocStatus;
@@ -22,7 +23,7 @@ import java.util.Optional;
  */
 @Component
 @RequiredArgsConstructor
-public class VocPersistenceAdapter implements LoadVocPort, SaveVocPort {
+public class VocPersistenceAdapter implements LoadVocPort, SaveVocPort, UpdateVocSentimentPort {
 
     private final VocJpaRepository vocJpaRepository;
     private final VocMapper vocMapper;
@@ -123,6 +124,15 @@ public class VocPersistenceAdapter implements LoadVocPort, SaveVocPort {
 
         VocJpaEntity savedEntity = vocJpaRepository.save(entity);
         return vocMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    @Transactional
+    public void updateSentiment(Long vocId, String sentiment, Double sentimentConfidence) {
+        vocJpaRepository.findById(vocId).ifPresent(entity -> {
+            entity.updateSentiment(sentiment, sentimentConfidence);
+            vocJpaRepository.save(entity);
+        });
     }
 
     @Override

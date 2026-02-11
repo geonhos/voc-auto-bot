@@ -149,6 +149,8 @@ public class SecurityConfig {
                         // Role-based access for management endpoints
                         .requestMatchers(new AntPathRequestMatcher("/v1/users/**")).hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(new AntPathRequestMatcher("/v1/categories/**")).hasAnyRole("ADMIN", "MANAGER")
+                        // SSE stream endpoint (requires auth but needs special handling)
+                        .requestMatchers(new AntPathRequestMatcher("/v1/notifications/stream")).authenticated()
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

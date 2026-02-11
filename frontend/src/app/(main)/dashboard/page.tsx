@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { useState, useCallback } from 'react';
 
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
+import { SentimentChart } from '@/components/dashboard/SentimentChart';
 import {
   DashboardLayout,
   DashboardSection,
@@ -232,6 +233,10 @@ export default function DashboardPage() {
             <CategoryChart data={categoryStats} limit={10} />
             <StatusChart data={statusDistribution} />
           </ChartGrid>
+        </DashboardSection>
+
+        <DashboardSection>
+          <SentimentChart />
         </DashboardSection>
 
         <DashboardSection>
