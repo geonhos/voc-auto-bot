@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { useVocFormViewModel } from '@/hooks/useVocFormViewModel';
 import { cn } from '@/lib/utils';
@@ -53,10 +53,22 @@ export function VocForm() {
     setShowDraftDialog(false);
   };
 
-  const handleDiscardDraft = () => {
+  const handleDiscardDraft = useCallback(() => {
     clearDraft();
     setShowDraftDialog(false);
-  };
+  }, [clearDraft]);
+
+  // Escape key handler for draft dialog accessibility
+  useEffect(() => {
+    if (!showDraftDialog) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleDiscardDraft();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showDraftDialog, handleDiscardDraft]);
 
   const priorityOptions: VocPriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
@@ -65,8 +77,13 @@ export function VocForm() {
       {/* 임시저장 복원 다이얼로그 */}
       {showDraftDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="draft-dialog-title"
+            className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4"
+          >
+            <h3 id="draft-dialog-title" className="text-lg font-semibold text-gray-900 mb-2">
               임시저장된 내용
             </h3>
             <p className="text-sm text-gray-600 mb-1">

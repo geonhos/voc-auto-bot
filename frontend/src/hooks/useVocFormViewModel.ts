@@ -11,29 +11,53 @@ import { useVocCreation } from './useVocMutation';
 
 const DRAFT_STORAGE_KEY = 'voc-form-draft';
 const DRAFT_DEBOUNCE_MS = 2000;
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-type DraftData = Omit<VocFormSchemaType & { parentCategoryId?: number | null }, 'files'> & {
+type DraftData = Pick<VocFormSchemaType, 'title' | 'content' | 'categoryId' | 'priority'> & {
+  parentCategoryId?: number | null;
+  channel?: string;
   savedAt: string;
 };
 
-function saveDraft(data: Omit<DraftData, 'savedAt'>): string {
-  const savedAt = new Date().toISOString();
-  const draft: DraftData = { ...data, savedAt };
-  localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
-  return savedAt;
+/** SSR guard: returns true only when running in a browser environment */
+function isClient(): boolean {
+  return typeof window !== 'undefined';
+}
+
+function saveDraft(data: Omit<DraftData, 'savedAt'>): string | null {
+  if (!isClient()) return null;
+  try {
+    const savedAt = new Date().toISOString();
+    const draft: DraftData = { ...data, savedAt };
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    return savedAt;
+  } catch {
+    // QuotaExceededError or other storage failures
+    return null;
+  }
 }
 
 function loadDraft(): DraftData | null {
+  if (!isClient()) return null;
   try {
     const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as DraftData;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed.savedAt !== 'string') return null;
+    const draft = parsed as unknown as DraftData;
+    // Check TTL expiration
+    if (Date.now() - new Date(draft.savedAt).getTime() > DRAFT_TTL_MS) {
+      removeDraft();
+      return null;
+    }
+    return draft;
   } catch {
     return null;
   }
 }
 
 function removeDraft(): void {
+  if (!isClient()) return;
   localStorage.removeItem(DRAFT_STORAGE_KEY);
 }
 
@@ -60,8 +84,9 @@ export function useVocFormViewModel({
   onSuccess,
 }: UseVocFormViewModelProps): UseVocFormViewModelReturn {
   const [error, setError] = useState<Error | null>(null);
-  const [hasDraft, setHasDraft] = useState<boolean>(() => loadDraft() !== null);
-  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(() => loadDraft()?.savedAt ?? null);
+  const [initialDraft] = useState(() => loadDraft());
+  const [hasDraft, setHasDraft] = useState(initialDraft !== null);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(initialDraft?.savedAt ?? null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const form = useForm<VocFormSchemaType & { parentCategoryId?: number | null; files?: File[] }>({
@@ -92,22 +117,31 @@ export function useVocFormViewModel({
     const draft = loadDraft();
     if (!draft) return;
     const { savedAt: _, ...values } = draft;
-    form.reset({ ...values, files: [] });
+    form.reset({ ...values, customerName: '', customerEmail: '', files: [] });
   }, [form]);
 
-  // Debounced auto-save
+  // Debounced auto-save (PII excluded: customerEmail, customerName)
   useEffect(() => {
     const subscription = form.watch((values) => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
       debounceRef.current = setTimeout(() => {
-        const { files: _files, ...draftValues } = values as VocFormSchemaType & { parentCategoryId?: number | null; files?: File[] };
-        const hasContent = draftValues.title || draftValues.content || draftValues.customerName || draftValues.customerEmail;
+        const { files: _files, customerEmail: _email, customerName: _name, ...rest } = values as VocFormSchemaType & { parentCategoryId?: number | null; files?: File[] };
+        const draftValues: Omit<DraftData, 'savedAt'> = {
+          title: rest.title ?? '',
+          content: rest.content ?? '',
+          categoryId: rest.categoryId ?? null,
+          parentCategoryId: rest.parentCategoryId ?? null,
+          priority: rest.priority ?? 'NORMAL',
+        };
+        const hasContent = draftValues.title || draftValues.content;
         if (hasContent) {
           const savedAt = saveDraft(draftValues);
-          setHasDraft(true);
-          setDraftSavedAt(savedAt);
+          if (savedAt) {
+            setHasDraft(true);
+            setDraftSavedAt(savedAt);
+          }
         }
       }, DRAFT_DEBOUNCE_MS);
     });
