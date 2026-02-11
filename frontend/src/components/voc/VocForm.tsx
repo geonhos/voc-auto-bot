@@ -45,7 +45,7 @@ export function VocForm() {
   const { suggestions, isLoading: isSuggestingCategory } = useCategorySuggestion(title, content);
 
   const handleSuggestionSelect = useCallback(
-    (categoryId: number) => {
+    (categoryId: number, _parentCategoryId: number | null) => {
       const category = categories.find((c) => c.id === categoryId);
       if (!category) return;
 
