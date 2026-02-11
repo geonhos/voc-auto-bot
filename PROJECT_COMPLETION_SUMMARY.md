@@ -144,6 +144,8 @@ VOC(Voice of Customer) 자동화 봇 시스템의 Backend(Spring Boot)와 Fronte
 8. **대시보드**: KPI, 트렌드, 감성 분석 차트, 통계 시각화
 9. **칸반 보드**: 드래그 앤 드롭 VOC 관리
 10. **보안**: httpOnly 쿠키 JWT, CORS, 보안 헤더
+11. **AI 카테고리 추천**: LLM 기반 제목/내용 분석 → 상위 3개 카테고리 자동 제안
+12. **폼 임시저장**: localStorage auto-save (2초 debounce, 24h TTL, PII 제외)
 
 ---
 
@@ -185,6 +187,7 @@ VOC(Voice of Customer) 자동화 봇 시스템의 Backend(Spring Boot)와 Fronte
 |--------|------|----|------|
 | AI-001 | 실시간 SSE 알림 (SseEmitter + ConcurrentHashMap) | #169 | ✅ |
 | AI-002 | 감성 분석 대시보드 (Ollama LLM 기반 sentiment classification) | #169 | ✅ |
+| AI-003 | AI 카테고리 자동 추천 (LLM 기반 top-3 제안) | #175 | ✅ |
 
 ### UX 개선
 | 태스크 | 설명 | PR | 상태 |
@@ -192,6 +195,8 @@ VOC(Voice of Customer) 자동화 봇 시스템의 Backend(Spring Boot)와 Fronte
 | UX-001 | 대시보드 랜딩 + 퀵 액션 버튼 | #168 | ✅ |
 | UX-002 | 이메일 발송 슬라이드 패널 (Sheet) | #168 | ✅ |
 | UX-003 | 유사 VOC 솔루션 적용 버튼 | #168 | ✅ |
+| UX-004 | VOC 입력 폼 UX 개선 (글자수 카운터, 티켓 ID 복사, 초기화 확인) | #173 | ✅ |
+| UX-005 | VOC 입력 폼 임시저장 (localStorage, 24h TTL, PII 제외) | #174 | ✅ |
 
 ---
 
@@ -206,6 +211,9 @@ VOC(Voice of Customer) 자동화 봇 시스템의 Backend(Spring Boot)와 Fronte
 | #167 | Backend 테스트 | COMMENT (H-4) | 커버리지 갭 4건 |
 | #168 | UX 개선 | REQUEST_CHANGES → APPROVE | H-3 반영 완료 |
 | #169 | AI 실시간 + 감성분석 | REQUEST_CHANGES → APPROVE | C-3 Critical 반영 완료 |
+| #173 | VOC 폼 UX 개선 | REQUEST_CHANGES → APPROVE | H-1 클립보드 에러 핸들링 반영 |
+| #174 | 폼 임시저장 | REQUEST_CHANGES → APPROVE | C-2 SSR 가드, PII 제외 반영 |
+| #175 | AI 카테고리 추천 | REQUEST_CHANGES → APPROVE | C-1 프롬프트 인젝션 방어 반영 |
 
 ---
 
@@ -219,4 +227,4 @@ VOC(Voice of Customer) 자동화 봇 시스템의 Backend(Spring Boot)와 Fronte
 ---
 
 **프로젝트 완료일**: 2026-01-25
-**최종 업데이트**: 2026-02-10 (Phase 3 완료: 보안/품질/AI 기능 확장)
+**최종 업데이트**: 2026-02-11 (VOC 입력 폼 개선: UX/임시저장/AI 카테고리 추천)

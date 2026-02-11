@@ -92,7 +92,7 @@
 | API Server | Java 21 / Spring Boot 3.x | 메인 API 서버, 인증, 비즈니스 로직, AI 기능 통합 |
 | Security | Spring Security + JWT (httpOnly Cookie) | httpOnly/Secure/SameSite=Strict 쿠키 기반 인증 |
 | Realtime | SseEmitter (SSE) | Server-Sent Events 실시간 알림 |
-| LLM | Ollama (nomic-embed-text) | 로컬 LLM 서버, 임베딩 + 감성 분석 |
+| LLM | Ollama (nomic-embed-text) | 로컬 LLM 서버, 임베딩 + 감성 분석 + 카테고리 추천 |
 | Vector Search | pgvector | 코사인 유사도 기반 유사 VOC 검색 |
 | Testing | JUnit 5 + MockMvc | 컨트롤러 통합 + 도메인/서비스 단위 테스트 (200+) |
 
