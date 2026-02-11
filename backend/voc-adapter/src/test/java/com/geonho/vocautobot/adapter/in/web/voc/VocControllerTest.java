@@ -4,10 +4,14 @@ import com.geonho.vocautobot.adapter.common.exception.GlobalExceptionHandler;
 import com.geonho.vocautobot.adapter.in.filter.RateLimitFilter;
 import com.geonho.vocautobot.adapter.in.security.JwtAuthenticationFilter;
 import com.geonho.vocautobot.application.analysis.dto.VocAnalysisDto;
+import com.geonho.vocautobot.application.analysis.port.out.SentimentAnalysisPort;
 import com.geonho.vocautobot.application.analysis.port.out.VectorSearchPort;
 import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisService;
+import com.geonho.vocautobot.application.category.port.in.SuggestCategoryUseCase;
+import com.geonho.vocautobot.application.notification.usecase.NotificationService;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.application.voc.port.in.dto.SimilarVocResult;
+import com.geonho.vocautobot.application.voc.port.out.UpdateVocSentimentPort;
 import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 import com.geonho.vocautobot.domain.voc.VocStatus;
@@ -76,7 +80,19 @@ class VocControllerTest {
     private GetSimilarVocsUseCase getSimilarVocsUseCase;
 
     @MockBean
+    private SuggestCategoryUseCase suggestCategoryUseCase;
+
+    @MockBean
     private VectorSearchPort vectorSearchPort;
+
+    @MockBean
+    private SentimentAnalysisPort sentimentAnalysisPort;
+
+    @MockBean
+    private UpdateVocSentimentPort updateVocSentimentPort;
+
+    @MockBean
+    private NotificationService notificationService;
 
     @MockBean(name = "vocIndexingExecutor")
     private Executor vocIndexingExecutor;
