@@ -1,15 +1,15 @@
 'use client';
 
 import { LogOutIcon, UserIcon, BellIcon } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 
+import { useLogout } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
 
 
 export function Header() {
-  const router = useRouter();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
+  const logoutMutation = useLogout();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -24,8 +24,7 @@ export function Header() {
   }, []);
 
   const handleLogout = () => {
-    logout();
-    router.push('/login');
+    logoutMutation.mutate();
   };
 
   return (
