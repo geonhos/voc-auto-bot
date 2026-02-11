@@ -42,6 +42,7 @@ export default function VocDetailPage() {
   const [selectedSubCategory, setSelectedSubCategory] = useState<number | ''>('');
   const [isEmailSheetOpen, setIsEmailSheetOpen] = useState(false);
   const [applyingSolutionId, setApplyingSolutionId] = useState<number | null>(null);
+  const [appliedSolutionIds, setAppliedSolutionIds] = useState<Set<number>>(new Set());
 
   const handleApplySolution = useCallback(async (similarVocId: number) => {
     setApplyingSolutionId(similarVocId);
@@ -56,6 +57,7 @@ export default function VocDetailPage() {
         return;
       }
       setNewMemo((prev) => prev ? `${prev}\n\n[유사 VOC #${similarVocDetail.ticketId} 솔루션]\n${solution}` : `[유사 VOC #${similarVocDetail.ticketId} 솔루션]\n${solution}`);
+      setAppliedSolutionIds((prev) => new Set(prev).add(similarVocId));
       toast({ title: '솔루션이 적용되었습니다', description: '메모 필드에 솔루션이 추가되었습니다. 저장 버튼을 눌러 확정하세요.', variant: 'success' });
     } catch {
       toast({ title: '솔루션 적용 실패', description: '유사 VOC 정보를 불러올 수 없습니다.', variant: 'error' });
@@ -565,15 +567,17 @@ export default function VocDetailPage() {
                     <button
                       type="button"
                       onClick={() => handleApplySolution(similar.id)}
-                      disabled={applyingSolutionId === similar.id}
+                      disabled={applyingSolutionId === similar.id || appliedSolutionIds.has(similar.id)}
                       className="px-3 py-1.5 text-xs font-medium border border-primary text-primary rounded hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                     >
                       {applyingSolutionId === similar.id ? (
                         <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></span>
+                      ) : appliedSolutionIds.has(similar.id) ? (
+                        <span className="material-icons-outlined text-xs">check</span>
                       ) : (
                         <span className="material-icons-outlined text-xs">content_paste</span>
                       )}
-                      솔루션 적용
+                      {appliedSolutionIds.has(similar.id) ? '적용됨' : '솔루션 적용'}
                     </button>
                   </div>
                 </div>
@@ -773,12 +777,14 @@ export default function VocDetailPage() {
         </p>
       </div>
 
-      {/* Email Compose Sheet */}
-      <EmailComposeSheet
-        vocId={voc.id}
-        open={isEmailSheetOpen}
-        onOpenChange={setIsEmailSheetOpen}
-      />
+      {/* Email Compose Sheet - 조건부 렌더링으로 불필요한 API 호출 방지 */}
+      {isEmailSheetOpen && (
+        <EmailComposeSheet
+          vocId={voc.id}
+          open={isEmailSheetOpen}
+          onOpenChange={setIsEmailSheetOpen}
+        />
+      )}
     </div>
   );
 }
