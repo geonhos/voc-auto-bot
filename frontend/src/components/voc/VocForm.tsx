@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useVocFormViewModel } from '@/hooks/useVocFormViewModel';
 import { cn } from '@/lib/utils';
 import type { VocPriority, Voc } from '@/types';
-import { priorityLabels } from '@/types/vocForm';
+import { priorityLabels, VOC_CONSTANTS } from '@/types/vocForm';
 
 import { CategorySelect } from './CategorySelect';
 import { FileUpload } from './FileUpload';
@@ -19,6 +19,7 @@ import { VocSuccessModal } from './VocSuccessModal';
 export function VocForm() {
   const [successTicketId, setSuccessTicketId] = useState<string>('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const { form, isSubmitting, error, handleSubmit, reset } = useVocFormViewModel({
     onSuccess: (voc: Voc) => {
@@ -35,6 +36,7 @@ export function VocForm() {
   } = form;
 
   const files = watch('files') || [];
+  const contentLength = watch('content')?.length || 0;
 
   const handleNewVoc = () => {
     setShowSuccessModal(false);
@@ -98,11 +100,27 @@ export function VocForm() {
             )}
             aria-invalid={!!errors.content}
           />
-          {errors.content && (
-            <p className="mt-1 text-sm text-red-600" role="alert">
-              {errors.content.message}
-            </p>
-          )}
+          <div className="mt-1 flex justify-between items-center">
+            {errors.content ? (
+              <p className="text-sm text-red-600" role="alert">
+                {errors.content.message}
+              </p>
+            ) : (
+              <span />
+            )}
+            <span
+              className={cn(
+                'text-xs',
+                contentLength >= 9500
+                  ? 'text-red-500'
+                  : contentLength >= 8000
+                    ? 'text-amber-500'
+                    : 'text-muted-foreground'
+              )}
+            >
+              {contentLength}/{VOC_CONSTANTS.CONTENT_MAX_LENGTH}
+            </span>
+          </div>
         </div>
 
         {/* 카테고리 선택 */}
@@ -209,7 +227,7 @@ export function VocForm() {
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
           <button
             type="button"
-            onClick={() => reset()}
+            onClick={() => setShowResetConfirm(true)}
             disabled={isSubmitting}
             className={cn(
               'px-6 py-2.5 text-sm font-medium rounded-lg border transition-colors',
@@ -234,6 +252,37 @@ export function VocForm() {
           </button>
         </div>
       </form>
+
+      {/* 초기화 확인 다이얼로그 */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">초기화 확인</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              입력한 내용이 모두 삭제됩니다. 초기화하시겠습니까?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  reset();
+                  setShowResetConfirm(false);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                초기화
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 성공 모달 */}
       <VocSuccessModal
