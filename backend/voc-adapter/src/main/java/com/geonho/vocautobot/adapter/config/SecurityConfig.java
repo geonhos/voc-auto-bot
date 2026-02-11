@@ -200,7 +200,8 @@ public class SecurityConfig {
                 "X-RateLimit-Limit",
                 "X-RateLimit-Remaining",
                 "X-RateLimit-Reset",
-                "Retry-After"
+                "Retry-After",
+                "Set-Cookie"
         ));
 
         // Allow credentials (cookies, authorization headers)
