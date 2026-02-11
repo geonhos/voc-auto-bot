@@ -126,8 +126,6 @@ export const handlers = [
 
     if (body.email === 'admin@voc-auto-bot.com' && body.password === 'Admin123!') {
       const response: LoginResponse = {
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
         user: {
           id: mockUser.id,
           username: mockUser.username,
@@ -155,10 +153,7 @@ export const handlers = [
     await delay(300);
     return HttpResponse.json({
       success: true,
-      data: {
-        accessToken: 'new-mock-access-token',
-        refreshToken: 'new-mock-refresh-token',
-      },
+      data: null,
     });
   }),
 

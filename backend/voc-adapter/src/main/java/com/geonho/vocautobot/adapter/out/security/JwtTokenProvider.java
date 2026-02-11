@@ -13,8 +13,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import org.springframework.http.ResponseCookie;
+
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -34,10 +37,15 @@ public class JwtTokenProvider {
     @Value("${jwt.refresh-token-validity}")
     private long refreshTokenValidity;
 
+    @Value("${cookie.secure:true}")
+    private boolean cookieSecure;
+
     private SecretKey key;
 
     private static final String AUTHORITIES_KEY = "auth";
     private static final String USER_ID_KEY = "userId";
+    public static final String ACCESS_TOKEN_COOKIE = "access_token";
+    public static final String REFRESH_TOKEN_COOKIE = "refresh_token";
 
     @PostConstruct
     protected void init() {
@@ -130,6 +138,50 @@ public class JwtTokenProvider {
         } catch (ExpiredJwtException e) {
             return true;
         }
+    }
+
+    public ResponseCookie generateAccessTokenCookie(String token) {
+        return ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Strict")
+                .path("/api")
+                .maxAge(Duration.ofMillis(accessTokenValidity))
+                .build();
+    }
+
+    public ResponseCookie generateRefreshTokenCookie(String token) {
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE, token)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Strict")
+                .path("/api/v1/auth")
+                .maxAge(Duration.ofMillis(refreshTokenValidity))
+                .build();
+    }
+
+    public ResponseCookie generateClearAccessTokenCookie() {
+        return ResponseCookie.from(ACCESS_TOKEN_COOKIE, "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Strict")
+                .path("/api")
+                .maxAge(0)
+                .build();
+    }
+
+    public ResponseCookie generateClearRefreshTokenCookie() {
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Strict")
+                .path("/api/v1/auth")
+                .maxAge(0)
+                .build();
+    }
+
+    public long getAccessTokenValidity() {
+        return accessTokenValidity;
     }
 
     private Claims parseClaims(String token) {
