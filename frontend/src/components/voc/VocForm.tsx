@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useVocFormViewModel } from '@/hooks/useVocFormViewModel';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,9 @@ import { VocSuccessModal } from './VocSuccessModal';
  * @description VocForm component for VOC input
  * Uses MVVM pattern with useVocFormViewModel hook
  */
+const WARN_THRESHOLD = VOC_CONSTANTS.CONTENT_MAX_LENGTH * 0.8;
+const DANGER_THRESHOLD = VOC_CONSTANTS.CONTENT_MAX_LENGTH * 0.95;
+
 export function VocForm() {
   const [successTicketId, setSuccessTicketId] = useState<string>('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -42,6 +45,19 @@ export function VocForm() {
     setShowSuccessModal(false);
     setSuccessTicketId('');
   };
+
+  const dismissResetConfirm = useCallback(() => setShowResetConfirm(false), []);
+
+  useEffect(() => {
+    if (!showResetConfirm) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        dismissResetConfirm();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showResetConfirm, dismissResetConfirm]);
 
   const priorityOptions: VocPriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
@@ -91,6 +107,7 @@ export function VocForm() {
             id="content"
             {...register('content')}
             rows={8}
+            maxLength={VOC_CONSTANTS.CONTENT_MAX_LENGTH}
             placeholder="내용을 입력하세요 (최소 10자)"
             className={cn(
               'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 resize-none',
@@ -111,9 +128,9 @@ export function VocForm() {
             <span
               className={cn(
                 'text-xs',
-                contentLength >= 9500
+                contentLength >= DANGER_THRESHOLD
                   ? 'text-red-500'
-                  : contentLength >= 8000
+                  : contentLength >= WARN_THRESHOLD
                     ? 'text-amber-500'
                     : 'text-muted-foreground'
               )}
@@ -255,9 +272,18 @@ export function VocForm() {
 
       {/* 초기화 확인 다이얼로그 */}
       {showResetConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">초기화 확인</h3>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={dismissResetConfirm}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-confirm-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="reset-confirm-title" className="text-lg font-semibold text-gray-900 mb-2">초기화 확인</h3>
             <p className="text-sm text-gray-600 mb-6">
               입력한 내용이 모두 삭제됩니다. 초기화하시겠습니까?
             </p>

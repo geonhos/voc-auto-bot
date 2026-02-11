@@ -18,7 +18,7 @@ interface VocSuccessModalProps {
  */
 export function VocSuccessModal({ isOpen, ticketId, onClose, onNewVoc }: VocSuccessModalProps) {
   const router = useRouter();
-  const { success } = useToast();
+  const { success, error: showError } = useToast();
 
   if (!isOpen) return null;
 
@@ -68,12 +68,17 @@ export function VocSuccessModal({ isOpen, ticketId, onClose, onNewVoc }: VocSucc
               <p className="text-2xl font-bold text-blue-600">{ticketId}</p>
               <button
                 type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(ticketId);
-                  success('티켓 번호가 복사되었습니다');
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(ticketId);
+                    success('티켓 번호가 복사되었습니다');
+                  } catch {
+                    showError('클립보드 복사에 실패했습니다');
+                  }
                 }}
                 className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-md transition-colors"
                 title="티켓 번호 복사"
+                aria-label="티켓 번호 복사"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
