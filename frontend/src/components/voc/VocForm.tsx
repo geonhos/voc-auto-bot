@@ -31,6 +31,7 @@ export function VocForm() {
   const [successTicketId, setSuccessTicketId] = useState<string>('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [categoryAutoFilled, setCategoryAutoFilled] = useState(false);
 
   const { form, isSubmitting, error, handleSubmit, reset, hasDraft, draftSavedAt, restoreDraft, clearDraft } = useVocFormViewModel({
     onSuccess: (voc: Voc) => {
@@ -54,7 +55,7 @@ export function VocForm() {
   const contentLength = content.length;
 
   const { data: categories = [] } = useCategories();
-  const { suggestions, isLoading: isSuggestingCategory } = useCategorySuggestion(title, content);
+  const { suggestions, isLoading: isSuggestingCategory, error: suggestionError } = useCategorySuggestion(title, content);
 
   const handleSuggestionSelect = useCallback(
     (categoryId: number, _parentCategoryId: number | null) => {
@@ -72,14 +73,30 @@ export function VocForm() {
     [categories, setValue]
   );
 
+  // 최초 1회 AI 카테고리 자동 채우기
+  useEffect(() => {
+    if (!categoryAutoFilled && suggestions.length > 0 && categories.length > 0) {
+      const firstSuggestion = suggestions[0];
+      const category = categories.find((c) => c.id === firstSuggestion.categoryId);
+      if (category) {
+        handleSuggestionSelect(firstSuggestion.categoryId, null);
+        setCategoryAutoFilled(true);
+      }
+    }
+  }, [suggestions, categories, categoryAutoFilled, handleSuggestionSelect]);
+
+  const categoryDisabled = !categoryAutoFilled && !suggestionError;
+
   const handleNewVoc = () => {
     setShowSuccessModal(false);
     setSuccessTicketId('');
+    setCategoryAutoFilled(false);
   };
 
   const handleRestoreDraft = () => {
     restoreDraft();
     setShowDraftDialog(false);
+    setCategoryAutoFilled(true);
   };
 
   const handleDiscardDraft = useCallback(() => {
@@ -223,21 +240,34 @@ export function VocForm() {
           </div>
         </div>
 
-        {/* AI 카테고리 추천 */}
-        <CategorySuggestion
-          suggestions={suggestions}
-          isLoading={isSuggestingCategory}
-          onSelect={handleSuggestionSelect}
-        />
-
-        {/* 카테고리 선택 */}
-        <CategorySelect
-          value={watch('categoryId') ?? null}
-          error={errors.categoryId?.message}
-          register={register}
-          setValue={setValue}
-          watch={watch}
-        />
+        {/* 카테고리 영역 */}
+        {isSuggestingCategory ? (
+          <div className="flex items-center justify-center py-8 border border-purple-200 rounded-lg bg-purple-50/30">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mx-auto mb-3" />
+              <p className="text-sm text-purple-600">AI가 카테고리를 분석하고 있습니다...</p>
+              <p className="text-xs text-purple-400 mt-1">잠시만 기다려 주세요.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {categoryAutoFilled && suggestions.length > 0 && (
+              <CategorySuggestion
+                suggestions={suggestions}
+                isLoading={false}
+                onSelect={handleSuggestionSelect}
+              />
+            )}
+            <CategorySelect
+              value={watch('categoryId') ?? null}
+              error={errors.categoryId?.message}
+              register={register}
+              setValue={setValue}
+              watch={watch}
+              disabled={categoryDisabled}
+            />
+          </>
+        )}
 
         {/* 우선순위 */}
         <div>
@@ -398,6 +428,7 @@ export function VocForm() {
                 type="button"
                 onClick={() => {
                   reset();
+                  setCategoryAutoFilled(false);
                   setShowResetConfirm(false);
                 }}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"

@@ -13,13 +13,14 @@ interface CategorySelectProps {
   register: UseFormRegister<any>;
   setValue: UseFormSetValue<any>;
   watch: UseFormWatch<any>;
+  disabled?: boolean;
 }
 
 /**
  * @description CategorySelect component with parent-child category linking
  * Displays two-level category selection (parent -> child)
  */
-export function CategorySelect({ value, error, register, setValue, watch }: CategorySelectProps) {
+export function CategorySelect({ value, error, register, setValue, watch, disabled = false }: CategorySelectProps) {
   const { data: categories = [], isLoading } = useCategories();
 
   // 대분류 카테고리 (type: MAIN 또는 level: 0/1, parentId가 없는 것)
@@ -88,9 +89,12 @@ export function CategorySelect({ value, error, register, setValue, watch }: Cate
           id="parentCategoryId"
           onChange={handleParentChange}
           value={selectedParentId || ''}
+          disabled={disabled}
           className={cn(
             'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-            'border-gray-300 focus:ring-blue-200'
+            disabled
+              ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'border-gray-300 focus:ring-blue-200'
           )}
         >
           <option value="">대분류를 선택하세요</option>
@@ -112,11 +116,13 @@ export function CategorySelect({ value, error, register, setValue, watch }: Cate
           {...register('categoryId', { valueAsNumber: true })}
           onChange={handleChildChange}
           value={value || ''}
-          disabled={!selectedParentId || childCategories.length === 0}
+          disabled={disabled || !selectedParentId || childCategories.length === 0}
           className={cn(
             'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-            error ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-200',
-            (!selectedParentId || childCategories.length === 0) && 'bg-gray-100 cursor-not-allowed'
+            error ? 'border-red-500 focus:ring-red-200' :
+            (disabled || !selectedParentId || childCategories.length === 0)
+              ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'border-gray-300 focus:ring-blue-200'
           )}
           aria-invalid={!!error}
         >
@@ -139,6 +145,12 @@ export function CategorySelect({ value, error, register, setValue, watch }: Cate
           </p>
         )}
       </div>
+
+      {disabled && (
+        <p className="text-sm text-gray-500">
+          제목과 내용을 입력하면 자동으로 작성됩니다
+        </p>
+      )}
     </div>
   );
 }
