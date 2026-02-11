@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { useCategories } from '@/hooks/useCategories';
+import { useCategorySuggestion } from '@/hooks/useCategorySuggestion';
 import { useVocFormViewModel } from '@/hooks/useVocFormViewModel';
 import { cn } from '@/lib/utils';
 import type { VocPriority, Voc } from '@/types';
 import { priorityLabels, VOC_CONSTANTS } from '@/types/vocForm';
 
 import { CategorySelect } from './CategorySelect';
+import { CategorySuggestion } from './CategorySuggestion';
 import { FileUpload } from './FileUpload';
 import { VocSuccessModal } from './VocSuccessModal';
 
@@ -39,7 +42,28 @@ export function VocForm() {
   } = form;
 
   const files = watch('files') || [];
-  const contentLength = watch('content')?.length || 0;
+  const title = watch('title') || '';
+  const content = watch('content') || '';
+  const contentLength = content.length;
+
+  const { data: categories = [] } = useCategories();
+  const { suggestions, isLoading: isSuggestingCategory } = useCategorySuggestion(title, content);
+
+  const handleSuggestionSelect = useCallback(
+    (categoryId: number, _parentCategoryId: number | null) => {
+      const category = categories.find((c) => c.id === categoryId);
+      if (!category) return;
+
+      if (category.parentId) {
+        setValue('parentCategoryId', category.parentId);
+        setValue('categoryId', categoryId);
+      } else {
+        setValue('parentCategoryId', categoryId);
+        setValue('categoryId', null);
+      }
+    },
+    [categories, setValue]
+  );
 
   const handleNewVoc = () => {
     setShowSuccessModal(false);
@@ -139,6 +163,13 @@ export function VocForm() {
             </span>
           </div>
         </div>
+
+        {/* AI 카테고리 추천 */}
+        <CategorySuggestion
+          suggestions={suggestions}
+          isLoading={isSuggestingCategory}
+          onSelect={handleSuggestionSelect}
+        />
 
         {/* 카테고리 선택 */}
         <CategorySelect

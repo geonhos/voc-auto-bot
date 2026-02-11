@@ -9,6 +9,8 @@ import com.geonho.vocautobot.application.analysis.service.AsyncVocAnalysisServic
 import com.geonho.vocautobot.application.notification.usecase.NotificationService;
 import com.geonho.vocautobot.application.voc.port.out.UpdateVocSentimentPort;
 import com.geonho.vocautobot.domain.notification.NotificationType;
+import com.geonho.vocautobot.application.category.port.in.SuggestCategoryUseCase;
+import com.geonho.vocautobot.application.category.port.in.dto.CategorySuggestionResult;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.application.voc.port.in.dto.SimilarVocResult;
 import com.geonho.vocautobot.domain.voc.VocDomain;
@@ -57,6 +59,7 @@ public class VocController {
     private final AddMemoUseCase addMemoUseCase;
     private final AsyncVocAnalysisService asyncVocAnalysisService;
     private final GetSimilarVocsUseCase getSimilarVocsUseCase;
+    private final SuggestCategoryUseCase suggestCategoryUseCase;
     private final VectorSearchPort vectorSearchPort;
     private final SentimentAnalysisPort sentimentAnalysisPort;
     private final UpdateVocSentimentPort updateVocSentimentPort;
@@ -73,6 +76,7 @@ public class VocController {
             AddMemoUseCase addMemoUseCase,
             AsyncVocAnalysisService asyncVocAnalysisService,
             GetSimilarVocsUseCase getSimilarVocsUseCase,
+            SuggestCategoryUseCase suggestCategoryUseCase,
             VectorSearchPort vectorSearchPort,
             SentimentAnalysisPort sentimentAnalysisPort,
             UpdateVocSentimentPort updateVocSentimentPort,
@@ -88,6 +92,7 @@ public class VocController {
         this.addMemoUseCase = addMemoUseCase;
         this.asyncVocAnalysisService = asyncVocAnalysisService;
         this.getSimilarVocsUseCase = getSimilarVocsUseCase;
+        this.suggestCategoryUseCase = suggestCategoryUseCase;
         this.vectorSearchPort = vectorSearchPort;
         this.sentimentAnalysisPort = sentimentAnalysisPort;
         this.updateVocSentimentPort = updateVocSentimentPort;
@@ -351,6 +356,23 @@ public class VocController {
         List<SimilarVocResult> results = getSimilarVocsUseCase.getSimilarVocs(id, limit);
         List<SimilarVocResponse> response = results.stream()
                 .map(SimilarVocResponse::from)
+                .toList();
+        return ApiResponse.success(response);
+    }
+
+    @Operation(
+            summary = "AI 카테고리 추천",
+            description = "VOC 제목과 내용을 기반으로 AI가 적합한 카테고리를 추천합니다"
+    )
+    @PostMapping("/suggest-category")
+    public ApiResponse<List<CategorySuggestionResponse>> suggestCategory(
+            @Valid @RequestBody SuggestCategoryRequest request
+    ) {
+        List<CategorySuggestionResult> results = suggestCategoryUseCase.suggestCategories(
+                request.title(), request.content()
+        );
+        List<CategorySuggestionResponse> response = results.stream()
+                .map(CategorySuggestionResponse::from)
                 .toList();
         return ApiResponse.success(response);
     }
