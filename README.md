@@ -90,9 +90,11 @@
 | 구분 | 기술 | 설명 |
 |------|------|------|
 | API Server | Java 21 / Spring Boot 3.x | 메인 API 서버, 인증, 비즈니스 로직, AI 기능 통합 |
-| Security | Spring Security + JWT | 인증/인가 처리 |
-| LLM | Ollama (nomic-embed-text) | 로컬 LLM 서버, 임베딩 생성 |
+| Security | Spring Security + JWT (httpOnly Cookie) | httpOnly/Secure/SameSite=Strict 쿠키 기반 인증 |
+| Realtime | SseEmitter (SSE) | Server-Sent Events 실시간 알림 |
+| LLM | Ollama (nomic-embed-text) | 로컬 LLM 서버, 임베딩 + 감성 분석 |
 | Vector Search | pgvector | 코사인 유사도 기반 유사 VOC 검색 |
+| Testing | JUnit 5 + MockMvc | 컨트롤러 통합 + 도메인/서비스 단위 테스트 (200+) |
 
 ### AI Service
 | 구분 | 기술 | 설명 |
@@ -108,7 +110,7 @@
 | Language | TypeScript | 타입 안정성 확보 |
 | 상태관리 | Zustand | 경량 상태관리 라이브러리 |
 | 스타일링 | Tailwind CSS | 유틸리티 기반 CSS |
-| 테스트 | Jest + Playwright | 단위 테스트 및 E2E 테스트 |
+| 테스트 | Vitest + Playwright | 단위 테스트 (ViewModel) 및 E2E 테스트 |
 
 ### Database
 | 구분 | 기술 | 설명 |
@@ -120,7 +122,8 @@
 | 구분 | 기술 | 설명 |
 |------|------|------|
 | Container | Docker / Docker Compose | 로컬 개발 환경 구성 |
-| CI/CD | GitHub Actions | 자동 빌드/테스트/배포 |
+| CI/CD | GitHub Actions | Backend/Frontend/AI Service 자동 빌드/테스트/배포 |
+| Monitoring | Docker Compose healthcheck | 서비스 상태 모니터링 |
 
 ## 프로젝트 구조
 
@@ -158,13 +161,14 @@ voc-auto-bot/
 
 ## AI Service (FastAPI)
 
-VOC 로그 분석을 위한 독립 서비스. Backend에서 HTTP로 호출.
+VOC 로그 분석 및 감성 분석을 위한 독립 서비스. Backend에서 HTTP로 호출.
 
 | 기능 | 설명 |
 |------|------|
 | 로그 임베딩 | OpenAI Embedding → pgvector 저장 |
 | 로그 분석 | LLM 기반 로그 원인 분석 |
 | 유사 로그 검색 | pgvector 코사인 유사도 검색 |
+| 감성 분석 | Ollama LLM 프롬프트 기반 sentiment 분류 (positive/negative/neutral) |
 
 ## Figma Plugin — Design Generator
 
