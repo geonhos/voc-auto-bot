@@ -15,6 +15,11 @@ import { FileUpload } from './FileUpload';
 import { VocSuccessModal } from './VocSuccessModal';
 
 
+function formatTime(isoString: string): string {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 /**
  * @description VocForm component for VOC input
  * Uses MVVM pattern with useVocFormViewModel hook
@@ -27,12 +32,14 @@ export function VocForm() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const { form, isSubmitting, error, handleSubmit, reset } = useVocFormViewModel({
+  const { form, isSubmitting, error, handleSubmit, reset, hasDraft, draftSavedAt, restoreDraft, clearDraft } = useVocFormViewModel({
     onSuccess: (voc: Voc) => {
       setSuccessTicketId(voc.ticketId);
       setShowSuccessModal(true);
     },
   });
+
+  const [showDraftDialog, setShowDraftDialog] = useState(hasDraft);
 
   const {
     register,
@@ -70,23 +77,75 @@ export function VocForm() {
     setSuccessTicketId('');
   };
 
+  const handleRestoreDraft = () => {
+    restoreDraft();
+    setShowDraftDialog(false);
+  };
+
+  const handleDiscardDraft = useCallback(() => {
+    clearDraft();
+    setShowDraftDialog(false);
+  }, [clearDraft]);
+
   const dismissResetConfirm = useCallback(() => setShowResetConfirm(false), []);
 
+  // Escape key handler for draft dialog and reset confirm
   useEffect(() => {
-    if (!showResetConfirm) return;
+    if (!showDraftDialog && !showResetConfirm) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        dismissResetConfirm();
+        if (showDraftDialog) handleDiscardDraft();
+        if (showResetConfirm) dismissResetConfirm();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showResetConfirm, dismissResetConfirm]);
+  }, [showDraftDialog, handleDiscardDraft, showResetConfirm, dismissResetConfirm]);
 
   const priorityOptions: VocPriority[] = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
   return (
     <>
+      {/* 임시저장 복원 다이얼로그 */}
+      {showDraftDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="draft-dialog-title"
+            className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4"
+          >
+            <h3 id="draft-dialog-title" className="text-lg font-semibold text-gray-900 mb-2">
+              임시저장된 내용
+            </h3>
+            <p className="text-sm text-gray-600 mb-1">
+              이전에 작성 중이던 내용이 있습니다. 불러오시겠습니까?
+            </p>
+            {draftSavedAt && (
+              <p className="text-xs text-gray-400 mb-4">
+                저장 시간: {formatTime(draftSavedAt)}
+              </p>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleDiscardDraft}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                새로 작성
+              </button>
+              <button
+                type="button"
+                onClick={handleRestoreDraft}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              >
+                불러오기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 전역 에러 메시지 */}
         {error && (
@@ -271,33 +330,42 @@ export function VocForm() {
           <FileUpload files={files} setValue={setValue} />
         </div>
 
-        {/* 제출 버튼 */}
-        <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={() => setShowResetConfirm(true)}
-            disabled={isSubmitting}
-            className={cn(
-              'px-6 py-2.5 text-sm font-medium rounded-lg border transition-colors',
-              isSubmitting
-                ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed'
-                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+        {/* 제출 버튼 + 임시저장 상태 */}
+        <div className="flex items-center justify-between gap-3 pt-6 border-t border-gray-200">
+          {/* 임시저장 상태 표시 */}
+          <div className="text-xs text-muted-foreground">
+            {draftSavedAt && (
+              <span>&#10003; 임시저장됨 {formatTime(draftSavedAt)}</span>
             )}
-          >
-            초기화
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={cn(
-              'px-6 py-2.5 text-sm font-medium text-white rounded-lg transition-colors',
-              isSubmitting
-                ? 'bg-blue-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            )}
-          >
-            {isSubmitting ? '등록 중...' : 'VOC 등록'}
-          </button>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowResetConfirm(true)}
+              disabled={isSubmitting}
+              className={cn(
+                'px-6 py-2.5 text-sm font-medium rounded-lg border transition-colors',
+                isSubmitting
+                  ? 'border-gray-300 text-gray-400 bg-gray-100 cursor-not-allowed'
+                  : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+              )}
+            >
+              초기화
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={cn(
+                'px-6 py-2.5 text-sm font-medium text-white rounded-lg transition-colors',
+                isSubmitting
+                  ? 'bg-blue-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              )}
+            >
+              {isSubmitting ? '등록 중...' : 'VOC 등록'}
+            </button>
+          </div>
         </div>
       </form>
 
