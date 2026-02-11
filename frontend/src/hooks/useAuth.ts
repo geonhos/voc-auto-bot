@@ -19,20 +19,7 @@ export function useLogin() {
     },
     onSuccess: (data) => {
       login(data.user);
-
-      // Redirect based on role
-      switch (data.user.role) {
-        case 'ADMIN':
-          router.push('/dashboard');
-          break;
-        case 'MANAGER':
-          router.push('/voc/kanban');
-          break;
-        case 'OPERATOR':
-        default:
-          router.push('/voc/kanban');
-          break;
-      }
+      router.push('/dashboard');
     },
   });
 }

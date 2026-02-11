@@ -7,7 +7,11 @@ import {
   ActivityIcon,
   RefreshCwIcon,
   CalendarIcon,
+  PlusCircleIcon,
+  KanbanIcon,
+  MailIcon,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useState, useCallback } from 'react';
 
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
@@ -84,6 +88,31 @@ export default function DashboardPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">통계 대시보드</h1>
         <p className="text-gray-500">VOC 처리 현황을 한눈에 확인하세요.</p>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Link
+          href="/voc/input"
+          className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <PlusCircleIcon className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">새 VOC 등록</span>
+        </Link>
+        <Link
+          href="/voc/kanban"
+          className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <KanbanIcon className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">VOC 칸반보드</span>
+        </Link>
+        <Link
+          href="/email/compose"
+          className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          <MailIcon className="h-5 w-5 text-primary" />
+          <span className="text-sm font-medium">이메일 발송</span>
+        </Link>
       </div>
 
       <DashboardLayout>
