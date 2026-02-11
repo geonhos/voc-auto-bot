@@ -9,5 +9,7 @@ public interface SseEmitterPort {
 
     void sendToUser(Long userId, Notification notification);
 
+    void broadcastAll(Notification notification);
+
     void removeEmitter(Long userId);
 }

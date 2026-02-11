@@ -52,7 +52,7 @@ export function useNotifications() {
     const sseUrl = `${API_BASE_URL}/v1/notifications/stream`;
 
     try {
-      const eventSource = new EventSource(sseUrl);
+      const eventSource = new EventSource(sseUrl, { withCredentials: true });
       eventSourceRef.current = eventSource;
 
       eventSource.addEventListener('notification', (event) => {

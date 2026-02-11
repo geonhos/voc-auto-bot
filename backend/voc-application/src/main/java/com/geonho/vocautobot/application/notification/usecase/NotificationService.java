@@ -44,10 +44,14 @@ public class NotificationService {
      */
     @Transactional
     public void broadcast(NotificationType type, String title, String message, Long vocId) {
-        // 간소화: userId=null로 저장하고 SSE는 생략
-        // 실제 구현에서는 모든 접속 사용자에게 전달
         Notification notification = Notification.create(null, type, title, message, vocId);
-        saveNotificationPort.save(notification);
+        Notification saved = saveNotificationPort.save(notification);
+
+        try {
+            sseEmitterPort.broadcastAll(saved);
+        } catch (Exception e) {
+            log.warn("Failed to broadcast SSE notification: {}", e.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)

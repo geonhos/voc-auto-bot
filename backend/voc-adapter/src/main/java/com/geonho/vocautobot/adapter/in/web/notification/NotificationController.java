@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -35,8 +37,8 @@ public class NotificationController {
 
     @Operation(summary = "SSE 스트림 연결", description = "실시간 알림을 받기 위한 SSE 연결")
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter stream(@RequestParam(required = false) Long userId) {
-        Long resolvedUserId = resolveUserId(userId);
+    public SseEmitter stream() {
+        Long resolvedUserId = resolveUserId();
         log.info("SSE stream requested for user: {}", resolvedUserId);
         return sseEmitterManager.createEmitter(resolvedUserId);
     }
@@ -44,11 +46,10 @@ public class NotificationController {
     @Operation(summary = "알림 목록 조회", description = "페이징 적용 알림 목록")
     @GetMapping
     public ApiResponse<List<NotificationResponse>> getNotifications(
-            @RequestParam(required = false) Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        Long resolvedUserId = resolveUserId(userId);
+        Long resolvedUserId = resolveUserId();
         Page<Notification> notifications = notificationService.getNotifications(
                 resolvedUserId, PageRequest.of(page, size));
 
@@ -67,8 +68,8 @@ public class NotificationController {
 
     @Operation(summary = "읽지 않은 알림 수 조회")
     @GetMapping("/unread-count")
-    public ApiResponse<Long> getUnreadCount(@RequestParam(required = false) Long userId) {
-        Long resolvedUserId = resolveUserId(userId);
+    public ApiResponse<Long> getUnreadCount() {
+        Long resolvedUserId = resolveUserId();
         return ApiResponse.success(notificationService.getUnreadCount(resolvedUserId));
     }
 
@@ -81,18 +82,27 @@ public class NotificationController {
 
     @Operation(summary = "전체 읽음 처리")
     @PatchMapping("/read-all")
-    public ApiResponse<Void> markAllAsRead(@RequestParam(required = false) Long userId) {
-        Long resolvedUserId = resolveUserId(userId);
+    public ApiResponse<Void> markAllAsRead() {
+        Long resolvedUserId = resolveUserId();
         notificationService.markAllAsRead(resolvedUserId);
         return ApiResponse.success(null);
     }
 
-    private Long resolveUserId(Long userId) {
+    private Long resolveUserId() {
         if (!securityEnabled) {
-            return userId != null ? userId : DEV_DEFAULT_USER_ID;
+            return DEV_DEFAULT_USER_ID;
         }
-        // In production, get userId from SecurityContext
-        // For now, fall back to parameter or default
-        return userId != null ? userId : DEV_DEFAULT_USER_ID;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Long userId) {
+            return userId;
+        }
+        if (auth != null && auth.getName() != null) {
+            try {
+                return Long.parseLong(auth.getName());
+            } catch (NumberFormatException e) {
+                log.warn("Cannot parse userId from authentication name: {}", auth.getName());
+            }
+        }
+        return DEV_DEFAULT_USER_ID;
     }
 }

@@ -85,6 +85,28 @@ public class SseEmitterManager implements SseEmitterPort {
     }
 
     @Override
+    public void broadcastAll(Notification notification) {
+        emitters.forEach((userId, emitter) -> {
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("notification")
+                        .data(Map.of(
+                                "id", notification.getId(),
+                                "type", notification.getType().name(),
+                                "title", notification.getTitle(),
+                                "message", notification.getMessage(),
+                                "vocId", notification.getVocId() != null ? notification.getVocId() : "",
+                                "read", notification.isRead(),
+                                "createdAt", notification.getCreatedAt().toString()
+                        )));
+            } catch (IOException e) {
+                log.warn("Failed to broadcast SSE to user {}: {}", userId, e.getMessage());
+                emitters.remove(userId);
+            }
+        });
+    }
+
+    @Override
     public void removeEmitter(Long userId) {
         SseEmitter emitter = emitters.remove(userId);
         if (emitter != null) {
