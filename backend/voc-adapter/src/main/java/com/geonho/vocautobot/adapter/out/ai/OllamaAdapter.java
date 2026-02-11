@@ -64,8 +64,7 @@ public class OllamaAdapter implements LlmPort {
             Map<String, Object> requestBody = Map.of(
                     "model", config.getModel(),
                     "prompt", prompt,
-                    "stream", false,
-                    "format", "json"  // Ollama JSON Mode 활성화
+                    "stream", false
             );
 
             String response = webClient

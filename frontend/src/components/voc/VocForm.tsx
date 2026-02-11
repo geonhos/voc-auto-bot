@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useCategories } from '@/hooks/useCategories';
 import { useCategorySuggestion } from '@/hooks/useCategorySuggestion';
@@ -26,6 +26,7 @@ function formatTime(isoString: string): string {
  */
 const WARN_THRESHOLD = VOC_CONSTANTS.CONTENT_MAX_LENGTH * 0.8;
 const DANGER_THRESHOLD = VOC_CONSTANTS.CONTENT_MAX_LENGTH * 0.95;
+const MIN_SPINNER_DURATION = 1500;
 
 export function VocForm() {
   const [successTicketId, setSuccessTicketId] = useState<string>('');
@@ -56,6 +57,30 @@ export function VocForm() {
 
   const { data: categories = [] } = useCategories();
   const { suggestions, isLoading: isSuggestingCategory, error: suggestionError } = useCategorySuggestion(title, content);
+
+  // 스피너 최소 표시 시간 (로컬 Ollama 응답이 빠르므로 UX 확보)
+  const [showCategorySpinner, setShowCategorySpinner] = useState(false);
+  const spinnerStartRef = useRef(0);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+
+    if (isSuggestingCategory) {
+      spinnerStartRef.current = Date.now();
+      setShowCategorySpinner(true);
+    } else if (spinnerStartRef.current > 0) {
+      const elapsed = Date.now() - spinnerStartRef.current;
+      const remaining = MIN_SPINNER_DURATION - elapsed;
+      if (remaining > 0) {
+        timer = setTimeout(() => setShowCategorySpinner(false), remaining);
+      } else {
+        setShowCategorySpinner(false);
+      }
+      spinnerStartRef.current = 0;
+    }
+
+    return () => { if (timer) clearTimeout(timer); };
+  }, [isSuggestingCategory]);
 
   const handleSuggestionSelect = useCallback(
     (categoryId: number, _parentCategoryId: number | null) => {
@@ -241,7 +266,7 @@ export function VocForm() {
         </div>
 
         {/* 카테고리 영역 */}
-        {isSuggestingCategory ? (
+        {showCategorySpinner ? (
           <div className="flex items-center justify-center py-8 border border-purple-200 rounded-lg bg-purple-50/30">
             <div className="text-center">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mx-auto mb-3" />

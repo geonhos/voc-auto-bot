@@ -37,6 +37,7 @@ public class SuggestCategoryService implements SuggestCategoryUseCase {
         try {
             List<Category> activeCategories = loadCategoryPort.loadActiveCategories();
             if (activeCategories.isEmpty()) {
+                log.warn("활성 카테고리가 없어 추천을 건너뜁니다");
                 return List.of();
             }
 

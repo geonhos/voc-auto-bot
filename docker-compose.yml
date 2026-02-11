@@ -127,7 +127,7 @@ services:
       SPRING_MAIL_HOST: mailhog
       SPRING_MAIL_PORT: 1025
       JWT_SECRET: ${JWT_SECRET}
-      LLM_API_URL: ${LLM_API_URL:-http://host.docker.internal:11434}
+      LLM_API_URL: http://host.docker.internal:11434
       LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
       LLM_EMBEDDING_MODEL: ${LLM_EMBEDDING_MODEL:-nomic-embed-text:latest}
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
