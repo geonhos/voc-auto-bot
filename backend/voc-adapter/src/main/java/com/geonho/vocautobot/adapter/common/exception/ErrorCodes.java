@@ -12,6 +12,7 @@ public final class ErrorCodes {
     // Common errors
     public static final String INVALID_INPUT = "INVALID_INPUT";
     public static final String METHOD_NOT_ALLOWED = "METHOD_NOT_ALLOWED";
+    public static final String CONFLICT = "CONFLICT";
     public static final String INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR";
 
     // Authentication errors

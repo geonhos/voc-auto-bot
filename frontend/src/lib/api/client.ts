@@ -114,4 +114,14 @@ export const api = {
       .then((res) => res.data),
 };
 
+/**
+ * Check if an error is a 409 Conflict (optimistic locking failure).
+ */
+export function isConflictError(error: unknown): boolean {
+  if (axios.isAxiosError(error) && error.response?.status === 409) {
+    return true;
+  }
+  return false;
+}
+
 export default apiClient;
