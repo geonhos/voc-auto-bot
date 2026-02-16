@@ -6,8 +6,10 @@ import { useState, useEffect, useCallback } from 'react';
 
 import { EmailComposeSheet } from '@/components/email/EmailComposeSheet';
 import { ConfidenceIndicator } from '@/components/voc/ConfidenceIndicator';
+import { VocStatusTimeline } from '@/components/voc/VocStatusTimeline';
 import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
+import { useVocStatusHistory } from '@/hooks/useVocStatusHistory';
 import { useToast } from '@/hooks/useToast';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc, useReanalyzeVoc } from '@/hooks/useVocs';
 import { api } from '@/lib/api/client';
@@ -31,6 +33,7 @@ export default function VocDetailPage() {
   const { data: voc, isLoading, error, refetch } = useVoc(vocId);
   const { data: categoryTree } = useCategoryTree();
   const { data: similarVocs } = useSimilarVocs(vocId, { limit: 5, enabled: !!voc });
+  const { data: statusHistory } = useVocStatusHistory(vocId);
   const changeStatusMutation = useChangeVocStatus();
   const addMemoMutation = useAddVocMemo();
   const updateVocMutation = useUpdateVoc();
@@ -663,7 +666,22 @@ export default function VocDetailPage() {
         </div>
       </div>
 
-      {/* 5. 담당자 메모 */}
+      {/* 5. 상태 변경 이력 타임라인 */}
+      {statusHistory && statusHistory.length > 0 && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
+          <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <span className="material-icons-outlined text-primary">timeline</span>
+              상태 변경 이력
+            </h2>
+          </div>
+          <div className="p-6">
+            <VocStatusTimeline statusHistory={statusHistory} currentStatus={voc.status} />
+          </div>
+        </div>
+      )}
+
+      {/* 6. 담당자 메모 */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
         <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -703,7 +721,7 @@ export default function VocDetailPage() {
         </div>
       </div>
 
-      {/* 6. 변경 이력 */}
+      {/* 7. 변경 이력 */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden mb-6">
         <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -743,7 +761,7 @@ export default function VocDetailPage() {
         </div>
       </div>
 
-      {/* 7. 하단 액션 버튼 */}
+      {/* 8. 하단 액션 버튼 */}
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col sm:flex-row gap-3 justify-end">
