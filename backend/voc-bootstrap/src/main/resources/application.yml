@@ -46,14 +46,21 @@ server:
 
 # Actuator
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+      group:
+        liveness:
+          include: livenessState, ping
+        readiness:
+          include: readinessState, db, redis, minio, ollama, aiService
   endpoints:
     web:
       exposure:
         include: health,info,metrics
       base-path: /actuator
-  endpoint:
-    health:
-      show-details: when-authorized
 
 # Swagger
 springdoc:
@@ -258,6 +265,9 @@ logging:
     com.geonho.vocautobot: INFO
 
 management:
+  endpoint:
+    health:
+      show-details: never
   endpoints:
     web:
       exposure:
