@@ -32,6 +32,7 @@ public class VocMapper {
 
         VocDomain domain = VocDomain.builder()
                 .id(entity.getId())
+                .version(entity.getVersion())
                 .ticketId(entity.getTicketId())
                 .title(entity.getTitle())
                 .content(entity.getContent())

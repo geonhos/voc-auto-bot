@@ -3,6 +3,7 @@ package com.geonho.vocautobot.adapter.common.exception;
 import com.geonho.vocautobot.adapter.common.ApiResponse;
 import com.geonho.vocautobot.application.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -75,6 +76,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(INVALID_CREDENTIALS, "이메일 또는 비밀번호가 올바르지 않습니다"));
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLockingFailure(OptimisticLockingFailureException e) {
+        log.warn("Optimistic locking failure: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(CONFLICT, "다른 사용자가 이미 변경했습니다. 새로고침 후 다시 시도하세요."));
     }
 
     @ExceptionHandler(Exception.class)

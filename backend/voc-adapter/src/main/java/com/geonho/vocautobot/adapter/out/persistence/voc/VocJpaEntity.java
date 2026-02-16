@@ -28,6 +28,10 @@ public class VocJpaEntity extends BaseJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "ticket_id", nullable = false, unique = true, length = 20)
     private String ticketId;
 

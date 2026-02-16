@@ -18,6 +18,7 @@ import java.util.List;
 public class VocDomain implements Auditable {
 
     private final Long id;
+    private Long version;
     private final String ticketId;
     private String title;
     private String content;

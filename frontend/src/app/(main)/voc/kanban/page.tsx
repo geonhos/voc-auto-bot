@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { VocPriorityBadge } from '@/components/voc/VocPriorityBadge';
 import { useVocs, useChangeVocStatus } from '@/hooks/useVocs';
+import { isConflictError } from '@/lib/api/client';
 import { VocStatus, isTerminalStatus } from '@/types';
 
 const STATUS_COLUMNS: { status: VocStatus; label: string; color: string; bgColor: string }[] = [
@@ -68,7 +69,12 @@ export default function VocKanbanPage() {
       });
     } catch (error) {
       console.error('상태 변경 실패:', error);
-      alert('상태 변경에 실패했습니다.');
+      if (isConflictError(error)) {
+        alert('다른 사용자가 이미 변경했습니다. 페이지를 새로고침합니다.');
+        window.location.reload();
+      } else {
+        alert('상태 변경에 실패했습니다.');
+      }
     }
 
     setDraggedId(null);

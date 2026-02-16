@@ -12,7 +12,7 @@ import { useSimilarVocs } from '@/hooks/useSimilarVocs';
 import { useVocStatusHistory } from '@/hooks/useVocStatusHistory';
 import { useToast } from '@/hooks/useToast';
 import { useVoc, useChangeVocStatus, useAddVocMemo, useUpdateVoc, useReanalyzeVoc } from '@/hooks/useVocs';
-import { api } from '@/lib/api/client';
+import { api, isConflictError } from '@/lib/api/client';
 import type { Voc, VocStatus, VocMemo, RelatedLog } from '@/types';
 import { isTerminalStatus, isLowConfidence, getAnalysisMethodLabel, getSentimentLabel, getSentimentColor } from '@/types';
 
@@ -144,7 +144,12 @@ export default function VocDetailPage() {
       alert('카테고리가 성공적으로 변경되었습니다.');
     } catch (err) {
       console.error('Failed to update category:', err);
-      alert('카테고리 변경 중 오류가 발생했습니다.');
+      if (isConflictError(err)) {
+        alert('다른 사용자가 이미 변경했습니다. 페이지를 새로고침합니다.');
+        refetch();
+      } else {
+        alert('카테고리 변경 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -162,7 +167,12 @@ export default function VocDetailPage() {
       alert('VOC가 반려되었습니다.');
     } catch (err) {
       console.error('Failed to reject:', err);
-      alert('VOC 반려 중 오류가 발생했습니다.');
+      if (isConflictError(err)) {
+        alert('다른 사용자가 이미 변경했습니다. 페이지를 새로고침합니다.');
+        refetch();
+      } else {
+        alert('VOC 반려 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -180,7 +190,12 @@ export default function VocDetailPage() {
       alert('VOC가 완료 처리되었습니다.');
     } catch (err) {
       console.error('Failed to complete:', err);
-      alert('VOC 완료 처리 중 오류가 발생했습니다.');
+      if (isConflictError(err)) {
+        alert('다른 사용자가 이미 변경했습니다. 페이지를 새로고침합니다.');
+        refetch();
+      } else {
+        alert('VOC 완료 처리 중 오류가 발생했습니다.');
+      }
     }
   };
 
