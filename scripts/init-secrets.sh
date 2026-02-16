@@ -27,7 +27,22 @@ fi
 
 # Check if .env already exists (unless --force)
 if [ "$FORCE" = false ] && [ -f "$ENV_FILE" ]; then
-    echo "[INFO] .env file already exists at: $ENV_FILE"
+    # Even if .env exists, generate secrets/*.txt if missing
+    if [ ! -f "$SECRETS_DIR/db_password.txt" ]; then
+        echo "[INFO] .env exists but secrets/*.txt files are missing. Generating from .env values..."
+        source "$ENV_FILE"
+        mkdir -p "$SECRETS_DIR"
+        printf '%s' "${JWT_SECRET:-}" > "$SECRETS_DIR/jwt_secret.txt"
+        printf '%s' "${POSTGRES_PASSWORD:-}" > "$SECRETS_DIR/db_password.txt"
+        printf '%s' "${REDIS_PASSWORD:-}" > "$SECRETS_DIR/redis_password.txt"
+        printf '%s' "${MINIO_ROOT_PASSWORD:-}" > "$SECRETS_DIR/minio_root_password.txt"
+        printf '%s' "${AI_SERVICE_API_KEY:-}" > "$SECRETS_DIR/ai_service_api_key.txt"
+        printf '%s' "${ENCRYPTION_KEY:-}" > "$SECRETS_DIR/encryption_key.txt"
+        chmod 600 "$SECRETS_DIR"/*.txt
+        echo "[OK] Secret files synced from .env to: $SECRETS_DIR/"
+        exit 0
+    fi
+    echo "[INFO] .env and secrets/*.txt already exist at: $PROJECT_ROOT"
     echo "  Use --force to regenerate: ./scripts/init-secrets.sh --force"
     exit 0
 fi
