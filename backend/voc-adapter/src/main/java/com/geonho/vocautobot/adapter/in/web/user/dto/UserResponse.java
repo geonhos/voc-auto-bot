@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.adapter.in.web.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.geonho.vocautobot.domain.user.User;
 import com.geonho.vocautobot.domain.user.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,17 +13,21 @@ public record UserResponse(
         @Schema(description = "사용자 ID", example = "1")
         Long id,
 
+        @Schema(description = "사용자명", example = "admin")
+        String username,
+
         @Schema(description = "이메일", example = "user@example.com")
         String email,
 
         @Schema(description = "이름", example = "홍길동")
         String name,
 
-        @Schema(description = "역할", example = "AGENT")
+        @Schema(description = "역할", example = "ADMIN")
         UserRole role,
 
+        @JsonProperty("isActive")
         @Schema(description = "활성 상태", example = "true")
-        boolean active,
+        boolean isActive,
 
         @Schema(description = "마지막 로그인 시간")
         LocalDateTime lastLoginAt,
@@ -36,6 +41,7 @@ public record UserResponse(
     public static UserResponse from(User user) {
         return new UserResponse(
                 user.getId(),
+                user.getUsername(),
                 user.getEmail(),
                 user.getName(),
                 user.getRole(),

@@ -116,7 +116,7 @@ services:
     container_name: voc-backend
     restart: unless-stopped
     environment:
-      SECURITY_ENABLED: ${SECURITY_ENABLED:-false}
+      SECURITY_ENABLED: ${SECURITY_ENABLED:-true}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-vocautobot}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-voc_user}
