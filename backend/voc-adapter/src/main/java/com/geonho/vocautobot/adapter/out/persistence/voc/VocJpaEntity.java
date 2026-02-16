@@ -9,8 +9,12 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 
 @Entity
@@ -64,6 +68,9 @@ public class VocJpaEntity extends BaseJpaEntity {
     @Convert(converter = AesEncryptConverter.class)
     @Column(name = "customer_phone", length = 512)
     private String customerPhone;
+
+    @Column(name = "customer_email_hash", length = 64)
+    private String customerEmailHash;
 
     @Column(name = "assignee_id")
     private Long assigneeId;
@@ -132,6 +139,20 @@ public class VocJpaEntity extends BaseJpaEntity {
             this.resolvedAt = LocalDateTime.now();
         } else if (status == VocStatus.CLOSED && this.closedAt == null) {
             this.closedAt = LocalDateTime.now();
+        }
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void computeEmailHash() {
+        if (this.customerEmail != null) {
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(this.customerEmail.getBytes(StandardCharsets.UTF_8));
+                this.customerEmailHash = HexFormat.of().formatHex(hash);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException("SHA-256 not available", e);
+            }
         }
     }
 

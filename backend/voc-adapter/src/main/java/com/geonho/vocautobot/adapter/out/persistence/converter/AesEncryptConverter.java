@@ -9,8 +9,10 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HexFormat;
 
 @Converter
 @Component
@@ -24,7 +26,7 @@ public class AesEncryptConverter implements AttributeConverter<String, String> {
 
     @Value("${encryption.key}")
     public void setSecretKey(String key) {
-        secretKey = hexToBytes(key);
+        secretKey = HexFormat.of().parseHex(key);
     }
 
     @Override
@@ -39,7 +41,7 @@ public class AesEncryptConverter implements AttributeConverter<String, String> {
                 new SecretKeySpec(secretKey, "AES"),
                 new GCMParameterSpec(GCM_TAG_LENGTH, iv));
 
-            byte[] encrypted = cipher.doFinal(attribute.getBytes("UTF-8"));
+            byte[] encrypted = cipher.doFinal(attribute.getBytes(StandardCharsets.UTF_8));
 
             ByteBuffer buffer = ByteBuffer.allocate(IV_LENGTH + encrypted.length);
             buffer.put(iv);
@@ -68,19 +70,10 @@ public class AesEncryptConverter implements AttributeConverter<String, String> {
                 new SecretKeySpec(secretKey, "AES"),
                 new GCMParameterSpec(GCM_TAG_LENGTH, iv));
 
-            return new String(cipher.doFinal(encrypted), "UTF-8");
+            return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("Decryption failed", e);
         }
     }
 
-    private static byte[] hexToBytes(String hex) {
-        int len = hex.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
-                    + Character.digit(hex.charAt(i + 1), 16));
-        }
-        return data;
-    }
 }
