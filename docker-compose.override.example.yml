@@ -1,0 +1,19 @@
+# Development overrides - restores port bindings for local debugging
+# Copy this file to docker-compose.override.yml to use:
+#   cp docker-compose.override.example.yml docker-compose.override.yml
+# docker-compose.override.yml is automatically loaded by docker compose.
+services:
+  postgres:
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+  redis:
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+  mailhog:
+    ports:
+      - "1025:1025"
+      - "8025:8025"
