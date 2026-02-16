@@ -10,6 +10,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-vocautobot}
       POSTGRES_USER: ${POSTGRES_USER:-voc_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -20,6 +21,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    secrets:
+      - db_password
     networks:
       - voc-network
 
@@ -40,6 +43,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    secrets:
+      - redis_password
     networks:
       - voc-network
 
@@ -64,6 +69,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    secrets:
+      - db_password
+      - ai_service_api_key
     networks:
       - voc-network
     profiles:
@@ -103,6 +111,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    secrets:
+      - minio_root_password
     networks:
       - voc-network
 
@@ -150,6 +160,12 @@ services:
       timeout: 10s
       start_period: 90s
       retries: 3
+    secrets:
+      - jwt_secret
+      - db_password
+      - redis_password
+      - minio_root_password
+      - ai_service_api_key
     networks:
       - voc-network
     profiles:
@@ -191,3 +207,26 @@ volumes:
 networks:
   voc-network:
     driver: bridge
+
+# =========================
+# Docker Secrets (Production / Swarm Mode)
+# =========================
+# For standalone docker-compose, secrets are provided via .env file.
+# For Docker Swarm or production deployments, use file-based secrets:
+#   1. Run: ./scripts/init-secrets.sh
+#   2. Deploy with: docker stack deploy -c docker-compose.yml voc
+#
+# Secret files are stored in ./secrets/ (gitignored).
+secrets:
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  redis_password:
+    file: ./secrets/redis_password.txt
+  minio_root_password:
+    file: ./secrets/minio_root_password.txt
+  ai_service_api_key:
+    file: ./secrets/ai_service_api_key.txt
+  encryption_key:
+    file: ./secrets/encryption_key.txt
