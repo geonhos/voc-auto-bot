@@ -10,7 +10,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-vocautobot}
       POSTGRES_USER: ${POSTGRES_USER:-voc_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     expose:
       - "5432"
     volumes:
