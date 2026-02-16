@@ -16,6 +16,11 @@ jwt:
   access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY:3600000}      # 1 hour
   refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY:604800000}   # 7 days
 
+# Encryption Configuration
+# SECURITY: ENCRYPTION_KEY must be set via environment variable (64 hex chars for AES-256)
+encryption:
+  key: ${ENCRYPTION_KEY}
+
 # Slack Notification Configuration
 slack:
   enabled: ${SLACK_ENABLED:true}

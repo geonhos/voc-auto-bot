@@ -21,6 +21,9 @@ spring:
     port: 1025
     protocol: smtp
 
+encryption:
+  key: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
 jwt:
   secret: test-secret-key-for-testing-purposes-only-must-be-long-enough-256-bits
   access-token-validity: 3600000
