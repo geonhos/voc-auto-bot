@@ -1,6 +1,7 @@
 package com.geonho.vocautobot.adapter.out.persistence.voc;
 
 import com.geonho.vocautobot.adapter.out.persistence.common.BaseJpaEntity;
+import com.geonho.vocautobot.adapter.out.persistence.converter.AesEncryptConverter;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 import com.geonho.vocautobot.domain.voc.VocStatus;
 import jakarta.persistence.*;
@@ -52,13 +53,16 @@ public class VocJpaEntity extends BaseJpaEntity {
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
 
-    @Column(name = "customer_email", nullable = false, length = 100)
+    @Convert(converter = AesEncryptConverter.class)
+    @Column(name = "customer_email", nullable = false, length = 512)
     private String customerEmail;
 
-    @Column(name = "customer_name", length = 100)
+    @Convert(converter = AesEncryptConverter.class)
+    @Column(name = "customer_name", length = 512)
     private String customerName;
 
-    @Column(name = "customer_phone", length = 20)
+    @Convert(converter = AesEncryptConverter.class)
+    @Column(name = "customer_phone", length = 512)
     private String customerPhone;
 
     @Column(name = "assignee_id")
