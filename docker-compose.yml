@@ -10,8 +10,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-vocautobot}
       POSTGRES_USER: ${POSTGRES_USER:-voc_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/docker/postgres/init:/docker-entrypoint-initdb.d
@@ -21,7 +21,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - voc-network
+      - data-net
 
   # =========================
   # Redis (Cache & Session)
@@ -30,8 +30,8 @@ services:
     image: redis:7-alpine
     container_name: voc-redis
     restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    expose:
+      - "6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
@@ -41,7 +41,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - voc-network
+      - data-net
 
   # =========================
   # AI Service (Python FastAPI)
@@ -65,7 +65,8 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - voc-network
+      - backend-net
+      - data-net
     profiles:
       - app
 
@@ -76,11 +77,12 @@ services:
     image: mailhog/mailhog:latest
     container_name: voc-mailhog
     restart: unless-stopped
+    expose:
+      - "1025"
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
+      - "127.0.0.1:8025:8025"   # Web UI (localhost only)
     networks:
-      - voc-network
+      - backend-net
 
   # =========================
   # MinIO (File Storage)
@@ -93,9 +95,10 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    expose:
+      - "9000"
     ports:
-      - "9000:9000"   # API
-      - "9001:9001"   # Console
+      - "127.0.0.1:9001:9001"   # Console (localhost only)
     volumes:
       - minio_data:/data
     healthcheck:
@@ -104,7 +107,7 @@ services:
       timeout: 20s
       retries: 3
     networks:
-      - voc-network
+      - data-net
 
   # =========================
   # Backend (Spring Boot)
@@ -151,7 +154,9 @@ services:
       start_period: 90s
       retries: 3
     networks:
-      - voc-network
+      - frontend-net
+      - backend-net
+      - data-net
     profiles:
       - app
 
@@ -180,7 +185,7 @@ services:
       start_period: 30s
       retries: 3
     networks:
-      - voc-network
+      - frontend-net
     profiles:
       - app
 
@@ -188,6 +193,17 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+
+# =========================
+# 3-tier Network Isolation
+# =========================
+# frontend-net: Frontend ↔ Backend communication
+# backend-net:  Backend ↔ AI Service, Backend ↔ MailHog
+# data-net:     Backend/AI Service ↔ Database/Cache/Storage
 networks:
-  voc-network:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+  data-net:
     driver: bridge
