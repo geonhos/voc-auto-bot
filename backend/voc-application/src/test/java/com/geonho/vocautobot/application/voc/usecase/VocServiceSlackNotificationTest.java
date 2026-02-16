@@ -1,12 +1,15 @@
 package com.geonho.vocautobot.application.voc.usecase;
 
+import com.geonho.vocautobot.application.analysis.port.out.ProgressiveLearningPort;
 import com.geonho.vocautobot.application.notification.port.out.NotificationPort;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.voc.port.in.dto.AssignVocCommand;
 import com.geonho.vocautobot.application.voc.port.in.dto.ChangeStatusCommand;
 import com.geonho.vocautobot.application.voc.port.in.dto.CreateVocCommand;
 import com.geonho.vocautobot.application.voc.port.out.GenerateTicketIdPort;
+import com.geonho.vocautobot.application.voc.port.out.LoadStatusHistoryPort;
 import com.geonho.vocautobot.application.voc.port.out.LoadVocPort;
+import com.geonho.vocautobot.application.voc.port.out.SaveStatusHistoryPort;
 import com.geonho.vocautobot.application.voc.port.out.SaveVocPort;
 import com.geonho.vocautobot.domain.user.User;
 import com.geonho.vocautobot.domain.user.UserRole;
@@ -50,6 +53,15 @@ class VocServiceSlackNotificationTest {
 
     @Mock
     private NotificationPort notificationPort;
+
+    @Mock
+    private ProgressiveLearningPort progressiveLearningPort;
+
+    @Mock
+    private SaveStatusHistoryPort saveStatusHistoryPort;
+
+    @Mock
+    private LoadStatusHistoryPort loadStatusHistoryPort;
 
     @InjectMocks
     private VocService vocService;

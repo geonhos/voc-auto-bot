@@ -60,6 +60,7 @@ public class VocController {
     private final AsyncVocAnalysisService asyncVocAnalysisService;
     private final GetSimilarVocsUseCase getSimilarVocsUseCase;
     private final SuggestCategoryUseCase suggestCategoryUseCase;
+    private final GetVocStatusHistoryUseCase getVocStatusHistoryUseCase;
     private final VectorSearchPort vectorSearchPort;
     private final SentimentAnalysisPort sentimentAnalysisPort;
     private final UpdateVocSentimentPort updateVocSentimentPort;
@@ -77,6 +78,7 @@ public class VocController {
             AsyncVocAnalysisService asyncVocAnalysisService,
             GetSimilarVocsUseCase getSimilarVocsUseCase,
             SuggestCategoryUseCase suggestCategoryUseCase,
+            GetVocStatusHistoryUseCase getVocStatusHistoryUseCase,
             VectorSearchPort vectorSearchPort,
             SentimentAnalysisPort sentimentAnalysisPort,
             UpdateVocSentimentPort updateVocSentimentPort,
@@ -93,6 +95,7 @@ public class VocController {
         this.asyncVocAnalysisService = asyncVocAnalysisService;
         this.getSimilarVocsUseCase = getSimilarVocsUseCase;
         this.suggestCategoryUseCase = suggestCategoryUseCase;
+        this.getVocStatusHistoryUseCase = getVocStatusHistoryUseCase;
         this.vectorSearchPort = vectorSearchPort;
         this.sentimentAnalysisPort = sentimentAnalysisPort;
         this.updateVocSentimentPort = updateVocSentimentPort;
@@ -379,12 +382,14 @@ public class VocController {
 
     @Operation(
             summary = "상태 변경 이력 조회",
-            description = "VOC의 상태 변경 이력을 조회합니다 (향후 구현 예정)"
+            description = "VOC의 상태 변경 이력을 조회합니다"
     )
     @GetMapping("/{id}/history")
-    @ResponseStatus(HttpStatus.NOT_IMPLEMENTED)
-    public ApiResponse<List<Object>> getVocHistory(@PathVariable Long id) {
-        // Feature: VOC status change history (requires VocStatusHistory entity, planned for future sprint)
-        return ApiResponse.error(HttpStatus.NOT_IMPLEMENTED, "이 기능은 아직 구현되지 않았습니다.");
+    public ApiResponse<List<VocStatusHistoryResponse>> getVocHistory(@PathVariable Long id) {
+        var historyList = getVocStatusHistoryUseCase.getStatusHistory(id);
+        List<VocStatusHistoryResponse> response = historyList.stream()
+                .map(VocStatusHistoryResponse::from)
+                .toList();
+        return ApiResponse.success(response);
     }
 }

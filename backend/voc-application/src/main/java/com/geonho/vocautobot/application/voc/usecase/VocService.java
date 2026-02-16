@@ -10,7 +10,9 @@ import com.geonho.vocautobot.application.voc.exception.VocNotFoundException;
 import com.geonho.vocautobot.application.voc.port.in.*;
 import com.geonho.vocautobot.application.voc.port.in.dto.*;
 import com.geonho.vocautobot.application.voc.port.out.GenerateTicketIdPort;
+import com.geonho.vocautobot.application.voc.port.out.LoadStatusHistoryPort;
 import com.geonho.vocautobot.application.voc.port.out.LoadVocPort;
+import com.geonho.vocautobot.application.voc.port.out.SaveStatusHistoryPort;
 import com.geonho.vocautobot.application.voc.port.out.SaveVocPort;
 import com.geonho.vocautobot.domain.user.User;
 import com.geonho.vocautobot.domain.user.UserRole;
@@ -18,12 +20,14 @@ import com.geonho.vocautobot.domain.voc.VocConstants;
 import com.geonho.vocautobot.domain.voc.VocDomain;
 import com.geonho.vocautobot.domain.voc.VocMemoDomain;
 import com.geonho.vocautobot.domain.voc.VocStatus;
+import com.geonho.vocautobot.domain.voc.VocStatusHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -41,7 +45,8 @@ public class VocService implements
         AssignVocUseCase,
         GetVocListUseCase,
         GetVocDetailUseCase,
-        AddMemoUseCase {
+        AddMemoUseCase,
+        GetVocStatusHistoryUseCase {
 
     private final LoadVocPort loadVocPort;
     private final SaveVocPort saveVocPort;
@@ -49,6 +54,8 @@ public class VocService implements
     private final LoadUserPort loadUserPort;
     private final NotificationPort notificationPort;
     private final ProgressiveLearningPort progressiveLearningPort;
+    private final SaveStatusHistoryPort saveStatusHistoryPort;
+    private final LoadStatusHistoryPort loadStatusHistoryPort;
 
     @Override
     @Transactional
@@ -105,8 +112,8 @@ public class VocService implements
         VocDomain voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
 
-        // Store previous status for notification
-        String previousStatus = voc.getStatus().name();
+        // Store previous status for notification and history
+        VocStatus previousStatus = voc.getStatus();
         VocStatus newStatus = command.newStatus();
 
         // Change status (domain logic validates state transition)
@@ -114,8 +121,18 @@ public class VocService implements
 
         VocDomain savedVoc = saveVocPort.saveVoc(voc);
 
+        // Save status change history
+        VocStatusHistory history = VocStatusHistory.create(
+                savedVoc.getId(),
+                previousStatus,
+                newStatus,
+                null,
+                command.processingNote()
+        );
+        saveStatusHistoryPort.saveStatusHistory(history);
+
         // Send notification (non-blocking - failures should not affect status change)
-        sendNotificationSafely(() -> notificationPort.notifyVocStatusChanged(savedVoc, previousStatus),
+        sendNotificationSafely(() -> notificationPort.notifyVocStatusChanged(savedVoc, previousStatus.name()),
                 "VOC status change notification", savedVoc.getTicketId());
 
         // Trigger progressive learning for resolved VOCs (async, non-blocking)
@@ -264,6 +281,15 @@ public class VocService implements
         voc.addMemo(memo);
 
         return saveVocPort.saveVoc(voc);
+    }
+
+    @Override
+    public List<VocStatusHistory> getStatusHistory(Long vocId) {
+        // Verify VOC exists
+        loadVocPort.loadVocById(vocId)
+                .orElseThrow(() -> new VocNotFoundException(vocId));
+
+        return loadStatusHistoryPort.loadStatusHistoryByVocId(vocId);
     }
 
     /**
