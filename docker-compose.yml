@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-vocautobot}
       POSTGRES_USER: ${POSTGRES_USER:-voc_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voc_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -34,9 +34,9 @@ services:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-voc_redis_pass}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-voc_redis_pass}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,7 +56,7 @@ services:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
       LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-voc_user}:${POSTGRES_PASSWORD:-voc_password}@postgres:5432/${POSTGRES_DB:-vocautobot}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY}
       PORT: 8001
     ports:
@@ -91,8 +91,8 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio_admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio_password}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
       - "9000:9000"   # API
       - "9001:9001"   # Console
@@ -120,10 +120,10 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-vocautobot}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-voc_user}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-voc_password}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD:-voc_redis_pass}
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       SPRING_MAIL_HOST: mailhog
       SPRING_MAIL_PORT: 1025
       JWT_SECRET: ${JWT_SECRET}
@@ -135,8 +135,8 @@ services:
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
       SLACK_ENABLED: ${SLACK_ENABLED:-false}
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minio_admin}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minio_password}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:

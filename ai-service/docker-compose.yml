@@ -14,14 +14,15 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: voc-postgres
+    env_file: ../.env
     environment:
-      POSTGRES_DB: vocautobot
-      POSTGRES_USER: voc_user
-      POSTGRES_PASSWORD: voc_password
+      POSTGRES_DB: ${POSTGRES_DB:-vocautobot}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U voc_user -d vocautobot"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-voc_user} -d ${POSTGRES_DB:-vocautobot}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,7 +38,7 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - EMBEDDING_MODEL=nomic-embed-text
       - LLM_MODEL=llama3.2:latest
-      - DATABASE_URL=postgresql://voc_user:voc_password@postgres:5432/vocautobot
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vocautobot}
     depends_on:
       ollama:
         condition: service_started

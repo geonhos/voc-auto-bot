@@ -18,10 +18,9 @@ async def lifespan(app: FastAPI):
         app: FastAPI application instance.
     """
     # Startup: Initialize database pool
-    database_url = os.getenv(
-        "DATABASE_URL",
-        "postgresql://voc_user:voc_password@localhost:5432/vocautobot",
-    )
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL environment variable is required")
     print(f"Initializing database pool: {database_url.split('@')[-1]}")
     init_pool(database_url)
     ensure_log_embeddings_table()

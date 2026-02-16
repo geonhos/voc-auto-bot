@@ -21,10 +21,9 @@ def init_pool(database_url: str | None = None, min_size: int = 2, max_size: int 
     if _pool is not None:
         return _pool
 
-    url = database_url or os.getenv(
-        "DATABASE_URL",
-        "postgresql://voc_user:voc_password@localhost:5432/vocautobot",
-    )
+    url = database_url or os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL environment variable is required")
     logger.info(f"Initializing database connection pool: {url.split('@')[-1]}")
 
     _pool = ConnectionPool(
