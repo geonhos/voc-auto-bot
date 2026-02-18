@@ -21,7 +21,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -36,6 +39,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/v1/statistics")
 @RequiredArgsConstructor
+@Validated
 public class StatisticsController {
 
     private final GetKpiUseCase getKpiUseCase;
@@ -217,7 +221,7 @@ public class StatisticsController {
     @GetMapping("/snapshot-trend")
     public ApiResponse<List<KpiSnapshotResponse>> getSnapshotTrend(
             @Parameter(description = "조회 일수 (기본 30일)")
-            @RequestParam(defaultValue = "30") int days
+            @RequestParam(defaultValue = "30") @Min(1) @Max(365) int days
     ) {
         List<KpiSnapshotResponse> snapshots = kpiSnapshotUseCase.getSnapshotTrend(days)
                 .stream()
