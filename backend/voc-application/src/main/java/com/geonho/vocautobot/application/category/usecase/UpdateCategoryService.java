@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.application.category.usecase;
 
+import com.geonho.vocautobot.application.audit.Audited;
 import com.geonho.vocautobot.application.category.port.in.UpdateCategoryUseCase;
 import com.geonho.vocautobot.application.category.port.in.UpdateCategoryCommand;
 import com.geonho.vocautobot.application.category.port.out.LoadCategoryPort;
@@ -19,6 +20,7 @@ public class UpdateCategoryService implements UpdateCategoryUseCase {
     private final SaveCategoryPort saveCategoryPort;
 
     @Override
+    @Audited(action = "UPDATE", entityType = "CATEGORY")
     public Category updateCategory(UpdateCategoryCommand command) {
         Category category = loadCategoryPort.loadById(command.getId())
                 .orElseThrow(() -> new BusinessException("CATEGORY_NOT_FOUND", "카테고리를 찾을 수 없습니다"));

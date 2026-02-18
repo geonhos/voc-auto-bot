@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.application.category.usecase;
 
+import com.geonho.vocautobot.application.audit.Audited;
 import com.geonho.vocautobot.application.category.port.in.CreateCategoryUseCase;
 import com.geonho.vocautobot.application.category.port.in.CreateCategoryCommand;
 import com.geonho.vocautobot.application.category.port.out.LoadCategoryPort;
@@ -19,6 +20,7 @@ public class CreateCategoryService implements CreateCategoryUseCase {
     private final SaveCategoryPort saveCategoryPort;
 
     @Override
+    @Audited(action = "CREATE", entityType = "CATEGORY")
     public Category createCategory(CreateCategoryCommand command) {
         validateDuplicateCode(command.getCode());
 
