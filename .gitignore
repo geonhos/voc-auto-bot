@@ -210,3 +210,9 @@ figma-plugin/dist/
 # Image exports
 # =========================
 image-export/
+
+# =========================
+# Ollama Model Exports
+# =========================
+ollama-export/
+ollama-data/

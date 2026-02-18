@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "description": "VOC Auto Bot - Ollama Model Package",
+  "models": [
+    {
+      "name": "nomic-embed-text",
+      "tag": "latest",
+      "purpose": "embedding",
+      "required": true
+    },
+    {
+      "name": "gemma3",
+      "tag": "4b",
+      "purpose": "llm",
+      "required": true
+    }
+  ],
+  "ollama_version": "0.5.7",
+  "notes": "Export with: ./scripts/ollama/export-models.sh <version>"
+}
