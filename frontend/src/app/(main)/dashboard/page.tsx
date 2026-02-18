@@ -14,6 +14,8 @@ import {
 import Link from 'next/link';
 import { useState, useCallback } from 'react';
 
+import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { AnimatedCounter } from '@/components/dashboard/AnimatedCounter';
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
 import { SentimentChart } from '@/components/dashboard/SentimentChart';
 import {
@@ -24,14 +26,33 @@ import {
 } from '@/components/dashboard/DashboardLayout';
 import { DatePicker } from '@/components/dashboard/DatePicker';
 import { KpiCard } from '@/components/dashboard/KpiCard';
+import { SlaWidget } from '@/components/dashboard/SlaWidget';
 import { StatusChart } from '@/components/dashboard/StatusChart';
 import { TrendChart } from '@/components/dashboard/TrendChart';
-import { useDashboardViewModel } from '@/hooks/useDashboardViewModel';
-import type { PeriodType } from '@/hooks/useDashboardViewModel';
+import { useDashboardViewModel, REFRESH_INTERVAL_OPTIONS } from '@/hooks/useDashboardViewModel';
+import type { PeriodType, RefreshIntervalType } from '@/hooks/useDashboardViewModel';
+
+function formatKpiValue(value: number, suffix: string): string {
+  return `${Math.round(value).toLocaleString()}${suffix}`;
+}
+
+function formatDecimalKpiValue(value: number, suffix: string): string {
+  return `${value.toFixed(1)}${suffix}`;
+}
 
 export default function DashboardPage() {
-  const { period, isLoading, data, setPeriod, setCustomDateRange, refetch, dateRangeLabel, customDateRange } =
-    useDashboardViewModel();
+  const {
+    period,
+    isLoading,
+    data,
+    setPeriod,
+    setCustomDateRange,
+    refetch,
+    dateRangeLabel,
+    customDateRange,
+    refreshInterval,
+    setRefreshInterval,
+  } = useDashboardViewModel();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const handlePeriodChange = (newPeriod: PeriodType) => {
@@ -181,7 +202,28 @@ export default function DashboardPage() {
                   </button>
                 </DatePicker>
               </div>
-              <div className="ml-auto">
+
+              <div className="ml-auto flex items-center gap-2">
+                {/* Refresh interval selector */}
+                <div className="flex items-center gap-1.5">
+                  <RefreshCwIcon className="h-4 w-4 text-gray-500" />
+                  <select
+                    value={refreshInterval === false ? 'manual' : String(refreshInterval)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setRefreshInterval(val === 'manual' ? false : (Number(val) as RefreshIntervalType));
+                    }}
+                    className="text-sm border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    aria-label="자동 갱신 주기"
+                  >
+                    {REFRESH_INTERVAL_OPTIONS.map((opt) => (
+                      <option key={String(opt.value)} value={opt.value === false ? 'manual' : String(opt.value)}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <button
                   onClick={() => refetch()}
                   className="px-4 py-2 text-sm font-medium rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-1"
@@ -199,25 +241,25 @@ export default function DashboardPage() {
           <KpiGrid>
             <KpiCard
               title="총 접수 건수"
-              value={`${safeKpi.totalVocs.toLocaleString()}건`}
+              value={<AnimatedCounter value={safeKpi.totalVocs} formatFn={(v) => formatKpiValue(v, '건')} />}
               icon={<BarChart3Icon className="h-6 w-6" />}
               change={kpi?.totalVocsChange}
             />
             <KpiCard
               title="평균 처리 시간"
-              value={`${safeKpi.avgResolutionTimeHours.toFixed(1)}시간`}
+              value={<AnimatedCounter value={safeKpi.avgResolutionTimeHours} formatFn={(v) => formatDecimalKpiValue(v, '시간')} />}
               icon={<ClockIcon className="h-6 w-6" />}
               change={kpi?.avgResolutionTimeChange}
             />
             <KpiCard
               title="완료율"
-              value={`${safeKpi.resolutionRate.toFixed(1)}%`}
+              value={<AnimatedCounter value={safeKpi.resolutionRate} formatFn={(v) => formatDecimalKpiValue(v, '%')} />}
               icon={<CheckCircleIcon className="h-6 w-6" />}
               change={kpi?.resolutionRateChange}
             />
             <KpiCard
               title="처리 중"
-              value={`${safeKpi.pendingVocs.toLocaleString()}건`}
+              value={<AnimatedCounter value={safeKpi.pendingVocs} formatFn={(v) => formatKpiValue(v, '건')} />}
               icon={<ActivityIcon className="h-6 w-6" />}
               change={kpi?.pendingVocsChange}
             />
@@ -237,6 +279,14 @@ export default function DashboardPage() {
 
         <DashboardSection>
           <SentimentChart />
+        </DashboardSection>
+
+        {/* SLA Widget + Activity Feed */}
+        <DashboardSection>
+          <ChartGrid columns={2}>
+            <SlaWidget />
+            <ActivityFeed />
+          </ChartGrid>
         </DashboardSection>
 
         <DashboardSection>

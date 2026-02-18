@@ -8,6 +8,15 @@ import { useDashboardData } from './useStatistics';
 
 export type PeriodType = 'today' | '7days' | '30days' | 'custom';
 
+export type RefreshIntervalType = 30000 | 60000 | 300000 | false;
+
+export const REFRESH_INTERVAL_OPTIONS: { label: string; value: RefreshIntervalType }[] = [
+  { label: '30초', value: 30000 },
+  { label: '1분', value: 60000 },
+  { label: '5분', value: 300000 },
+  { label: '수동', value: false },
+];
+
 export interface UseDashboardViewModelReturn {
   period: PeriodType;
   customDateRange: { fromDate?: string; toDate?: string };
@@ -19,6 +28,8 @@ export interface UseDashboardViewModelReturn {
   setCustomDateRange: (fromDate: string, toDate: string) => void;
   refetch: () => void;
   dateRangeLabel: string;
+  refreshInterval: RefreshIntervalType;
+  setRefreshInterval: (interval: RefreshIntervalType) => void;
 }
 
 export function useDashboardViewModel(): UseDashboardViewModelReturn {
@@ -27,6 +38,7 @@ export function useDashboardViewModel(): UseDashboardViewModelReturn {
     fromDate?: string;
     toDate?: string;
   }>({});
+  const [refreshInterval, setRefreshInterval] = useState<RefreshIntervalType>(60000);
 
   const params = useMemo<StatisticsParams>(() => {
     const now = new Date();
@@ -61,7 +73,7 @@ export function useDashboardViewModel(): UseDashboardViewModelReturn {
     return { fromDate, toDate };
   }, [period, customDateRange]);
 
-  const { data, isLoading, isError, error, refetch } = useDashboardData(params);
+  const { data, isLoading, isError, error, refetch } = useDashboardData(params, refreshInterval);
 
   const dateRangeLabel = useMemo(() => {
     if (!params.fromDate || !params.toDate) return '';
@@ -86,5 +98,7 @@ export function useDashboardViewModel(): UseDashboardViewModelReturn {
     setCustomDateRange,
     refetch,
     dateRangeLabel,
+    refreshInterval,
+    setRefreshInterval,
   };
 }

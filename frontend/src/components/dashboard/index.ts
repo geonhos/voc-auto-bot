@@ -5,6 +5,9 @@ export { TrendChart } from './TrendChart';
 export { CategoryChart } from './CategoryChart';
 export { PriorityChart } from './PriorityChart';
 export { RecentVocList } from './RecentVocList';
+export { AnimatedCounter } from './AnimatedCounter';
+export { SlaWidget } from './SlaWidget';
+export { ActivityFeed } from './ActivityFeed';
 
 export {
   DashboardLayout,

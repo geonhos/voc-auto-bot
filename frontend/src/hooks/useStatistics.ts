@@ -10,11 +10,13 @@ const STATISTICS_QUERY_KEY = 'statistics';
 /**
  * @description Fetch complete dashboard data including KPI, trends, and all distributions
  */
-export function useDashboardData(params?: StatisticsParams) {
+export function useDashboardData(params?: StatisticsParams, refetchInterval?: number | false) {
   return useQuery({
     queryKey: [STATISTICS_QUERY_KEY, 'dashboard', params],
     queryFn: () => statisticsApi.getDashboard(params),
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchInterval: refetchInterval || false,
+    refetchIntervalInBackground: false,
   });
 }
 
