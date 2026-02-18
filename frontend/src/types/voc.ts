@@ -336,3 +336,26 @@ export interface SimilarVoc {
   similarity: number;
   createdAt: string;
 }
+
+// Bulk operation types
+export interface BulkStatusChangeRequest {
+  vocIds: number[];
+  status: VocStatus;
+  reason?: string;
+}
+
+export interface BulkAssignRequest {
+  vocIds: number[];
+  assigneeId: number;
+}
+
+export interface BulkPriorityChangeRequest {
+  vocIds: number[];
+  priority: VocPriority;
+}
+
+export interface BulkOperationResponse {
+  successCount: number;
+  failedIds: number[];
+  errors: Record<number, string>;
+}
