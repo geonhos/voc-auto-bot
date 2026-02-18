@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 export interface KpiCardProps {
   title: string;
-  value: string;
+  value: React.ReactNode;
   icon: React.ReactNode;
   change?: {
     value: number;
