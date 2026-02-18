@@ -21,18 +21,17 @@ public class KpiResponse {
     private long monthVocs;
 
     public static KpiResponse from(KpiResult result) {
-        long resolved = Math.round(result.totalVocs() * result.processingRate() / 100.0);
-        long pending = result.totalVocs() - resolved;
+        long pending = result.totalVocs() - result.resolvedVocs();
 
         return KpiResponse.builder()
                 .totalVocs(result.totalVocs())
-                .resolvedVocs(resolved)
-                .pendingVocs(pending)
+                .resolvedVocs(result.resolvedVocs())
+                .pendingVocs(Math.max(pending, 0))
                 .avgResolutionTimeHours(result.avgProcessingTimeHours())
                 .resolutionRate(result.processingRate())
-                .todayVocs(0) // TODO: 실제 구현 필요
-                .weekVocs(0)  // TODO: 실제 구현 필요
-                .monthVocs(result.totalVocs())
+                .todayVocs(result.todayVocs())
+                .weekVocs(result.weekVocs())
+                .monthVocs(result.monthVocs())
                 .build();
     }
 }

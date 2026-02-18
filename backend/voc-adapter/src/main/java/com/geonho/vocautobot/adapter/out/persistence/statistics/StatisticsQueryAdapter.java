@@ -183,4 +183,20 @@ public class StatisticsQueryAdapter implements StatisticsQueryPort {
 
         return result;
     }
+
+    @Override
+    public long countVocsSince(LocalDateTime since) {
+        TypedQuery<Long> query = entityManager.createQuery(
+                "SELECT COUNT(v) FROM VocJpaEntity v WHERE v.createdAt >= :since", Long.class);
+        query.setParameter("since", since);
+        return query.getSingleResult();
+    }
+
+    @Override
+    public long countResolvedVocs() {
+        TypedQuery<Long> query = entityManager.createQuery(
+                "SELECT COUNT(v) FROM VocJpaEntity v WHERE v.status = :status", Long.class);
+        query.setParameter("status", VocStatus.RESOLVED);
+        return query.getSingleResult();
+    }
 }
