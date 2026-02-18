@@ -8,6 +8,7 @@ import {
   MailIcon,
   UsersIcon,
   TagIcon,
+  ShieldCheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-react';
@@ -59,6 +60,11 @@ const navItems: NavItem[] = [
     label: '카테고리 관리',
     href: '/admin/categories',
     icon: <TagIcon className="h-5 w-5" />,
+  },
+  {
+    label: '감사 로그',
+    href: '/admin/audit-logs',
+    icon: <ShieldCheckIcon className="h-5 w-5" />,
   },
 ];
 
