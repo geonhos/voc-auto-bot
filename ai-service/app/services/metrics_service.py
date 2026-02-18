@@ -1,7 +1,7 @@
 """Service for recording and querying AI model performance metrics."""
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -110,7 +110,7 @@ class MetricsService:
             Summary dict with total_requests, avg_latency, avg_confidence,
             json_success_rate, method_distribution, feedback_stats.
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         start = (
             datetime.fromisoformat(start_date)
             if start_date
@@ -198,7 +198,7 @@ class MetricsService:
         Returns:
             Dict with current_avg, baseline_avg, drift_pct, is_drifting.
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if current_week_start:
             week_start = datetime.fromisoformat(current_week_start)
         else:
