@@ -1,9 +1,11 @@
 'use client';
 
-import { Suspense, useState, useCallback, useEffect } from 'react';
+import { Download, Loader2 } from 'lucide-react';
+import { Suspense, useState, useCallback, useEffect, useMemo } from 'react';
 
 import { VocSearchFilter } from '@/components/voc/VocSearchFilter';
 import { VocTable } from '@/components/voc/VocTable';
+import { useExportVocs } from '@/hooks/useExportVocs';
 import { useVocFilterParams } from '@/hooks/useVocFilterParams';
 import { useVocs } from '@/hooks/useVocs';
 import type { VocFilterState, VocListParams } from '@/types';
@@ -63,6 +65,35 @@ function VocTableContent() {
     setSortDirection(newSortDirection);
   }, []);
 
+  const { exportVocs, isExporting } = useExportVocs();
+
+  const exportParams = useMemo(() => {
+    const { page: _p, size: _s, ...rest } = params;
+    return rest;
+  }, [params]);
+
+  const handleExport = useCallback(() => {
+    exportVocs(exportParams);
+  }, [exportVocs, exportParams]);
+
+  const exportButton = useMemo(
+    () => (
+      <button
+        onClick={handleExport}
+        disabled={isExporting}
+        className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors flex items-center gap-2 disabled:opacity-50"
+      >
+        {isExporting ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Download className="w-4 h-4" />
+        )}
+        Excel 내보내기
+      </button>
+    ),
+    [handleExport, isExporting],
+  );
+
   return (
     <>
       <VocSearchFilter
@@ -96,6 +127,7 @@ function VocTableContent() {
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
           onSortChange={handleSortChange}
+          headerActions={exportButton}
         />
       )}
     </>
