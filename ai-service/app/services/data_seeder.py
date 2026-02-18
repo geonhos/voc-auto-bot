@@ -10,6 +10,7 @@ from enum import Enum
 
 from app.models.schemas import LogDocument
 from app.data.log_templates import LOG_TEMPLATES, find_matching_categories
+from app.data.voc_templates import find_matching_voc_categories
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class DataSeederService:
     """Service for seeding vector database with initial log data."""
 
     DEFAULT_SEED_FILE = "app/data/seed_logs_expanded.json"
+    DEFAULT_VOC_SEED_FILE = "app/data/seed_vocs.json"
 
     def __init__(self, embedding_service: Any = None):
         """Initialize data seeder service.
@@ -118,6 +120,118 @@ class DataSeederService:
 
         self._last_result = result
         return result
+
+    def seed_from_voc_file(self, file_path: Optional[str] = None) -> SeedingResult:
+        """Seed vector database from Korean VOC JSON file.
+
+        Converts VOC entries to LogDocument format so they can be stored
+        alongside system logs in the same vector store for RAG retrieval.
+
+        Args:
+            file_path: Path to VOC JSON file. Defaults to seed_vocs.json.
+
+        Returns:
+            SeedingResult with operation status.
+        """
+        if file_path is None:
+            file_path = self.DEFAULT_VOC_SEED_FILE
+
+        self._seeding_status = SeedingStatus.IN_PROGRESS
+        result = SeedingResult(
+            status=SeedingStatus.IN_PROGRESS,
+            started_at=datetime.now().isoformat(),
+        )
+
+        try:
+            path = Path(file_path)
+            if not path.exists():
+                base_path = Path(__file__).parent.parent.parent
+                path = base_path / file_path
+                if not path.exists():
+                    raise FileNotFoundError(f"VOC seed file not found: {file_path}")
+
+            with open(path, "r", encoding="utf-8") as f:
+                voc_entries = json.load(f)
+
+            result.total_entries = len(voc_entries)
+
+            # Convert VOC entries to LogDocument format
+            log_documents = self._convert_voc_to_log_documents(voc_entries)
+            result.seeded_entries = len(log_documents)
+            result.failed_entries = result.total_entries - len(log_documents)
+
+            # Collect unique categories
+            categories = set()
+            for entry in voc_entries:
+                cat = entry.get("category", "")
+                sub = entry.get("subcategory", "")
+                if cat:
+                    categories.add(f"{cat}/{sub}" if sub else cat)
+            result.categories_seeded = sorted(categories)
+
+            if self.embedding_service:
+                self.embedding_service.add_logs(log_documents)
+                logger.info(
+                    f"Seeded {len(log_documents)} VOC entries to vector store"
+                )
+
+            result.status = SeedingStatus.COMPLETED
+            result.completed_at = datetime.now().isoformat()
+            self._seeding_status = SeedingStatus.COMPLETED
+
+        except Exception as e:
+            logger.error(f"Seeding VOC file failed: {e}")
+            result.status = SeedingStatus.FAILED
+            result.error_message = str(e)
+            result.completed_at = datetime.now().isoformat()
+            self._seeding_status = SeedingStatus.FAILED
+
+        self._last_result = result
+        return result
+
+    def _convert_voc_to_log_documents(
+        self, voc_entries: List[Dict[str, Any]]
+    ) -> List[LogDocument]:
+        """Convert VOC entries to LogDocument objects for vector storage.
+
+        Maps VOC fields to LogDocument fields:
+        - message = "[VOC] {title}: {content}"
+        - serviceName = "voc-service"
+        - category = categoryCode
+        - severity from priority mapping
+
+        Args:
+            voc_entries: List of raw VOC entries from seed file.
+
+        Returns:
+            List of LogDocument objects.
+        """
+        priority_to_severity = {
+            "high": "high",
+            "medium": "medium",
+            "low": "low",
+        }
+        documents = []
+        for entry in voc_entries:
+            try:
+                title = entry.get("title", "")
+                content = entry.get("content", "")
+                doc = LogDocument(
+                    id=entry.get("id", f"voc-seed-{len(documents)}"),
+                    timestamp=datetime.now().isoformat(),
+                    logLevel="INFO",
+                    serviceName="voc-service",
+                    message=f"[VOC] {title}: {content}",
+                    category=entry.get("categoryCode", entry.get("category", "general")),
+                    severity=priority_to_severity.get(
+                        entry.get("priority", "medium"), "medium"
+                    ),
+                )
+                documents.append(doc)
+            except Exception as e:
+                logger.warning(f"Failed to convert VOC entry: {e}")
+                continue
+        return documents
 
     def seed_from_templates(self, count_per_category: int = 10) -> SeedingResult:
         """Generate and seed synthetic log entries from templates.
@@ -352,6 +466,8 @@ class DataSeederService:
     def _detect_category_from_content(self, title: str, content: str) -> str:
         """Detect category from VOC title and content.
 
+        Tries VOC templates first, then falls back to log templates.
+
         Args:
             title: VOC title.
             content: VOC content.
@@ -360,6 +476,9 @@ class DataSeederService:
             Detected category or 'general'.
         """
         text = f"{title} {content}"
+        voc_matches = find_matching_voc_categories(text)
+        if voc_matches:
+            return voc_matches[0][0]
         matches = find_matching_categories(text)
         if matches:
             return matches[0][0]

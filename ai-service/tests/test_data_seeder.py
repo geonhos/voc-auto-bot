@@ -231,21 +231,24 @@ class TestDataSeederService:
         assert len(documents) == 1
 
     def test_detect_category_from_content(self, seeder: DataSeederService):
-        """Test category detection from title and content."""
-        # Payment category
-        category = seeder._detect_category_from_content(
-            "결제 오류", "payment timeout 발생"
-        )
-        assert category == "payment"
+        """Test category detection from title and content.
 
-        # Auth category
+        Now uses VOC templates first, then log templates as fallback.
+        """
+        # Korean text → VOC templates → "오류/버그"
         category = seeder._detect_category_from_content(
-            "로그인 실패", "token expired 오류"
+            "결제 오류", "결제 실패 발생"
         )
-        assert category == "auth"
+        assert category == "오류/버그"
+
+        # Korean inquiry → VOC templates → "문의"
+        category = seeder._detect_category_from_content(
+            "비밀번호 변경", "어디서 하나요 방법 문의"
+        )
+        assert category == "문의"
 
         # No match
-        category = seeder._detect_category_from_content("일반 문의", "배송 문의")
+        category = seeder._detect_category_from_content("ABC", "lorem ipsum")
         assert category == "general"
 
     def test_generate_logs_from_template(self, seeder: DataSeederService):

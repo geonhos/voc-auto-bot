@@ -340,57 +340,84 @@ class AnalysisService:
             RAG prompt string.
         """
         return f"""[시스템]
-당신은 시스템 로그 분석 전문가입니다. 고객 VOC와 관련 시스템 로그를 분석하여 근본 원인을 파악하고 해결 방안을 제시합니다.
+당신은 한국어 고객 피드백(VOC) 분석 전문가입니다.
+VOC 내용과 유사 사례를 참고하여 카테고리를 분류하고 원인을 분석합니다.
 
-## 분석 카테고리 정의
-- 결제 오류: 결제 게이트웨이 타임아웃, 결제 실패, PG사 연동 오류
-- 인증 오류: JWT 토큰 만료, 로그인 실패, 세션 관리 문제
-- 데이터베이스 오류: DB 연결 실패, 쿼리 타임아웃, 커넥션 풀 고갈
-- 성능 문제: API 응답 지연, 메모리 부족, CPU 과부하
-- 외부 서비스 오류: 외부 API 연동 실패, 네트워크 문제
+## VOC 카테고리 정의 (5대분류 × 17소분류)
+1. 오류/버그: 시스템 오류, UI/UX 오류, 데이터 오류, 결제 오류
+2. 기능 요청: 신규 기능, 기능 개선, 시스템 연동
+3. 문의: 사용 방법, 계정 관련, 결제/환불, 기타 문의
+4. 불만/개선: 서비스 불만, 응대 불만, 속도/성능
+5. 칭찬: 서비스 칭찬, 직원 칭찬
 
 ## Few-shot 분석 예시
 
 예시 1)
-VOC: "결제가 안 됩니다. 카드 결제 시 계속 오류가 발생합니다."
-로그: [ERROR] [payment-service] Payment gateway timeout after 30s
-분석:
-- summary: "결제 게이트웨이 타임아웃으로 인한 결제 처리 실패. PG사 서버 응답 지연이 원인으로 보입니다."
-- keywords: ["payment", "gateway", "timeout"]
-- possibleCauses: ["PG사 서버 응답 지연", "네트워크 대역폭 부족"]
-- recommendation: "PG사 서버 상태 확인 및 타임아웃 임계값 조정 필요"
+VOC: "결제 버튼 클릭 시 500 에러가 발생합니다"
+유사 사례: 결제 오류, 간편결제 실패
+→ category: "오류/버그", subcategory: "결제 오류"
+→ summary: "결제 처리 중 서버 오류(500) 발생. 결제 게이트웨이 연동 또는 서버 측 예외 처리 확인 필요."
+→ keywords: ["결제오류", "500에러", "결제실패"]
+→ sentiment: "negative"
 
 예시 2)
-VOC: "로그인이 자꾸 풀립니다."
-로그: [WARN] [auth-service] JWT token expired for user_id=12345
-분석:
-- summary: "JWT 토큰 만료로 인한 반복적인 로그아웃 현상. 토큰 갱신 로직 점검이 필요합니다."
-- keywords: ["JWT", "token", "expired", "auth"]
-- possibleCauses: ["토큰 유효 시간 설정 부족", "Refresh 토큰 갱신 실패"]
-- recommendation: "토큰 유효 시간 연장 및 자동 갱신 로직 점검"
+VOC: "엑셀 내보내기 기능을 추가해주세요"
+유사 사례: 기능 개선 요청, 보고서 다운로드
+→ category: "기능 요청", subcategory: "기능 개선"
+→ summary: "보고서 데이터의 엑셀 내보내기 기능 요청. 현재 수동 복사 방식의 불편함 개선 필요."
+→ keywords: ["엑셀", "내보내기", "보고서"]
+→ sentiment: "neutral"
+
+예시 3)
+VOC: "비밀번호를 변경하고 싶은데 어디서 하나요?"
+유사 사례: 계정 설정, 비밀번호 변경 문의
+→ category: "문의", subcategory: "계정 관련"
+→ summary: "비밀번호 변경 경로를 모르는 사용자의 계정 관련 문의."
+→ keywords: ["비밀번호", "변경", "계정"]
+→ sentiment: "neutral"
+
+예시 4)
+VOC: "최근 업데이트 후 앱 로딩이 5초 이상 걸립니다"
+유사 사례: 성능 저하, 로딩 지연
+→ category: "불만/개선", subcategory: "속도/성능"
+→ summary: "업데이트 이후 앱 로딩 성능이 크게 저하됨. 성능 프로파일링을 통한 병목 구간 확인 필요."
+→ keywords: ["느림", "로딩", "성능저하"]
+→ sentiment: "negative"
+
+예시 5)
+VOC: "상담원분이 매우 친절하게 안내해주셨습니다"
+유사 사례: 직원 칭찬, 친절 응대
+→ category: "칭찬", subcategory: "직원 칭찬"
+→ summary: "상담원의 친절한 응대에 대한 칭찬 VOC."
+→ keywords: ["친절", "상담원", "감사"]
+→ sentiment: "positive"
 
 [사용자]
-다음 VOC와 관련 로그를 분석해주세요.
+다음 VOC와 유사 사례를 분석해주세요.
 
 VOC 제목: {request.title}
 VOC 내용: {request.content}
 
-관련 시스템 로그 (최근 24시간):
+유사 사례 참고:
 {logs_context}
 
 다음 JSON 형식으로만 응답하세요 (마크다운 코드 블록 사용 금지):
 {{
   "summary": "분석 요약 (한국어, 2-3문장)",
   "confidence": 0.85,
-  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "keywords": ["키워드1", "키워드2", "키워드3"],
   "possibleCauses": ["원인 1", "원인 2", "원인 3"],
-  "recommendation": "권장 조치 사항 (한국어)"
+  "recommendation": "권장 조치 사항 (한국어)",
+  "category": "5대분류 중 하나",
+  "subcategory": "해당 소분류",
+  "sentiment": "positive|neutral|negative"
 }}
 
 분석 지침:
-- 로그 데이터의 실제 에러 패턴을 기반으로 구체적으로 분석
+- 유사 사례의 패턴을 참고하여 구체적으로 분석
+- 5대분류(오류/버그, 기능 요청, 문의, 불만/개선, 칭찬) 중 가장 적합한 카테고리 선택
 - summary, possibleCauses, recommendation은 한국어로 작성
-- keywords는 영어 기술 용어로 작성 (3-5개)"""
+- keywords는 한국어 키워드 3-5개 추출"""
 
     def _create_direct_prompt(self, request: AnalysisRequest) -> str:
         """Create direct LLM prompt without log context.
@@ -402,40 +429,60 @@ VOC 내용: {request.content}
             Direct prompt string.
         """
         return f"""[시스템]
-당신은 시스템 분석 전문가입니다. 관련 시스템 로그 없이 VOC 내용만으로 분석합니다.
-로그 데이터가 없으므로 보수적으로 분석하고, confidence는 0.3~0.5 범위로 설정합니다.
+당신은 한국어 고객 피드백(VOC) 분석 전문가입니다.
+유사 사례 없이 VOC 내용만으로 카테고리를 분류하고 분석합니다.
+유사 사례가 없으므로 보수적으로 분석하고, confidence는 0.4~0.6 범위로 설정합니다.
+
+## VOC 카테고리 정의 (5대분류)
+1. 오류/버그: 시스템 오류, UI/UX 오류, 데이터 오류, 결제 오류
+2. 기능 요청: 신규 기능, 기능 개선, 시스템 연동
+3. 문의: 사용 방법, 계정 관련, 결제/환불, 기타 문의
+4. 불만/개선: 서비스 불만, 응대 불만, 속도/성능
+5. 칭찬: 서비스 칭찬, 직원 칭찬
 
 ## Few-shot 분석 예시
 
 예시 1)
 VOC: "결제가 안 됩니다"
-→ summary: "결제 기능 장애 추정. 관련 로그 데이터 없이 VOC 내용만으로 분석됨."
-→ keywords: ["payment", "error"], possibleCauses: ["PG사 연동 오류", "결제 모듈 장애"]
+→ category: "오류/버그", subcategory: "결제 오류"
+→ summary: "결제 기능 장애 추정. 유사 사례 없이 VOC 내용만으로 분석됨."
+→ keywords: ["결제오류", "결제실패"]
 
 예시 2)
 VOC: "데이터가 사라졌어요"
-→ summary: "데이터 유실 가능성 추정. 로그 확인을 통한 정확한 원인 파악 필요."
-→ keywords: ["data", "loss"], possibleCauses: ["DB 저장 실패", "캐시 만료"]
+→ category: "오류/버그", subcategory: "데이터 오류"
+→ summary: "데이터 유실 가능성 추정. 시스템 로그 확인을 통한 정확한 원인 파악 필요."
+→ keywords: ["데이터유실", "삭제"]
+
+예시 3)
+VOC: "친절하게 상담해주셔서 감사합니다"
+→ category: "칭찬", subcategory: "직원 칭찬"
+→ summary: "상담원의 친절한 응대에 대한 칭찬 VOC."
+→ keywords: ["친절", "감사", "상담"]
 
 [사용자]
-다음 VOC를 분석해주세요. (관련 로그 없음)
+다음 VOC를 분석해주세요. (유사 사례 없음)
 
 VOC 제목: {request.title}
 VOC 내용: {request.content}
 
 다음 JSON 형식으로만 응답하세요 (마크다운 코드 블록 사용 금지):
 {{
-  "summary": "분석 요약 (한국어). 참고: 관련 로그 데이터 없이 분석됨",
-  "confidence": 0.35,
-  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "summary": "분석 요약 (한국어, 2-3문장). 참고: 유사 사례 없이 분석됨",
+  "confidence": 0.45,
+  "keywords": ["키워드1", "키워드2", "키워드3"],
   "possibleCauses": ["가능한 원인 1", "가능한 원인 2"],
-  "recommendation": "권장 조치 사항 (한국어)"
+  "recommendation": "권장 조치 사항 (한국어)",
+  "category": "5대분류 중 하나",
+  "subcategory": "해당 소분류",
+  "sentiment": "positive|neutral|negative"
 }}
 
 분석 지침:
-- 로그 데이터 없이 일반적인 분석임을 명시
-- 시스템 로그 확인을 권장 사항에 포함
-- summary, possibleCauses, recommendation은 한국어로 작성"""
+- 유사 사례 없이 VOC 내용만으로 분석됨을 명시
+- 5대분류(오류/버그, 기능 요청, 문의, 불만/개선, 칭찬) 중 가장 적합한 카테고리 선택
+- summary, possibleCauses, recommendation은 한국어로 작성
+- keywords는 한국어 키워드 3-5개 추출"""
 
     def _parse_llm_response(self, response: str) -> dict:
         """Parse LLM response to extract analysis data.

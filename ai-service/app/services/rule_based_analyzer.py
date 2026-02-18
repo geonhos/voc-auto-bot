@@ -9,6 +9,11 @@ from app.data.log_templates import (
     find_matching_categories,
     get_severity_from_keywords,
 )
+from app.data.voc_templates import (
+    VOC_TEMPLATES,
+    find_matching_voc_categories,
+    get_voc_priority,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +49,9 @@ class RuleBasedAnalyzer:
     def analyze(self, title: str, content: str) -> RuleBasedAnalysisResult:
         """Analyze VOC using rule-based matching.
 
+        Tries VOC templates (Korean VOC categories) first, then falls back
+        to technical log templates if no VOC category matches.
+
         Args:
             title: VOC title.
             content: VOC content.
@@ -53,7 +61,14 @@ class RuleBasedAnalyzer:
         """
         combined_text = f"{title} {content}"
 
-        # Find matching categories based on keywords
+        # Priority 1: Try VOC templates (Korean VOC 5대분류)
+        voc_matches = find_matching_voc_categories(combined_text)
+        if voc_matches:
+            return self._analyze_with_voc_templates(
+                combined_text, voc_matches, title
+            )
+
+        # Priority 2: Fallback to technical log templates
         category_matches = find_matching_categories(combined_text)
 
         if not category_matches:
@@ -91,6 +106,62 @@ class RuleBasedAnalyzer:
             match_count=match_count,
         )
 
+    def _analyze_with_voc_templates(
+        self,
+        combined_text: str,
+        voc_matches: List[tuple],
+        title: str,
+    ) -> RuleBasedAnalysisResult:
+        """Analyze using Korean VOC templates.
+
+        Args:
+            combined_text: Combined title + content text.
+            voc_matches: List of (category, subcategory, match_count) from VOC templates.
+            title: Original VOC title.
+
+        Returns:
+            RuleBasedAnalysisResult from VOC template matching.
+        """
+        best_category, best_subcategory, match_count = voc_matches[0]
+        template = VOC_TEMPLATES.get(best_category, {})
+
+        # Collect keywords from both category and subcategory level
+        cat_keywords = template.get("keywords", [])
+        sub_info = template.get("subcategories", {}).get(best_subcategory, {})
+        sub_keywords = sub_info.get("keywords", [])
+        all_keywords = cat_keywords + sub_keywords
+
+        matched_keywords = self._extract_matched_keywords(combined_text, all_keywords)
+
+        # Get typical responses as recommendation
+        typical_responses = template.get("typical_responses", [])
+        recommendation = typical_responses[0] if typical_responses else (
+            "담당 부서에 전달하여 처리하겠습니다."
+        )
+
+        # Calculate confidence
+        confidence = self._calculate_confidence(match_count, len(voc_matches))
+
+        # Build summary with Korean VOC category
+        summary = (
+            f"'{best_category}' > '{best_subcategory}' 카테고리로 분류됩니다. "
+            f"'{title}'에서 {', '.join(matched_keywords[:3])} 등의 키워드가 감지되었습니다. "
+            f"(규칙 기반 분석)"
+        )
+
+        return RuleBasedAnalysisResult(
+            summary=summary,
+            confidence=confidence,
+            keywords=matched_keywords[:5],
+            possible_causes=[
+                f"'{best_category}' 관련 이슈로 분류됨",
+                f"세부 분류: {best_subcategory}",
+            ],
+            recommendation=recommendation,
+            detected_category=best_category,
+            match_count=match_count,
+        )
+
     def can_analyze(self, title: str, content: str) -> bool:
         """Check if rule-based analysis is possible for this VOC.
 
@@ -99,9 +170,12 @@ class RuleBasedAnalyzer:
             content: VOC content.
 
         Returns:
-            True if at least one category matches.
+            True if at least one category matches (VOC or log templates).
         """
         combined_text = f"{title} {content}"
+        voc_matches = find_matching_voc_categories(combined_text)
+        if voc_matches:
+            return True
         category_matches = find_matching_categories(combined_text)
         return len(category_matches) > 0
 

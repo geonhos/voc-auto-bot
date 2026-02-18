@@ -1,4 +1,4 @@
-.PHONY: help up down up-infra down-infra up-gpu build build-backend build-frontend build-ai logs logs-backend logs-ai ps clean seed seed-reset seed-status seed-vocs setup ollama-check
+.PHONY: help up down up-infra down-infra up-gpu build build-backend build-frontend build-ai logs logs-backend logs-ai ps clean seed seed-voc seed-reset seed-status seed-vocs setup ollama-check
 
 COMPOSE = docker compose
 
@@ -63,6 +63,11 @@ seed: ## Add expanded seed data to vector store (pgvector)
 		-H 'Content-Type: application/json' \
 		-d '{"source": "expanded"}' | python3 -m json.tool
 
+seed-voc: ## Seed Korean VOC examples to vector store
+	@curl -s -X POST http://localhost:8001/api/v1/seed \
+		-H 'Content-Type: application/json' \
+		-d '{"source": "vocs"}' | python3 -m json.tool
+
 seed-status: ## Check vector store seeding status
 	@curl -s http://localhost:8001/api/v1/seed/status | python3 -m json.tool
 
@@ -79,6 +84,7 @@ setup: up ## Full setup: start services + seed pgvector + index VOCs
 	@echo "Waiting for services to start..."
 	@sleep 10
 	@$(MAKE) seed-reset
+	@$(MAKE) seed-voc
 	@$(MAKE) seed-vocs
 	@echo "Setup complete!"
 

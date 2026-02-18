@@ -231,7 +231,7 @@ class SeedRequest(BaseModel):
 
     source: str = Field(
         default="expanded",
-        description="Source type: 'expanded' (predefined seed file) or 'templates' (generate from templates)",
+        description="Source type: 'expanded' (predefined seed file), 'templates' (generate from templates), or 'vocs' (Korean VOC seed data)",
     )
     count_per_category: Optional[int] = Field(
         10, description="Entries per category (for source='templates')", ge=1, le=100

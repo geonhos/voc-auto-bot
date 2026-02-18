@@ -174,7 +174,7 @@ async def analyze_sentiment(request: SentimentRequest) -> SentimentResponse:
 
 
 # Allowed seed sources to prevent path traversal attacks
-ALLOWED_SEED_SOURCES = {"expanded", "templates"}
+ALLOWED_SEED_SOURCES = {"expanded", "templates", "vocs"}
 
 
 @router.post("/api/v1/seed", response_model=SeedResponse)
@@ -208,6 +208,8 @@ async def seed_data(request: SeedRequest) -> SeedResponse:
         if request.source == "expanded":
             # Use predefined seed file only - no arbitrary file paths allowed
             result = data_seeder_service.seed_from_file()
+        elif request.source == "vocs":
+            result = data_seeder_service.seed_from_voc_file()
         elif request.source == "templates":
             result = data_seeder_service.seed_from_templates(
                 count_per_category=request.count_per_category or 10
@@ -246,7 +248,7 @@ async def reset_and_reseed() -> dict:
         # 1. Reset (delete all collections)
         embedding_service.reset_vectorstore()
 
-        # 2. Re-seed with all data
+        # 2. Re-seed with all data (system logs + VOC seed data)
         mock_logs = embedding_service.load_mock_logs()
         expanded_logs = embedding_service.load_mock_logs(
             mock_logs_path="app/data/seed_logs_expanded.json"
@@ -259,11 +261,25 @@ async def reset_and_reseed() -> dict:
                 seen_ids.add(log.id)
                 all_logs.append(log)
 
+        # Also load VOC seed data
+        if data_seeder_service:
+            from pathlib import Path
+            voc_path = Path(__file__).parent.parent / "data" / "seed_vocs.json"
+            if voc_path.exists():
+                import json
+                with open(voc_path, "r", encoding="utf-8") as f:
+                    voc_entries = json.load(f)
+                voc_docs = data_seeder_service._convert_voc_to_log_documents(voc_entries)
+                for doc in voc_docs:
+                    if doc.id not in seen_ids:
+                        seen_ids.add(doc.id)
+                        all_logs.append(doc)
+
         embedding_service.initialize_vectorstore(all_logs)
 
         return {
             "status": "success",
-            "message": f"Reset and re-seeded {len(all_logs)} unique documents",
+            "message": f"Reset and re-seeded {len(all_logs)} unique documents (including VOC seed data)",
             "collection_count": embedding_service.get_collection_count(),
         }
     except Exception as e:
