@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { Voc, PageResponse } from '@/types';
 
+import { BulkActionBar } from './BulkActionBar';
 import { VocPriorityBadge } from './VocPriorityBadge';
 import { VocStatusBadge } from './VocStatusBadge';
 
@@ -19,6 +20,34 @@ interface VocTableProps {
 export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: VocTableProps) {
   const router = useRouter();
   const [pageSize, setPageSize] = useState(10);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  const currentPageIds = vocs?.content?.map((v) => v.id) ?? [];
+  const allSelected = currentPageIds.length > 0 && currentPageIds.every((id) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allSelected) {
+        currentPageIds.forEach((id) => next.delete(id));
+      } else {
+        currentPageIds.forEach((id) => next.add(id));
+      }
+      return next;
+    });
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const handleRowClick = (vocId: number) => {
     router.push(`/voc/${vocId}`);
@@ -66,11 +95,21 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
   }
 
   return (
-    <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+    <div className="space-y-3">
+      <BulkActionBar selectedIds={selectedIds} onClearSelection={() => setSelectedIds(new Set())} />
+      <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-border-light dark:divide-border-dark">
           <thead className="bg-slate-50 dark:bg-slate-800/50">
             <tr>
+              <th className="px-4 py-4 w-10">
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
+                />
+              </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                 티켓번호
               </th>
@@ -104,6 +143,14 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
                 onClick={() => handleRowClick(voc.id)}
                 className="hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors"
               >
+                <td className="px-4 py-4 w-10" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(voc.id)}
+                    onChange={() => toggleSelect(voc.id)}
+                    className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary hover:text-primary-dark hover:underline">
                   {voc.ticketId}
                 </td>
@@ -204,6 +251,7 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

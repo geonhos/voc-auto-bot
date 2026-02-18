@@ -1,3 +1,4 @@
+export { BulkActionBar } from './BulkActionBar';
 export { VocTable } from './VocTable';
 export { VocSearchFilter } from './VocSearchFilter';
 export { VocStatusBadge } from './VocStatusBadge';
