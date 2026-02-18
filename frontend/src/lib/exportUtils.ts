@@ -1,13 +1,13 @@
-import * as XLSX from 'xlsx';
-
 /**
  * Create an Excel workbook from data and trigger browser download.
+ * Uses dynamic import to avoid bundling xlsx in the initial chunk.
  */
-export function downloadAsExcel<T extends Record<string, unknown>>(
+export async function downloadAsExcel<T extends Record<string, unknown>>(
   data: T[],
   filename: string,
   sheetName: string = 'Sheet1',
 ) {
+  const XLSX = await import('xlsx');
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);

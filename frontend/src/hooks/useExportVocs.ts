@@ -16,19 +16,24 @@ export function useExportVocs() {
   const exportVocs = useCallback(async (params: Omit<VocListParams, 'page' | 'size'>) => {
     setIsExporting(true);
     try {
-      // Fetch a large page to get all filtered results
       const response = await api.get<PageResponse<Voc>>('/vocs', {
         ...params,
         page: 0,
-        size: 10000,
+        size: 5000,
       } as Record<string, unknown>);
 
       const vocs = response.data.content;
-      if (vocs.length === 0) return;
+      if (vocs.length === 0) {
+        alert('내보낼 데이터가 없습니다.');
+        return;
+      }
 
       const rows = vocs.map(mapVocToExportRow);
       const timestamp = new Date().toISOString().slice(0, 10);
-      downloadAsExcel(rows, `VOC_목록_${timestamp}`, 'VOC 목록');
+      await downloadAsExcel(rows, `VOC_목록_${timestamp}`, 'VOC 목록');
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('내보내기에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsExporting(false);
     }
