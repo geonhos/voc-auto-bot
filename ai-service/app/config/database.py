@@ -72,3 +72,33 @@ def ensure_log_embeddings_table() -> None:
             """)
         conn.commit()
     logger.info("log_embeddings table ensured.")
+
+
+def ensure_model_metrics_table() -> None:
+    pool = get_pool()
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS model_metrics (
+                    id BIGSERIAL PRIMARY KEY,
+                    request_id UUID DEFAULT gen_random_uuid(),
+                    analysis_method VARCHAR(20),
+                    confidence_score FLOAT,
+                    latency_ms INT,
+                    json_parse_success BOOLEAN,
+                    model_name VARCHAR(100),
+                    embedding_model VARCHAR(100),
+                    user_feedback VARCHAR(10),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_model_metrics_created_at
+                ON model_metrics(created_at)
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_model_metrics_request_id
+                ON model_metrics(request_id)
+            """)
+        conn.commit()
+    logger.info("model_metrics table ensured.")

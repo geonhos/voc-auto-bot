@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+import time
 from typing import List, Optional, Tuple, Dict, Any
 
 from langchain_community.llms import Ollama
@@ -47,6 +48,8 @@ class AnalysisService:
         embedding_service: EmbeddingService,
         model_name: str = "exaone3.5:7.8b",
         ollama_base_url: str = "http://localhost:11434",
+        metrics_service=None,
+        embedding_model_name: str = "bge-m3",
     ):
         """Initialize analysis service.
 
@@ -54,11 +57,16 @@ class AnalysisService:
             embedding_service: Embedding service for log search.
             model_name: Ollama LLM model name.
             ollama_base_url: Ollama server base URL.
+            metrics_service: Optional MetricsService for recording performance metrics.
+            embedding_model_name: Embedding model name for metric recording.
         """
         self.embedding_service = embedding_service
         self.llm = Ollama(model=model_name, base_url=ollama_base_url, temperature=0.3)
         self.rule_based_analyzer = RuleBasedAnalyzer()
         self.confidence_calculator = ConfidenceCalculator()
+        self.metrics_service = metrics_service
+        self.model_name = model_name
+        self.embedding_model_name = embedding_model_name
 
     def analyze_voc(self, request: AnalysisRequest) -> AnalysisResponse:
         """Analyze VOC using fallback chain: RAG -> Rule-Based -> Direct LLM.
@@ -69,6 +77,7 @@ class AnalysisService:
         Returns:
             Analysis response with summary, causes, and recommendations.
         """
+        start_time = time.monotonic()
         query = f"{request.title} {request.content}"
 
         # Step 1: Try RAG-based analysis
@@ -78,14 +87,19 @@ class AnalysisService:
         filtered_logs = self._filter_by_similarity(similar_logs)
 
         if len(filtered_logs) >= self.MIN_VECTOR_MATCHES:
-            return self._analyze_with_rag(request, filtered_logs)
+            result = self._analyze_with_rag(request, filtered_logs)
+        elif self.rule_based_analyzer.can_analyze(request.title, request.content):
+            # Step 2: Try Rule-Based analysis
+            result = self._analyze_with_rules(request)
+        else:
+            # Step 3: Fall back to Direct LLM analysis
+            result = self._analyze_with_direct_llm(request)
 
-        # Step 2: Try Rule-Based analysis
-        if self.rule_based_analyzer.can_analyze(request.title, request.content):
-            return self._analyze_with_rules(request)
+        # Record metric
+        latency_ms = int((time.monotonic() - start_time) * 1000)
+        self._record_metric(result, latency_ms)
 
-        # Step 3: Fall back to Direct LLM analysis
-        return self._analyze_with_direct_llm(request)
+        return result
 
     def _filter_by_similarity(
         self, logs: List[Tuple[LogDocument, float]]
@@ -508,6 +522,31 @@ VOC 내용: {request.content}
             Normalized score in [0, 1] range.
         """
         return max(0.0, min(1.0, score))
+
+    def _record_metric(self, result: AnalysisResponse, latency_ms: int) -> None:
+        """Record analysis metrics if metrics_service is available.
+
+        Args:
+            result: The analysis response.
+            latency_ms: Total analysis latency in milliseconds.
+        """
+        if self.metrics_service is None:
+            return
+        try:
+            method = result.analysisMethod.value if result.analysisMethod else "unknown"
+            # JSON parse is considered successful if we got a non-empty summary
+            json_parse_success = bool(result.summary and not result.summary.startswith("AI 분석 중 오류"))
+            request_id = self.metrics_service.record_metric(
+                analysis_method=method.upper(),
+                confidence_score=result.confidence,
+                latency_ms=latency_ms,
+                json_parse_success=json_parse_success,
+                model_name=self.model_name,
+                embedding_model=self.embedding_model_name,
+            )
+            result.requestId = str(request_id)
+        except Exception as e:
+            logger.error("Failed to record metric: %s", e)
 
     def _create_empty_response(self, reason: str) -> AnalysisResponse:
         """Create empty response when analysis cannot be performed.

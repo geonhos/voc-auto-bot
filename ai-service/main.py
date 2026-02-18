@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router, initialize_services
-from app.config.database import init_pool, close_pool, ensure_log_embeddings_table, get_pool
+from app.config.database import init_pool, close_pool, ensure_log_embeddings_table, ensure_model_metrics_table, get_pool
 
 
 @asynccontextmanager
@@ -24,6 +24,7 @@ async def lifespan(app: FastAPI):
     print(f"Initializing database pool: {database_url.split('@')[-1]}")
     init_pool(database_url)
     ensure_log_embeddings_table()
+    ensure_model_metrics_table()
 
     # Startup: Initialize services
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")

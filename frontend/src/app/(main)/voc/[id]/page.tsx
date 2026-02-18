@@ -4,9 +4,12 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback } from 'react';
 
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
+
 import { EmailComposeSheet } from '@/components/email/EmailComposeSheet';
 import { ConfidenceIndicator } from '@/components/voc/ConfidenceIndicator';
 import { VocStatusTimeline } from '@/components/voc/VocStatusTimeline';
+import { useAiFeedback } from '@/hooks/useAiFeedback';
 import { useCategoryTree } from '@/hooks/useCategories';
 import { useSimilarVocs } from '@/hooks/useSimilarVocs';
 import { useVocStatusHistory } from '@/hooks/useVocStatusHistory';
@@ -38,6 +41,7 @@ export default function VocDetailPage() {
   const addMemoMutation = useAddVocMemo();
   const updateVocMutation = useUpdateVoc();
   const reanalyzeMutation = useReanalyzeVoc();
+  const feedbackMutation = useAiFeedback();
   const { toast } = useToast();
 
   const [newMemo, setNewMemo] = useState('');
@@ -46,6 +50,7 @@ export default function VocDetailPage() {
   const [isEmailSheetOpen, setIsEmailSheetOpen] = useState(false);
   const [applyingSolutionId, setApplyingSolutionId] = useState<number | null>(null);
   const [appliedSolutionIds, setAppliedSolutionIds] = useState<Set<number>>(new Set());
+  const [submittedFeedback, setSubmittedFeedback] = useState<'GOOD' | 'BAD' | null>(null);
 
   const handleApplySolution = useCallback(async (similarVocId: number) => {
     setApplyingSolutionId(similarVocId);
@@ -217,6 +222,31 @@ export default function VocDetailPage() {
       }
     }
   };
+
+  const handleFeedback = useCallback(
+    (feedback: 'GOOD' | 'BAD') => {
+      const requestId = voc?.aiAnalysis?.requestId;
+      if (!requestId) return;
+
+      feedbackMutation.mutate(
+        { requestId, feedback },
+        {
+          onSuccess: () => {
+            setSubmittedFeedback(feedback);
+            toast({
+              title: '피드백이 제출되었습니다',
+              description: feedback === 'GOOD' ? '긍정적 피드백 감사합니다.' : '피드백을 개선에 반영하겠습니다.',
+              variant: 'success',
+            });
+          },
+          onError: () => {
+            toast({ title: '피드백 제출 실패', variant: 'error' });
+          },
+        },
+      );
+    },
+    [voc?.aiAnalysis?.requestId, feedbackMutation, toast],
+  );
 
   // Filter main categories (those with children or type === 'MAIN')
   const mainCategories = categoryTree?.filter((cat) =>
@@ -448,6 +478,48 @@ export default function VocDetailPage() {
                   size="md"
                 />
               </div>
+
+              {/* AI 분석 피드백 */}
+              {analysis.requestId && (
+                <div>
+                  <span className="block text-sm font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                    분석 결과 피드백
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleFeedback('GOOD')}
+                      disabled={submittedFeedback !== null || feedbackMutation.isPending}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded border transition-colors ${
+                        submittedFeedback === 'GOOD'
+                          ? 'bg-green-100 border-green-300 text-green-700'
+                          : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-green-50 hover:border-green-300 hover:text-green-700'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <ThumbsUp className="w-4 h-4" />
+                      도움됨
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFeedback('BAD')}
+                      disabled={submittedFeedback !== null || feedbackMutation.isPending}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded border transition-colors ${
+                        submittedFeedback === 'BAD'
+                          ? 'bg-red-100 border-red-300 text-red-700'
+                          : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-red-50 hover:border-red-300 hover:text-red-700'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <ThumbsDown className="w-4 h-4" />
+                      개선 필요
+                    </button>
+                    {submittedFeedback && (
+                      <span className="text-xs text-slate-400">
+                        피드백이 제출되었습니다
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* 분석 요약 */}
               {analysis.summary && (

@@ -133,6 +133,9 @@ class AnalysisResponse(BaseModel):
     vectorMatchCount: Optional[int] = Field(
         None, description="Number of vector matches found", ge=0
     )
+    requestId: Optional[str] = Field(
+        None, description="Metric request ID for feedback submission"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -317,6 +320,24 @@ class SentimentResponse(BaseModel):
                     "satisfaction": 0.0,
                     "urgency": 0.6,
                 },
+            }
+        }
+    )
+
+
+class FeedbackRequest(BaseModel):
+    """Request model for submitting analysis feedback."""
+
+    request_id: str = Field(..., description="UUID of the analysis request")
+    feedback: str = Field(
+        ..., description="Feedback value: GOOD or BAD", pattern="^(GOOD|BAD)$"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "request_id": "550e8400-e29b-41d4-a716-446655440000",
+                "feedback": "GOOD",
             }
         }
     )
