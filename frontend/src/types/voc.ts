@@ -175,6 +175,8 @@ export interface AiAnalysis {
   analysisMethod?: AnalysisMethod;
   vectorMatchCount?: number;
   confidenceDetails?: ConfidenceDetails;
+  // Metrics request ID for feedback
+  requestId?: string;
 }
 
 export interface RelatedLog {

@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from app.api.dependencies import verify_api_key
 from app.models.schemas import (
     AnalysisRequest,
@@ -13,11 +13,13 @@ from app.models.schemas import (
     LearnRequest,
     SentimentRequest,
     SentimentResponse,
+    FeedbackRequest,
 )
 from app.services.embedding_service import EmbeddingService
 from app.services.analysis_service import AnalysisService
 from app.services.data_seeder import DataSeederService
 from app.services.sentiment_service import SentimentService
+from app.services.metrics_service import MetricsService
 
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
@@ -26,6 +28,7 @@ embedding_service: Optional[EmbeddingService] = None
 analysis_service: Optional[AnalysisService] = None
 data_seeder_service: Optional[DataSeederService] = None
 sentiment_service: Optional[SentimentService] = None
+metrics_service: Optional[MetricsService] = None
 
 
 def initialize_services(
@@ -45,7 +48,7 @@ def initialize_services(
         llm_model: LLM model name.
         db_pool: psycopg ConnectionPool for PostgreSQL pgvector.
     """
-    global embedding_service, analysis_service, data_seeder_service, sentiment_service
+    global embedding_service, analysis_service, data_seeder_service, sentiment_service, metrics_service
 
     # Initialize embedding service
     embedding_service = EmbeddingService(
@@ -69,11 +72,17 @@ def initialize_services(
     # Initialize vector store (idempotent - skips if data exists)
     embedding_service.initialize_vectorstore(all_logs)
 
+    # Initialize metrics service
+    if db_pool:
+        metrics_service = MetricsService(db_pool=db_pool)
+
     # Initialize analysis service
     analysis_service = AnalysisService(
         embedding_service=embedding_service,
         model_name=llm_model,
         ollama_base_url=ollama_base_url,
+        metrics_service=metrics_service,
+        embedding_model_name=embedding_model,
     )
 
     # Initialize data seeder service
@@ -324,4 +333,104 @@ async def learn_from_voc(request: LearnRequest) -> SeedResponse:
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Progressive learning failed: {str(e)}"
+        )
+
+
+@router.post("/api/v1/feedback")
+async def submit_feedback(request: FeedbackRequest) -> dict:
+    """Submit user feedback (GOOD/BAD) for an analysis result.
+
+    Args:
+        request: Feedback request with request_id and feedback value.
+
+    Returns:
+        Status of the feedback submission.
+
+    Raises:
+        HTTPException: If metrics service is not initialized or request_id not found.
+    """
+    if metrics_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Metrics service not initialized.",
+        )
+
+    success = metrics_service.record_feedback(
+        request_id=request.request_id,
+        feedback=request.feedback,
+    )
+    if not success:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Analysis request not found: {request.request_id}",
+        )
+
+    return {"status": "ok", "request_id": request.request_id, "feedback": request.feedback}
+
+
+@router.get("/api/v1/metrics/summary")
+async def get_metrics_summary(
+    start_date: Optional[str] = Query(None, description="Start date (ISO format)"),
+    end_date: Optional[str] = Query(None, description="End date (ISO format)"),
+) -> dict:
+    """Get aggregated AI model metrics summary.
+
+    Args:
+        start_date: Start date filter (ISO format, defaults to 7 days ago).
+        end_date: End date filter (ISO format, defaults to now).
+
+    Returns:
+        Aggregated metrics including total_requests, avg_latency, avg_confidence,
+        json_success_rate, method_distribution, and feedback_stats.
+
+    Raises:
+        HTTPException: If metrics service is not initialized.
+    """
+    if metrics_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Metrics service not initialized.",
+        )
+
+    try:
+        summary = metrics_service.get_metrics_summary(
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return summary
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get metrics summary: {str(e)}"
+        )
+
+
+@router.get("/api/v1/metrics/drift")
+async def check_drift(
+    baseline_weeks: int = Query(4, description="Number of baseline weeks", ge=1, le=12),
+) -> dict:
+    """Check for model confidence drift.
+
+    Compares current week's confidence against baseline period.
+
+    Args:
+        baseline_weeks: Number of previous weeks for baseline comparison.
+
+    Returns:
+        Drift detection result with current/baseline averages and drift percentage.
+
+    Raises:
+        HTTPException: If metrics service is not initialized.
+    """
+    if metrics_service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Metrics service not initialized.",
+        )
+
+    try:
+        drift_result = metrics_service.check_drift(baseline_weeks=baseline_weeks)
+        return drift_result
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to check drift: {str(e)}"
         )
