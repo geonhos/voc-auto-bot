@@ -13,17 +13,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Set;
+
 @Slf4j
 @Aspect
 @Component
 @RequiredArgsConstructor
 public class AuditAspect {
+
+    private static final Set<String> SENSITIVE_FIELDS = Set.of(
+            "password", "token", "secret", "accessToken", "refreshToken",
+            "currentPassword", "newPassword", "confirmPassword"
+    );
 
     private final SaveAuditLogPort saveAuditLogPort;
     private final ObjectMapper objectMapper;
@@ -69,12 +77,21 @@ public class AuditAspect {
                     userAgent
             );
 
-            saveAuditLogPort.save(auditLog);
+            saveAuditLogAsync(auditLog);
         } catch (Exception e) {
             log.warn("Failed to save audit log for method {}: {}", joinPoint.getSignature().getName(), e.getMessage());
         }
 
         return result;
+    }
+
+    @Async
+    protected void saveAuditLogAsync(AuditLog auditLog) {
+        try {
+            saveAuditLogPort.save(auditLog);
+        } catch (Exception e) {
+            log.error("Async audit log save failed: {}", e.getMessage());
+        }
     }
 
     private String extractEntityId(Object result) {
@@ -98,13 +115,30 @@ public class AuditAspect {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private String serializeResult(Object result) {
         if (result == null) return null;
         try {
-            return objectMapper.writeValueAsString(result);
+            String json = objectMapper.writeValueAsString(result);
+            // Mask sensitive fields
+            var map = objectMapper.readValue(json, java.util.Map.class);
+            maskSensitiveFields(map);
+            return objectMapper.writeValueAsString(map);
         } catch (Exception e) {
             log.debug("Failed to serialize audit data: {}", e.getMessage());
             return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void maskSensitiveFields(java.util.Map<String, Object> map) {
+        for (String key : map.keySet()) {
+            Object value = map.get(key);
+            if (SENSITIVE_FIELDS.contains(key)) {
+                map.put(key, "***MASKED***");
+            } else if (value instanceof java.util.Map) {
+                maskSensitiveFields((java.util.Map<String, Object>) value);
+            }
         }
     }
 
