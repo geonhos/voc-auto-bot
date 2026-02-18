@@ -212,9 +212,9 @@ ollama:
   model: ${LLM_MODEL:gpt-oss:20b}
   embedding-model: ${LLM_EMBEDDING_MODEL:nomic-embed-text:latest}
 
-# Cookie - HTTP between containers in development
+# Cookie - HTTPS via Nginx TLS termination
 cookie:
-  secure: false
+  secure: true
 
 # Logging
 logging:
