@@ -40,7 +40,7 @@ class AnalysisService:
     # Minimum vector matches required for RAG analysis
     MIN_VECTOR_MATCHES = 1
     # Threshold for similarity score to consider a match useful
-    SIMILARITY_THRESHOLD = 0.3
+    SIMILARITY_THRESHOLD = 0.45
 
     def __init__(
         self,

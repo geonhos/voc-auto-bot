@@ -19,7 +19,7 @@ class EmbeddingService:
 
     def __init__(
         self,
-        model_name: str = "nomic-embed-text",
+        model_name: str = "bge-m3",
         ollama_base_url: str = "http://localhost:11434",
         db_pool: Optional[ConnectionPool] = None,
     ):

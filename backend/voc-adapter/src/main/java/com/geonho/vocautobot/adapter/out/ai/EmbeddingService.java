@@ -160,14 +160,14 @@ public class EmbeddingService {
 
     /**
      * 임베딩 차원 수 조회
-     * nomic-embed-text 모델의 기본 차원은 768
+     * bge-m3 모델의 기본 차원은 1024
      * 필요시 설정으로 변경 가능
      *
      * @return 임베딩 벡터 차원 수
      */
     public int getEmbeddingDimension() {
-        // nomic-embed-text의 기본 차원은 768
+        // bge-m3의 기본 차원은 1024
         // 실제 응답에서 동적으로 확인하는 것이 더 안전
-        return 768;
+        return 1024;
     }
 }

@@ -246,7 +246,7 @@ class TestAnalysisServiceIntegration:
             Initialized EmbeddingService.
         """
         service = EmbeddingService(
-            model_name="nomic-embed-text",
+            model_name="bge-m3",
             ollama_base_url="http://localhost:11434",
             db_pool=db_pool,
         )
