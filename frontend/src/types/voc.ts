@@ -288,6 +288,7 @@ export interface VocListParams {
   channel?: VocChannel;
   categoryId?: number;
   assigneeId?: number;
+  customerEmail?: string;
   search?: string;
   fromDate?: string;
   toDate?: string;

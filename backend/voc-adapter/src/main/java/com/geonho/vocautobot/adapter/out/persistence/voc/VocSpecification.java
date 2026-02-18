@@ -5,7 +5,11 @@ import com.geonho.vocautobot.domain.voc.VocStatus;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 
 public class VocSpecification {
@@ -38,7 +42,7 @@ public class VocSpecification {
             }
 
             if (customerEmail != null && !customerEmail.isBlank()) {
-                predicates.add(criteriaBuilder.equal(root.get("customerEmail"), customerEmail));
+                predicates.add(criteriaBuilder.equal(root.get("customerEmailHash"), sha256(customerEmail)));
             }
 
             if (search != null && !search.isBlank()) {
@@ -55,5 +59,15 @@ public class VocSpecification {
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
+    }
+
+    private static String sha256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not available", e);
+        }
     }
 }

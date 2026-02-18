@@ -15,6 +15,7 @@ public class CategoryResponse {
 
     private Long id;
     private String name;
+    private String code;
     private CategoryType type;
     private Long parentId;
     private String parentName;
@@ -33,6 +34,7 @@ public class CategoryResponse {
         return CategoryResponse.builder()
                 .id(category.getId())
                 .name(category.getName())
+                .code(category.getCode())
                 .type(category.getType())
                 .parentId(category.getParentId())
                 .parentName(category.getParent() != null ? category.getParent().getName() : null)

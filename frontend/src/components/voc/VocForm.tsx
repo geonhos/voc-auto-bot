@@ -4,14 +4,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useCategories } from '@/hooks/useCategories';
 import { useCategorySuggestion } from '@/hooks/useCategorySuggestion';
+import { useCustomerVocHistory } from '@/hooks/useCustomerVocHistory';
 import { useVocFormViewModel } from '@/hooks/useVocFormViewModel';
 import { cn } from '@/lib/utils';
 import type { VocPriority, Voc } from '@/types';
 import { priorityLabels, VOC_CONSTANTS } from '@/types/vocForm';
 
-import { CategorySelect } from './CategorySelect';
+import { CategoryCardSelect } from './CategoryCardSelect';
 import { CategorySuggestion } from './CategorySuggestion';
+import { CustomerVocHistoryBanner } from './CustomerVocHistoryBanner';
 import { FileUpload } from './FileUpload';
+import { PriorityRecommendation } from './PriorityRecommendation';
 import { VocSuccessModal } from './VocSuccessModal';
 
 
@@ -34,7 +37,7 @@ export function VocForm() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [categoryAutoFilled, setCategoryAutoFilled] = useState(false);
 
-  const { form, isSubmitting, error, handleSubmit, reset, hasDraft, draftSavedAt, restoreDraft, clearDraft } = useVocFormViewModel({
+  const { form, isSubmitting, error, handleSubmit, reset, hasDraft, draftSavedAt, restoreDraft, clearDraft, recommendedPriority } = useVocFormViewModel({
     onSuccess: (voc: Voc) => {
       setSuccessTicketId(voc.ticketId);
       setShowSuccessModal(true);
@@ -54,6 +57,31 @@ export function VocForm() {
   const title = watch('title') || '';
   const content = watch('content') || '';
   const contentLength = content.length;
+  const customerEmail = watch('customerEmail') || '';
+  const currentPriority = watch('priority') || 'NORMAL';
+
+  // 고객 VOC 이력 조회 (개선 A)
+  const {
+    unresolvedVocs,
+    customerName: historicalCustomerName,
+    isLoading: isLoadingHistory,
+    unresolvedCount,
+  } = useCustomerVocHistory(customerEmail);
+
+  // 고객명 자동 채우기 (빈 값일 때만)
+  const prevHistoricalNameRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      historicalCustomerName &&
+      historicalCustomerName !== prevHistoricalNameRef.current
+    ) {
+      const currentName = form.getValues('customerName');
+      if (!currentName) {
+        setValue('customerName', historicalCustomerName);
+      }
+    }
+    prevHistoricalNameRef.current = historicalCustomerName;
+  }, [historicalCustomerName, form, setValue]);
 
   const { data: categories = [] } = useCategories();
   const { suggestions, isLoading: isSuggestingCategory, error: suggestionError } = useCategorySuggestion(title, content);
@@ -198,6 +226,64 @@ export function VocForm() {
           </div>
         )}
 
+        {/* 고객 이메일 (게이트 필드 - 최상단) */}
+        <div>
+          <label htmlFor="customerEmail" className="block text-sm font-medium text-gray-700 mb-1">
+            고객 이메일 <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="customerEmail"
+            type="email"
+            {...register('customerEmail')}
+            placeholder="이메일을 입력하세요 (예: customer@example.com)"
+            className={cn(
+              'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
+              errors.customerEmail
+                ? 'border-red-500 focus:ring-red-200'
+                : 'border-gray-300 focus:ring-blue-200'
+            )}
+            aria-invalid={!!errors.customerEmail}
+          />
+          {errors.customerEmail && (
+            <p className="mt-1 text-sm text-red-600" role="alert">
+              {errors.customerEmail.message}
+            </p>
+          )}
+        </div>
+
+        {/* 고객 VOC 이력 배너 (개선 A) */}
+        <CustomerVocHistoryBanner
+          unresolvedVocs={unresolvedVocs}
+          unresolvedCount={unresolvedCount}
+          isLoading={isLoadingHistory}
+          customerEmail={customerEmail}
+        />
+
+        {/* 고객명 */}
+        <div>
+          <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 mb-1">
+            고객명
+          </label>
+          <input
+            id="customerName"
+            type="text"
+            {...register('customerName')}
+            placeholder="고객명을 입력하세요"
+            className={cn(
+              'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
+              errors.customerName
+                ? 'border-red-500 focus:ring-red-200'
+                : 'border-gray-300 focus:ring-blue-200'
+            )}
+            aria-invalid={!!errors.customerName}
+          />
+          {errors.customerName && (
+            <p className="mt-1 text-sm text-red-600" role="alert">
+              {errors.customerName.message}
+            </p>
+          )}
+        </div>
+
         {/* 제목 */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
@@ -265,7 +351,7 @@ export function VocForm() {
           </div>
         </div>
 
-        {/* 카테고리 영역 */}
+        {/* 카테고리 영역 (개선 B: 카드 선택) */}
         {showCategorySpinner ? (
           <div className="flex items-center justify-center py-8 border border-purple-200 rounded-lg bg-purple-50/30">
             <div className="text-center">
@@ -283,18 +369,16 @@ export function VocForm() {
                 onSelect={handleSuggestionSelect}
               />
             )}
-            <CategorySelect
-              value={watch('categoryId') ?? null}
-              error={errors.categoryId?.message}
-              register={register}
+            <CategoryCardSelect
               setValue={setValue}
               watch={watch}
+              error={errors.categoryId?.message}
               disabled={categoryDisabled}
             />
           </>
         )}
 
-        {/* 우선순위 */}
+        {/* 우선순위 + 추천 뱃지 (개선 C) */}
         <div>
           <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
             우선순위 <span className="text-red-500">*</span>
@@ -321,63 +405,10 @@ export function VocForm() {
               {errors.priority.message}
             </p>
           )}
-        </div>
-
-        {/* 고객 정보 */}
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-sm font-medium text-gray-900 mb-4">고객 정보</h3>
-
-          <div className="space-y-4">
-            {/* 고객명 */}
-            <div>
-              <label htmlFor="customerName" className="block text-sm font-medium text-gray-700 mb-1">
-                고객명
-              </label>
-              <input
-                id="customerName"
-                type="text"
-                {...register('customerName')}
-                placeholder="고객명을 입력하세요"
-                className={cn(
-                  'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-                  errors.customerName
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-gray-300 focus:ring-blue-200'
-                )}
-                aria-invalid={!!errors.customerName}
-              />
-              {errors.customerName && (
-                <p className="mt-1 text-sm text-red-600" role="alert">
-                  {errors.customerName.message}
-                </p>
-              )}
-            </div>
-
-            {/* 고객 이메일 */}
-            <div>
-              <label htmlFor="customerEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                이메일 <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="customerEmail"
-                type="email"
-                {...register('customerEmail')}
-                placeholder="이메일을 입력하세요 (예: customer@example.com)"
-                className={cn(
-                  'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2',
-                  errors.customerEmail
-                    ? 'border-red-500 focus:ring-red-200'
-                    : 'border-gray-300 focus:ring-blue-200'
-                )}
-                aria-invalid={!!errors.customerEmail}
-              />
-              {errors.customerEmail && (
-                <p className="mt-1 text-sm text-red-600" role="alert">
-                  {errors.customerEmail.message}
-                </p>
-              )}
-            </div>
-          </div>
+          <PriorityRecommendation
+            recommendedPriority={recommendedPriority}
+            currentPriority={currentPriority}
+          />
         </div>
 
         {/* 파일 첨부 */}

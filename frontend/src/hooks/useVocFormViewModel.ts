@@ -1,12 +1,13 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useEffect, useRef, useCallback, FormEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, FormEvent } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 
-import type { Voc } from '@/types';
-import { vocFormSchema, VocFormSchemaType } from '@/types/vocForm';
+import type { Voc, VocPriority } from '@/types';
+import { vocFormSchema, VocFormSchemaType, CATEGORY_PRIORITY_MAP, URGENT_KEYWORDS } from '@/types/vocForm';
 
+import { useCategories } from './useCategories';
 import { useVocCreation } from './useVocMutation';
 
 const DRAFT_STORAGE_KEY = 'voc-form-draft';
@@ -62,6 +63,29 @@ function removeDraft(): void {
 }
 
 /**
+ * 카테고리 코드와 제목/내용 키워드 기반으로 추천 우선순위 결정
+ */
+function getRecommendedPriority(
+  parentCategoryCode: string | undefined,
+  title: string,
+  content: string
+): VocPriority | null {
+  if (!parentCategoryCode) return null;
+
+  const basePriority = CATEGORY_PRIORITY_MAP[parentCategoryCode];
+  if (!basePriority) return null;
+
+  // ERROR 카테고리 + 긴급 키워드 → URGENT 에스컬레이션
+  if (parentCategoryCode === 'ERROR') {
+    const combined = `${title} ${content}`;
+    const hasUrgentKeyword = URGENT_KEYWORDS.some((kw) => combined.includes(kw));
+    if (hasUrgentKeyword) return 'URGENT';
+  }
+
+  return basePriority;
+}
+
+/**
  * @description Manages VOC form state and submission
  */
 interface UseVocFormViewModelProps {
@@ -78,6 +102,7 @@ interface UseVocFormViewModelReturn {
   draftSavedAt: string | null;
   restoreDraft: () => void;
   clearDraft: () => void;
+  recommendedPriority: VocPriority | null;
 }
 
 export function useVocFormViewModel({
@@ -153,6 +178,34 @@ export function useVocFormViewModel({
     };
   }, [form]);
 
+  // Priority auto-recommendation
+  const { data: categories = [] } = useCategories();
+  const parentCategoryId = form.watch('parentCategoryId');
+  const watchedTitle = form.watch('title') || '';
+  const watchedContent = form.watch('content') || '';
+
+  const parentCategoryCode = useMemo(() => {
+    if (!parentCategoryId) return undefined;
+    const cat = categories.find((c) => c.id === parentCategoryId);
+    return cat?.code;
+  }, [parentCategoryId, categories]);
+
+  const recommendedPriority = useMemo(
+    () => getRecommendedPriority(parentCategoryCode, watchedTitle, watchedContent),
+    [parentCategoryCode, watchedTitle, watchedContent]
+  );
+
+  // Auto-set priority when parentCategoryId changes
+  const prevParentCategoryIdRef = useRef<number | null | undefined>(undefined);
+  useEffect(() => {
+    if (prevParentCategoryIdRef.current !== parentCategoryId && parentCategoryId != null) {
+      if (recommendedPriority) {
+        form.setValue('priority', recommendedPriority);
+      }
+    }
+    prevParentCategoryIdRef.current = parentCategoryId;
+  }, [parentCategoryId, recommendedPriority, form]);
+
   const { createWithFiles, isPending } = useVocCreation({
     onSuccess: (voc) => {
       setError(null);
@@ -219,5 +272,6 @@ export function useVocFormViewModel({
     draftSavedAt,
     restoreDraft,
     clearDraft,
+    recommendedPriority,
   };
 }

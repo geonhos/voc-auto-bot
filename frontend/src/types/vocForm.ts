@@ -80,3 +80,80 @@ export const priorityColors: Record<VocPriority, string> = {
   HIGH: 'text-[#B89350] bg-[#B89350]/10',
   URGENT: 'text-[#B85C5C] bg-[#B85C5C]/10',
 };
+
+/**
+ * 카테고리 code → 기본 추천 우선순위 매핑
+ */
+export const CATEGORY_PRIORITY_MAP: Record<string, VocPriority> = {
+  ERROR: 'HIGH',
+  FEATURE: 'NORMAL',
+  INQUIRY: 'LOW',
+  COMPLAINT: 'HIGH',
+  PRAISE: 'LOW',
+};
+
+/**
+ * ERROR 카테고리에서 URGENT로 에스컬레이션하는 키워드
+ */
+export const URGENT_KEYWORDS: string[] = [
+  '결제',
+  '장애',
+  '접속불가',
+  '데이터 손실',
+  '보안',
+  '해킹',
+  '개인정보',
+  '서비스 중단',
+];
+
+/**
+ * 대분류 카드 메타 정보
+ */
+export interface CategoryCardMeta {
+  code: string;
+  label: string;
+  description: string;
+  icon: string;
+  colorClass: string;
+}
+
+/**
+ * 5대분류 카드별 메타 정보
+ */
+export const CATEGORY_CARD_META: CategoryCardMeta[] = [
+  {
+    code: 'ERROR',
+    label: '오류/버그',
+    description: '시스템 오류 및 버그 리포트',
+    icon: 'Bug',
+    colorClass: 'border-red-500 bg-red-50 text-red-700',
+  },
+  {
+    code: 'FEATURE',
+    label: '기능 요청',
+    description: '새로운 기능 및 개선 요청',
+    icon: 'Lightbulb',
+    colorClass: 'border-blue-500 bg-blue-50 text-blue-700',
+  },
+  {
+    code: 'INQUIRY',
+    label: '문의',
+    description: '사용법, 정책 등 일반 문의',
+    icon: 'HelpCircle',
+    colorClass: 'border-green-500 bg-green-50 text-green-700',
+  },
+  {
+    code: 'COMPLAINT',
+    label: '불만/컴플레인',
+    description: '서비스 불만 및 민원',
+    icon: 'AlertTriangle',
+    colorClass: 'border-amber-500 bg-amber-50 text-amber-700',
+  },
+  {
+    code: 'PRAISE',
+    label: '칭찬/감사',
+    description: '서비스 만족 및 감사 피드백',
+    icon: 'ThumbsUp',
+    colorClass: 'border-purple-500 bg-purple-50 text-purple-700',
+  },
+];

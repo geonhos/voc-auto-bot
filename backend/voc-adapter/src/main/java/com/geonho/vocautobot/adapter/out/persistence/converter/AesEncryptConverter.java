@@ -59,6 +59,11 @@ public class AesEncryptConverter implements AttributeConverter<String, String> {
         try {
             byte[] decoded = Base64.getDecoder().decode(dbData);
 
+            // Minimum size: IV (12 bytes) + GCM tag (16 bytes) + at least 1 byte data
+            if (decoded.length < IV_LENGTH + 16) {
+                return dbData;
+            }
+
             ByteBuffer buffer = ByteBuffer.wrap(decoded);
             byte[] iv = new byte[IV_LENGTH];
             buffer.get(iv);
@@ -72,7 +77,8 @@ public class AesEncryptConverter implements AttributeConverter<String, String> {
 
             return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RuntimeException("Decryption failed", e);
+            // Plain text data from before encryption was enabled
+            return dbData;
         }
     }
 

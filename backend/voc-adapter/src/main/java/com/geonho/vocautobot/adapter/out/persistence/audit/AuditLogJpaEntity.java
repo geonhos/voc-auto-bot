@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -37,9 +39,11 @@ public class AuditLogJpaEntity {
     @Column(name = "entity_id", length = 100)
     private String entityId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "before_data", columnDefinition = "jsonb")
     private String beforeData;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "after_data", columnDefinition = "jsonb")
     private String afterData;
 
