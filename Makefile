@@ -1,4 +1,4 @@
-.PHONY: help up down up-infra down-infra build build-backend build-frontend build-ai logs logs-backend logs-ai ps clean seed seed-reset seed-status seed-vocs setup
+.PHONY: help up down up-infra down-infra up-gpu build build-backend build-frontend build-ai logs logs-backend logs-ai ps clean seed seed-reset seed-status seed-vocs setup ollama-check
 
 COMPOSE = docker compose
 
@@ -14,12 +14,18 @@ down-infra: ## Stop infra
 	$(COMPOSE) down --remove-orphans
 
 # ── App (Backend + Frontend + AI + Infra) ──
+# 네이티브 Ollama가 실행 중이어야 함 (Mac: brew install ollama && ollama serve)
 
-up: ## Start all services
+up: ollama-check ## Start all services (requires native Ollama)
 	$(COMPOSE) --profile app up -d
 
 down: ## Stop all services
 	$(COMPOSE) --profile app down --remove-orphans
+
+# ── GPU Server (Docker Ollama + App) ──
+
+up-gpu: ## Start all with Docker Ollama (GPU server only)
+	$(COMPOSE) --profile app --profile gpu up -d
 
 # ── Build ──
 
@@ -82,4 +88,11 @@ ps: ## Show running containers
 	$(COMPOSE) ps
 
 clean: ## Stop all and remove volumes
-	$(COMPOSE) --profile app down -v --remove-orphans
+	$(COMPOSE) --profile app --profile gpu down -v --remove-orphans
+
+ollama-check: ## Verify native Ollama is running
+	@curl -sf http://localhost:11434/api/tags > /dev/null 2>&1 || \
+		(echo "❌ Ollama가 실행되고 있지 않습니다." && \
+		 echo "   Mac: brew install ollama && ollama serve" && \
+		 echo "   GPU 서버: make up-gpu 사용" && exit 1)
+	@echo "✅ Ollama 연결 확인 (localhost:11434)"

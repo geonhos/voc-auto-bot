@@ -17,14 +17,11 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
-  # Ollama: uncomment GPU section if NVIDIA GPU is available
-  ollama:
-    ports:
-      - "${OLLAMA_PORT:-11434}:11434"
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
+
+  # Ollama: gpu 프로필에서만 사용 (docker compose --profile gpu up -d)
+  # Mac 개발 환경에서는 네이티브 Ollama 사용 권장:
+  #   brew install ollama && ollama serve
+  #   ollama pull bge-m3 && ollama pull exaone3.5:7.8b
+  # ollama:
+  #   ports:
+  #     - "${OLLAMA_PORT:-11434}:11434"

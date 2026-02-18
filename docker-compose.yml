@@ -48,8 +48,12 @@ services:
       - data-net
 
   # =========================
-  # Ollama (LLM Inference)
+  # Ollama (LLM Inference) — Docker 모드
   # =========================
+  # Mac 개발 환경: 네이티브 Ollama 사용 (Apple Silicon GPU 가속)
+  #   → brew install ollama && ollama serve
+  #   → OLLAMA_BASE_URL 기본값이 host.docker.internal:11434를 가리킴
+  # GPU 서버/CI: docker compose --profile gpu up -d 로 활성화
   ollama:
     image: ollama/ollama:0.5.7
     container_name: voc-ollama
@@ -70,13 +74,15 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      test: ["CMD", "/bin/ollama", "list"]
       interval: 30s
       timeout: 10s
-      start_period: 30s
-      retries: 3
+      start_period: 60s
+      retries: 5
     networks:
       - backend-net
+    profiles:
+      - gpu
 
   # =========================
   # AI Service (Python FastAPI)
@@ -88,7 +94,7 @@ services:
     container_name: voc-ai-service
     restart: unless-stopped
     environment:
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
       LLM_MODEL: ${LLM_MODEL:-exaone3.5:7.8b}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -98,8 +104,6 @@ services:
       - "8001:8001"
     depends_on:
       postgres:
-        condition: service_healthy
-      ollama:
         condition: service_healthy
     secrets:
       - db_password
@@ -172,7 +176,7 @@ services:
       SPRING_MAIL_HOST: mailhog
       SPRING_MAIL_PORT: 1025
       JWT_SECRET: ${JWT_SECRET}
-      LLM_API_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      LLM_API_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       LLM_MODEL: ${LLM_MODEL:-exaone3.5:7.8b}
       LLM_EMBEDDING_MODEL: ${LLM_EMBEDDING_MODEL:-bge-m3:latest}
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
@@ -189,8 +193,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      ollama:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/actuator/health/liveness || exit 1"]
@@ -265,7 +267,7 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
-  ollama_data:
+  ollama_data:  # gpu 프로필 전용
 
 # =========================
 # 3-tier Network Isolation
