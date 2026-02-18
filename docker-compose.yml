@@ -48,6 +48,37 @@ services:
       - data-net
 
   # =========================
+  # Ollama (LLM Inference)
+  # =========================
+  ollama:
+    image: ollama/ollama:0.5.7
+    container_name: voc-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    expose:
+      - "11434"
+    environment:
+      - OLLAMA_NUM_PARALLEL=4
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_KEEP_ALIVE=5m
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    networks:
+      - backend-net
+
+  # =========================
   # AI Service (Python FastAPI)
   # =========================
   ai-service:
@@ -57,7 +88,7 @@ services:
     container_name: voc-ai-service
     restart: unless-stopped
     environment:
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
       LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -67,6 +98,8 @@ services:
       - "8001:8001"
     depends_on:
       postgres:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
     secrets:
       - db_password
@@ -139,7 +172,7 @@ services:
       SPRING_MAIL_HOST: mailhog
       SPRING_MAIL_PORT: 1025
       JWT_SECRET: ${JWT_SECRET}
-      LLM_API_URL: http://host.docker.internal:11434
+      LLM_API_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
       LLM_EMBEDDING_MODEL: ${LLM_EMBEDDING_MODEL:-nomic-embed-text:latest}
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
@@ -156,6 +189,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/actuator/health/liveness || exit 1"]
@@ -230,6 +265,7 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+  ollama_data:
 
 # =========================
 # 3-tier Network Isolation

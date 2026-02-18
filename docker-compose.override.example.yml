@@ -17,3 +17,14 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+  # Ollama: uncomment GPU section if NVIDIA GPU is available
+  ollama:
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
