@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.application.user.usecase;
 
+import com.geonho.vocautobot.application.audit.Audited;
 import com.geonho.vocautobot.application.auth.port.out.PasswordEncoderPort;
 import com.geonho.vocautobot.application.common.UseCase;
 import com.geonho.vocautobot.application.common.exception.BusinessException;
@@ -22,6 +23,7 @@ public class CreateUserService implements CreateUserUseCase {
     private final PasswordEncoderPort passwordEncoderPort;
 
     @Override
+    @Audited(action = "CREATE", entityType = "USER")
     public User createUser(CreateUserCommand command) {
         validateDuplicateUsername(command.username());
         validateDuplicateEmail(command.email());

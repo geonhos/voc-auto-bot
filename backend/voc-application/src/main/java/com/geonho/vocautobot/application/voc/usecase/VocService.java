@@ -2,6 +2,7 @@ package com.geonho.vocautobot.application.voc.usecase;
 
 import com.geonho.vocautobot.application.analysis.dto.VocLogAnalysis;
 import com.geonho.vocautobot.application.analysis.port.out.ProgressiveLearningPort;
+import com.geonho.vocautobot.application.audit.Audited;
 import com.geonho.vocautobot.application.notification.port.out.NotificationPort;
 import com.geonho.vocautobot.application.user.port.out.LoadUserPort;
 import com.geonho.vocautobot.application.voc.exception.TicketIdGenerationException;
@@ -59,6 +60,7 @@ public class VocService implements
 
     @Override
     @Transactional
+    @Audited(action = "CREATE", entityType = "VOC")
     public VocDomain createVoc(CreateVocCommand command) {
         // Generate unique ticket ID with retry limit
         String ticketId = generateUniqueTicketId();
@@ -86,6 +88,7 @@ public class VocService implements
 
     @Override
     @Transactional
+    @Audited(action = "UPDATE", entityType = "VOC")
     public VocDomain updateVoc(UpdateVocCommand command) {
         VocDomain voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));
@@ -108,6 +111,7 @@ public class VocService implements
 
     @Override
     @Transactional
+    @Audited(action = "STATUS_CHANGE", entityType = "VOC")
     public VocDomain changeStatus(ChangeStatusCommand command) {
         VocDomain voc = loadVocPort.loadVocById(command.vocId())
                 .orElseThrow(() -> new VocNotFoundException(command.vocId()));

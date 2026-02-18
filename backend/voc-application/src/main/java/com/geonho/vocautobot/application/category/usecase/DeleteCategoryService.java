@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.application.category.usecase;
 
+import com.geonho.vocautobot.application.audit.Audited;
 import com.geonho.vocautobot.application.category.port.in.DeleteCategoryUseCase;
 import com.geonho.vocautobot.application.category.port.out.CheckCategoryUsagePort;
 import com.geonho.vocautobot.application.category.port.out.LoadCategoryPort;
@@ -20,6 +21,7 @@ public class DeleteCategoryService implements DeleteCategoryUseCase {
     private final CheckCategoryUsagePort checkCategoryUsagePort;
 
     @Override
+    @Audited(action = "DELETE", entityType = "CATEGORY")
     public void deleteCategory(Long categoryId) {
         Category category = loadCategoryPort.loadById(categoryId)
                 .orElseThrow(() -> new BusinessException("CATEGORY_NOT_FOUND", "카테고리를 찾을 수 없습니다"));

@@ -1,5 +1,6 @@
 package com.geonho.vocautobot.application.user.usecase;
 
+import com.geonho.vocautobot.application.audit.Audited;
 import com.geonho.vocautobot.application.common.UseCase;
 import com.geonho.vocautobot.application.common.exception.BusinessException;
 import com.geonho.vocautobot.application.user.port.in.UpdateUserUseCase;
@@ -19,6 +20,7 @@ public class UpdateUserService implements UpdateUserUseCase {
     private final SaveUserPort saveUserPort;
 
     @Override
+    @Audited(action = "UPDATE", entityType = "USER")
     public User updateUser(UpdateUserCommand command) {
         User user = loadUserPort.loadById(command.id())
                 .orElseThrow(() -> new BusinessException("USER_NOT_FOUND", "사용자를 찾을 수 없습니다"));

@@ -6,6 +6,7 @@ export * from './vocForm';
 export * from './email';
 export * from './statistics';
 export * from './payment';
+export * from './audit';
 
 // Common types
 export interface PageParams {
