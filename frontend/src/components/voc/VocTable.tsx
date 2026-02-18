@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -9,14 +10,46 @@ import type { Voc, PageResponse } from '@/types';
 import { VocPriorityBadge } from './VocPriorityBadge';
 import { VocStatusBadge } from './VocStatusBadge';
 
+type SortDirection = 'ASC' | 'DESC';
+
 interface VocTableProps {
   vocs: PageResponse<Voc>;
   isLoading?: boolean;
+  sortBy?: string;
+  sortDirection?: SortDirection;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
+  onSortChange?: (sortBy: string, sortDirection: SortDirection) => void;
+  headerActions?: React.ReactNode;
 }
 
-export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: VocTableProps) {
+interface SortableColumn {
+  key: string;
+  label: string;
+  sortable: boolean;
+}
+
+const columns: SortableColumn[] = [
+  { key: 'ticketId', label: '티켓번호', sortable: true },
+  { key: 'title', label: '제목', sortable: true },
+  { key: 'category', label: '카테고리', sortable: false },
+  { key: 'status', label: '상태', sortable: true },
+  { key: 'priority', label: '우선순위', sortable: true },
+  { key: 'assignee', label: '담당자', sortable: false },
+  { key: 'createdAt', label: '등록일', sortable: true },
+  { key: 'updatedAt', label: '최종 수정', sortable: true },
+];
+
+export function VocTable({
+  vocs,
+  isLoading,
+  sortBy,
+  sortDirection,
+  onPageChange,
+  onPageSizeChange,
+  onSortChange,
+  headerActions,
+}: VocTableProps) {
   const router = useRouter();
   const [pageSize, setPageSize] = useState(10);
 
@@ -27,6 +60,15 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
     onPageSizeChange(newSize);
+  };
+
+  const handleSort = (columnKey: string) => {
+    if (!onSortChange) return;
+    if (sortBy === columnKey) {
+      onSortChange(columnKey, sortDirection === 'ASC' ? 'DESC' : 'ASC');
+    } else {
+      onSortChange(columnKey, 'ASC');
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -49,6 +91,17 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
     });
   };
 
+  const renderSortIcon = (columnKey: string) => {
+    if (sortBy === columnKey) {
+      return sortDirection === 'ASC' ? (
+        <ArrowUp className="w-3.5 h-3.5 inline ml-1" />
+      ) : (
+        <ArrowDown className="w-3.5 h-3.5 inline ml-1" />
+      );
+    }
+    return <ArrowUpDown className="w-3.5 h-3.5 inline ml-1 opacity-40" />;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -67,34 +120,28 @@ export function VocTable({ vocs, isLoading, onPageChange, onPageSizeChange }: Vo
 
   return (
     <div className="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+      {headerActions && (
+        <div className="px-6 py-3 border-b border-border-light dark:border-border-dark flex justify-end">
+          {headerActions}
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-border-light dark:divide-border-dark">
           <thead className="bg-slate-50 dark:bg-slate-800/50">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                티켓번호
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                제목
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                카테고리
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                상태
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                우선순위
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                담당자
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                등록일
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                최종 수정
-              </th>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  onClick={col.sortable ? () => handleSort(col.key) : undefined}
+                  className={cn(
+                    'px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider',
+                    col.sortable && 'cursor-pointer select-none hover:text-primary transition-colors',
+                  )}
+                >
+                  {col.label}
+                  {col.sortable && renderSortIcon(col.key)}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="bg-surface-light dark:bg-surface-dark divide-y divide-border-light dark:divide-border-dark">
