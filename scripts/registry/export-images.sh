@@ -32,11 +32,10 @@ done
 echo "[2/3] Building application images..."
 (cd "$PROJECT_ROOT" && docker compose build backend frontend ai-service 2>/dev/null || echo "  [WARN] Some app images may not build without full env")
 
-# Save all images to tar
+# Save all images (pipe to gzip for efficiency)
 echo "[3/3] Saving images..."
-ARCHIVE="${OUTPUT_DIR}/docker-images-${VERSION}.tar"
-docker save -o "$ARCHIVE" "${IMAGES[@]}"
-gzip "$ARCHIVE"
+ARCHIVE_GZ="${OUTPUT_DIR}/docker-images-${VERSION}.tar.gz"
+docker save "${IMAGES[@]}" | gzip > "$ARCHIVE_GZ"
 
 # Generate checksum
 (cd "$OUTPUT_DIR" && sha256sum "docker-images-${VERSION}.tar.gz" > "docker-images-${VERSION}.sha256")

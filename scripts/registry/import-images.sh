@@ -15,11 +15,17 @@ fi
 
 # Verify checksum
 CHECKSUM="${ARCHIVE%.tar.gz}.sha256"
+echo "[1/2] Verifying checksum..."
 if [ -f "$CHECKSUM" ]; then
-    echo "[1/2] Verifying checksum..."
     (cd "$(dirname "$ARCHIVE")" && sha256sum -c "$(basename "$CHECKSUM")")
 else
-    echo "[WARN] No checksum file. Skipping verification."
+    echo "[ERROR] No checksum file found: ${CHECKSUM}"
+    echo "  Air-gapped deployments require integrity verification."
+    echo "  Use --skip-verify to bypass (not recommended)."
+    if [ "${2:-}" != "--skip-verify" ]; then
+        exit 1
+    fi
+    echo "[WARN] Skipping verification as requested."
 fi
 
 # Load images
