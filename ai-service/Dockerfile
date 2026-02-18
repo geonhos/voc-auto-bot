@@ -1,5 +1,5 @@
 # Dockerfile for VOC Log Analysis AI Service
-FROM python:3.11-slim
+FROM python:3.11.8-slim
 
 WORKDIR /app
 

@@ -205,3 +205,8 @@ reviews/
 # =========================
 figma-plugin/node_modules/
 figma-plugin/dist/
+
+# =========================
+# Image exports
+# =========================
+image-export/

@@ -1,5 +1,5 @@
 # Build stage
-FROM gradle:8.5-jdk17 AS builder
+FROM gradle:8.5.2-jdk17 AS builder
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ COPY voc-bootstrap/src ./voc-bootstrap/src
 RUN gradle :voc-bootstrap:bootJar --no-daemon -x test
 
 # Runtime stage
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:17.0.13_11-jre
 
 WORKDIR /app
 
