@@ -126,6 +126,13 @@ secrets/*.key
 secrets/*.pem
 
 # =========================
+# TLS Certificates
+# =========================
+certs/*.key
+certs/*.crt
+certs/*.pem
+
+# =========================
 # Docker
 # =========================
 docker-compose.override.yml
