@@ -1,10 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { ChevronDown, Save, Trash2 } from 'lucide-react';
 
+import { useCategories } from '@/hooks/useCategories';
+import { useFilterPresets } from '@/hooks/useFilterPresets';
+import { useUsers } from '@/hooks/useUsers';
 import type { VocStatus, VocPriority, VocFilterState } from '@/types';
 
 interface VocSearchFilterProps {
+  initialFilters?: VocFilterState;
+  initialSearch?: string;
   onFilterChange: (filters: VocFilterState) => void;
   onSearch: (search: string) => void;
 }
@@ -25,39 +31,56 @@ const priorityOptions: { value: VocPriority; label: string }[] = [
   { value: 'URGENT', label: '긴급' },
 ];
 
-export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterProps) {
-  const [filters, setFilters] = useState<VocFilterState>({
-    status: [],
-    priority: [],
-    search: '',
-  });
-  const [searchInput, setSearchInput] = useState('');
+export function VocSearchFilter({
+  initialFilters,
+  initialSearch,
+  onFilterChange,
+  onSearch,
+}: VocSearchFilterProps) {
+  const [filters, setFilters] = useState<VocFilterState>(
+    initialFilters ?? { status: [], priority: [] },
+  );
+  const [searchInput, setSearchInput] = useState(initialSearch ?? '');
   const [showFilters, setShowFilters] = useState(false);
+  const [showPresetDropdown, setShowPresetDropdown] = useState(false);
+  const presetNameRef = useRef<HTMLInputElement>(null);
+
+  const { data: categories } = useCategories();
+  const { data: usersResponse } = useUsers({ size: 100 });
+  const users = usersResponse?.data?.content ?? [];
+  const { presets, savePreset, deletePreset } = useFilterPresets();
+
+  const applyFilters = (newFilters: VocFilterState) => {
+    setFilters(newFilters);
+    onFilterChange(newFilters);
+  };
 
   const handleStatusChange = (status: VocStatus) => {
     const newStatus = filters.status.includes(status)
       ? filters.status.filter((s) => s !== status)
       : [...filters.status, status];
-
-    const newFilters = { ...filters, status: newStatus };
-    setFilters(newFilters);
-    onFilterChange(newFilters);
+    applyFilters({ ...filters, status: newStatus });
   };
 
   const handlePriorityChange = (priority: VocPriority) => {
     const newPriority = filters.priority.includes(priority)
       ? filters.priority.filter((p) => p !== priority)
       : [...filters.priority, priority];
-
-    const newFilters = { ...filters, priority: newPriority };
-    setFilters(newFilters);
-    onFilterChange(newFilters);
+    applyFilters({ ...filters, priority: newPriority });
   };
 
   const handleDateChange = (field: 'fromDate' | 'toDate', value: string) => {
-    const newFilters = { ...filters, [field]: value };
-    setFilters(newFilters);
-    onFilterChange(newFilters);
+    applyFilters({ ...filters, [field]: value });
+  };
+
+  const handleCategoryChange = (value: string) => {
+    const categoryId = value ? Number(value) : undefined;
+    applyFilters({ ...filters, categoryId });
+  };
+
+  const handleAssigneeChange = (value: string) => {
+    const assigneeId = value ? Number(value) : undefined;
+    applyFilters({ ...filters, assigneeId });
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -66,19 +89,31 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
   };
 
   const handleClearFilters = () => {
-    const clearedFilters: VocFilterState = {
-      status: [],
-      priority: [],
-    };
+    const clearedFilters: VocFilterState = { status: [], priority: [] };
     setFilters(clearedFilters);
     setSearchInput('');
     onFilterChange(clearedFilters);
     onSearch('');
   };
 
+  const handleSavePreset = () => {
+    const name = presetNameRef.current?.value?.trim();
+    if (!name) return;
+    savePreset(name, filters);
+    if (presetNameRef.current) presetNameRef.current.value = '';
+  };
+
+  const handleApplyPreset = (preset: typeof presets[number]) => {
+    setFilters(preset.filters);
+    onFilterChange(preset.filters);
+    setShowPresetDropdown(false);
+  };
+
   const hasActiveFilters =
     filters.status.length > 0 ||
     filters.priority.length > 0 ||
+    filters.categoryId ||
+    filters.assigneeId ||
     filters.fromDate ||
     filters.toDate ||
     searchInput;
@@ -126,6 +161,45 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
           필터
         </button>
 
+        {/* Preset dropdown */}
+        {presets.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => setShowPresetDropdown(!showPresetDropdown)}
+              className="px-4 py-2 border border-border-light dark:border-border-dark rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 text-sm"
+            >
+              프리셋
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            {showPresetDropdown && (
+              <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded-lg shadow-lg z-20">
+                {presets.map((preset) => (
+                  <div
+                    key={preset.id}
+                    className="flex items-center justify-between px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                  >
+                    <span
+                      className="text-sm text-slate-700 dark:text-slate-300 truncate flex-1"
+                      onClick={() => handleApplyPreset(preset)}
+                    >
+                      {preset.name}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deletePreset(preset.id);
+                      }}
+                      className="text-slate-400 hover:text-danger ml-2"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {hasActiveFilters && (
           <button
             onClick={handleClearFilters}
@@ -138,6 +212,7 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
 
       {showFilters && (
         <div className="border-t border-border-light dark:border-border-dark pt-4 space-y-4">
+          {/* Status filter */}
           <div role="group" aria-labelledby="status-filter-label">
             <span id="status-filter-label" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">상태</span>
             <div className="flex flex-wrap gap-2">
@@ -158,6 +233,7 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
             </div>
           </div>
 
+          {/* Priority filter */}
           <div role="group" aria-labelledby="priority-filter-label">
             <span id="priority-filter-label" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">우선순위</span>
             <div className="flex flex-wrap gap-2">
@@ -178,6 +254,47 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
             </div>
           </div>
 
+          {/* Category filter */}
+          <div>
+            <label htmlFor="category-filter" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              카테고리
+            </label>
+            <select
+              id="category-filter"
+              value={filters.categoryId ?? ''}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="w-full max-w-xs px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+            >
+              <option value="">전체</option>
+              {categories?.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Assignee filter */}
+          <div>
+            <label htmlFor="assignee-filter" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+              담당자
+            </label>
+            <select
+              id="assignee-filter"
+              value={filters.assigneeId ?? ''}
+              onChange={(e) => handleAssigneeChange(e.target.value)}
+              className="w-full max-w-xs px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
+            >
+              <option value="">전체</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name} (@{user.username})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date range filter */}
           <div role="group" aria-labelledby="date-filter-label">
             <span id="date-filter-label" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">기간</span>
             <div className="flex items-center gap-2">
@@ -194,6 +311,26 @@ export function VocSearchFilter({ onFilterChange, onSearch }: VocSearchFilterPro
                 onChange={(e) => handleDateChange('toDate', e.target.value)}
                 className="px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               />
+            </div>
+          </div>
+
+          {/* Save preset */}
+          <div className="border-t border-border-light dark:border-border-dark pt-4">
+            <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">필터 프리셋 저장</span>
+            <div className="flex items-center gap-2">
+              <input
+                ref={presetNameRef}
+                type="text"
+                placeholder="프리셋 이름"
+                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-border-light dark:border-border-dark rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <button
+                onClick={handleSavePreset}
+                className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm hover:bg-primary-dark transition-colors flex items-center gap-1"
+              >
+                <Save className="w-4 h-4" />
+                저장
+              </button>
             </div>
           </div>
         </div>

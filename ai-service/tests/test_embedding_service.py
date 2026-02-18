@@ -14,7 +14,7 @@ class TestEmbeddingService:
     def test_load_mock_logs(self):
         """Test loading mock logs from JSON."""
         service = EmbeddingService(
-            model_name="nomic-embed-text",
+            model_name="bge-m3",
             ollama_base_url="http://localhost:11434",
         )
 
@@ -84,7 +84,7 @@ class TestEmbeddingServiceIntegration:
             Initialized EmbeddingService.
         """
         service = EmbeddingService(
-            model_name="nomic-embed-text",
+            model_name="bge-m3",
             ollama_base_url="http://localhost:11434",
             db_pool=db_pool,
         )

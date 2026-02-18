@@ -34,7 +34,7 @@ class TestAnalysisService:
         with patch("app.services.analysis_service.Ollama"):
             service = AnalysisService(
                 embedding_service=mock_embedding_service,
-                model_name="gpt-oss:20b",
+                model_name="exaone3.5:7.8b",
                 ollama_base_url="http://localhost:11434",
             )
             return service
@@ -246,7 +246,7 @@ class TestAnalysisServiceIntegration:
             Initialized EmbeddingService.
         """
         service = EmbeddingService(
-            model_name="nomic-embed-text",
+            model_name="bge-m3",
             ollama_base_url="http://localhost:11434",
             db_pool=db_pool,
         )
@@ -271,7 +271,7 @@ class TestAnalysisServiceIntegration:
         try:
             service = AnalysisService(
                 embedding_service=embedding_service,
-                model_name="gpt-oss:20b",
+                model_name="exaone3.5:7.8b",
                 ollama_base_url="http://localhost:11434",
             )
             return service

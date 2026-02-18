@@ -58,7 +58,7 @@ def ensure_log_embeddings_table() -> None:
                     log_id VARCHAR(255) NOT NULL UNIQUE,
                     content TEXT NOT NULL,
                     metadata JSONB NOT NULL DEFAULT '{}',
-                    embedding vector(768) NOT NULL,
+                    embedding vector(1024) NOT NULL,
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
             """)

@@ -32,7 +32,7 @@ class OllamaAdapterTest {
 
         config = new OllamaConfig();
         config.setBaseUrl(mockWebServer.url("/").toString());
-        config.setModel("gpt-oss:20b");
+        config.setModel("exaone3.5:7.8b");
         config.setTimeout(5000);
 
         WebClient webClient = WebClient.builder()
@@ -76,7 +76,7 @@ class OllamaAdapterTest {
 
         String ollamaResponse = String.format("""
                 {
-                  "model": "gpt-oss:20b",
+                  "model": "exaone3.5:7.8b",
                   "response": "%s"
                 }
                 """, llmResponseJson.replace("\n", "\\n").replace("\"", "\\\""));
@@ -113,7 +113,7 @@ class OllamaAdapterTest {
         String expectedResponse = "This is a test response";
         String ollamaResponse = String.format("""
                 {
-                  "model": "gpt-oss:20b",
+                  "model": "exaone3.5:7.8b",
                   "response": "%s"
                 }
                 """, expectedResponse);
@@ -152,7 +152,7 @@ class OllamaAdapterTest {
         // given
         String invalidOllamaResponse = """
                 {
-                  "model": "gpt-oss:20b",
+                  "model": "exaone3.5:7.8b",
                   "response": "invalid json"
                 }
                 """;

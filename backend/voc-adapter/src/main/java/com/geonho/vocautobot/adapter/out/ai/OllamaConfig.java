@@ -13,8 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class OllamaConfig {
 
     private String baseUrl = "http://localhost:11434";
-    private String model = "gpt-oss:20b";
-    private String embeddingModel = "nomic-embed-text:latest";
+    private String model = "exaone3.5:7.8b";
+    private String embeddingModel = "bge-m3:latest";
     private int timeout = 30000;
     private int maxRetries = 3;
 

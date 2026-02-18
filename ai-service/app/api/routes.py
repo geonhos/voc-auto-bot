@@ -30,8 +30,8 @@ sentiment_service: Optional[SentimentService] = None
 
 def initialize_services(
     ollama_base_url: str = "http://localhost:11434",
-    embedding_model: str = "nomic-embed-text",
-    llm_model: str = "gpt-oss:20b",
+    embedding_model: str = "bge-m3",
+    llm_model: str = "exaone3.5:7.8b",
     db_pool=None,
 ) -> None:
     """Initialize services and load seed data (idempotent).

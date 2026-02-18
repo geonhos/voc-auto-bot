@@ -40,12 +40,12 @@ class AnalysisService:
     # Minimum vector matches required for RAG analysis
     MIN_VECTOR_MATCHES = 1
     # Threshold for similarity score to consider a match useful
-    SIMILARITY_THRESHOLD = 0.3
+    SIMILARITY_THRESHOLD = 0.45
 
     def __init__(
         self,
         embedding_service: EmbeddingService,
-        model_name: str = "gpt-oss:20b",
+        model_name: str = "exaone3.5:7.8b",
         ollama_base_url: str = "http://localhost:11434",
     ):
         """Initialize analysis service.
@@ -325,38 +325,58 @@ class AnalysisService:
         Returns:
             RAG prompt string.
         """
-        return f"""You are an expert system log analyzer. Analyze the following VOC (Voice of Customer) issue and related system logs to identify the root cause and provide recommendations.
+        return f"""[시스템]
+당신은 시스템 로그 분석 전문가입니다. 고객 VOC와 관련 시스템 로그를 분석하여 근본 원인을 파악하고 해결 방안을 제시합니다.
 
-VOC Title: {request.title}
-VOC Content: {request.content}
+## 분석 카테고리 정의
+- 결제 오류: 결제 게이트웨이 타임아웃, 결제 실패, PG사 연동 오류
+- 인증 오류: JWT 토큰 만료, 로그인 실패, 세션 관리 문제
+- 데이터베이스 오류: DB 연결 실패, 쿼리 타임아웃, 커넥션 풀 고갈
+- 성능 문제: API 응답 지연, 메모리 부족, CPU 과부하
+- 외부 서비스 오류: 외부 API 연동 실패, 네트워크 문제
 
-Related System Logs (from the last 24 hours):
+## Few-shot 분석 예시
+
+예시 1)
+VOC: "결제가 안 됩니다. 카드 결제 시 계속 오류가 발생합니다."
+로그: [ERROR] [payment-service] Payment gateway timeout after 30s
+분석:
+- summary: "결제 게이트웨이 타임아웃으로 인한 결제 처리 실패. PG사 서버 응답 지연이 원인으로 보입니다."
+- keywords: ["payment", "gateway", "timeout"]
+- possibleCauses: ["PG사 서버 응답 지연", "네트워크 대역폭 부족"]
+- recommendation: "PG사 서버 상태 확인 및 타임아웃 임계값 조정 필요"
+
+예시 2)
+VOC: "로그인이 자꾸 풀립니다."
+로그: [WARN] [auth-service] JWT token expired for user_id=12345
+분석:
+- summary: "JWT 토큰 만료로 인한 반복적인 로그아웃 현상. 토큰 갱신 로직 점검이 필요합니다."
+- keywords: ["JWT", "token", "expired", "auth"]
+- possibleCauses: ["토큰 유효 시간 설정 부족", "Refresh 토큰 갱신 실패"]
+- recommendation: "토큰 유효 시간 연장 및 자동 갱신 로직 점검"
+
+[사용자]
+다음 VOC와 관련 로그를 분석해주세요.
+
+VOC 제목: {request.title}
+VOC 내용: {request.content}
+
+관련 시스템 로그 (최근 24시간):
 {logs_context}
 
-Based on the VOC and related logs, provide a detailed analysis:
-
-1. **Summary**: A brief summary of the issue (2-3 sentences in Korean)
-2. **Confidence**: Your confidence level in this analysis (0.0 to 1.0)
-3. **Keywords**: Key technical keywords from the logs (3-5 words)
-4. **Possible Causes**: List of 2-4 possible root causes (in Korean)
-5. **Recommendation**: Specific recommended actions to resolve the issue (in Korean)
-
-Respond ONLY with a valid JSON object in the following format (do not include markdown code blocks):
+다음 JSON 형식으로만 응답하세요 (마크다운 코드 블록 사용 금지):
 {{
-  "summary": "분석 요약 (한국어)",
+  "summary": "분석 요약 (한국어, 2-3문장)",
   "confidence": 0.85,
   "keywords": ["keyword1", "keyword2", "keyword3"],
   "possibleCauses": ["원인 1", "원인 2", "원인 3"],
   "recommendation": "권장 조치 사항 (한국어)"
 }}
 
-Important:
-- Be specific and technical in your analysis
-- Base your analysis on the actual log data provided
-- If logs show clear error patterns, mention them explicitly
-- Provide actionable recommendations
-- Respond in Korean for summary, causes, and recommendations
-- Keep keywords in English"""
+분석 지침:
+- 로그 데이터의 실제 에러 패턴을 기반으로 구체적으로 분석
+- summary, possibleCauses, recommendation은 한국어로 작성
+- keywords는 영어 기술 용어로 작성 (3-5개)"""
 
     def _create_direct_prompt(self, request: AnalysisRequest) -> str:
         """Create direct LLM prompt without log context.
@@ -367,20 +387,29 @@ Important:
         Returns:
             Direct prompt string.
         """
-        return f"""You are an expert system analyst. Analyze the following VOC (Voice of Customer) issue based on your knowledge. Note that no related system logs are available.
+        return f"""[시스템]
+당신은 시스템 분석 전문가입니다. 관련 시스템 로그 없이 VOC 내용만으로 분석합니다.
+로그 데이터가 없으므로 보수적으로 분석하고, confidence는 0.3~0.5 범위로 설정합니다.
 
-VOC Title: {request.title}
-VOC Content: {request.content}
+## Few-shot 분석 예시
 
-Based only on the VOC description, provide your best analysis:
+예시 1)
+VOC: "결제가 안 됩니다"
+→ summary: "결제 기능 장애 추정. 관련 로그 데이터 없이 VOC 내용만으로 분석됨."
+→ keywords: ["payment", "error"], possibleCauses: ["PG사 연동 오류", "결제 모듈 장애"]
 
-1. **Summary**: A brief summary of the issue (2-3 sentences in Korean)
-2. **Confidence**: Your confidence level (should be lower since no logs available, around 0.3-0.5)
-3. **Keywords**: Likely technical keywords related to this issue (3-5 words)
-4. **Possible Causes**: List of 2-4 possible root causes (in Korean)
-5. **Recommendation**: General recommended actions (in Korean)
+예시 2)
+VOC: "데이터가 사라졌어요"
+→ summary: "데이터 유실 가능성 추정. 로그 확인을 통한 정확한 원인 파악 필요."
+→ keywords: ["data", "loss"], possibleCauses: ["DB 저장 실패", "캐시 만료"]
 
-Respond ONLY with a valid JSON object in the following format (do not include markdown code blocks):
+[사용자]
+다음 VOC를 분석해주세요. (관련 로그 없음)
+
+VOC 제목: {request.title}
+VOC 내용: {request.content}
+
+다음 JSON 형식으로만 응답하세요 (마크다운 코드 블록 사용 금지):
 {{
   "summary": "분석 요약 (한국어). 참고: 관련 로그 데이터 없이 분석됨",
   "confidence": 0.35,
@@ -389,11 +418,10 @@ Respond ONLY with a valid JSON object in the following format (do not include ma
   "recommendation": "권장 조치 사항 (한국어)"
 }}
 
-Important:
-- Clearly indicate that this is a general analysis without log data
-- Provide conservative estimates since no concrete log data is available
-- Suggest checking system logs as part of recommendations
-- Respond in Korean for summary, causes, and recommendations"""
+분석 지침:
+- 로그 데이터 없이 일반적인 분석임을 명시
+- 시스템 로그 확인을 권장 사항에 포함
+- summary, possibleCauses, recommendation은 한국어로 작성"""
 
     def _parse_llm_response(self, response: str) -> dict:
         """Parse LLM response to extract analysis data.
