@@ -37,7 +37,7 @@ services:
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - EMBEDDING_MODEL=bge-m3
-      - LLM_MODEL=llama3.2:latest
+      - LLM_MODEL=exaone3.5:7.8b
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vocautobot}
     depends_on:
       ollama:

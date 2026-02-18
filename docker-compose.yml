@@ -90,7 +90,7 @@ services:
     environment:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-bge-m3}
-      LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
+      LLM_MODEL: ${LLM_MODEL:-exaone3.5:7.8b}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY}
       PORT: 8001
@@ -173,7 +173,7 @@ services:
       SPRING_MAIL_PORT: 1025
       JWT_SECRET: ${JWT_SECRET}
       LLM_API_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
-      LLM_MODEL: ${LLM_MODEL:-gpt-oss:20b}
+      LLM_MODEL: ${LLM_MODEL:-exaone3.5:7.8b}
       LLM_EMBEDDING_MODEL: ${LLM_EMBEDDING_MODEL:-bge-m3:latest}
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8001}
       AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY}

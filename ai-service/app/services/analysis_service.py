@@ -45,7 +45,7 @@ class AnalysisService:
     def __init__(
         self,
         embedding_service: EmbeddingService,
-        model_name: str = "gpt-oss:20b",
+        model_name: str = "exaone3.5:7.8b",
         ollama_base_url: str = "http://localhost:11434",
     ):
         """Initialize analysis service.

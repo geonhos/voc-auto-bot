@@ -113,7 +113,7 @@ SPRING_PROFILES_ACTIVE=docker
 # =========================
 # LLM Configuration
 # =========================
-LLM_MODEL=gpt-oss:20b
+LLM_MODEL=exaone3.5:7.8b
 
 # =========================
 # Application Ports
