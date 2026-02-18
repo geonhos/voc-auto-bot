@@ -3,6 +3,7 @@ package com.geonho.vocautobot.application.statistics.port.out;
 import com.geonho.vocautobot.domain.voc.VocPriority;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
@@ -61,4 +62,19 @@ public interface StatisticsQueryPort {
      * @return 감성별 VOC 건수 맵 (positive, negative, neutral)
      */
     Map<String, Long> countVocsBySentiment();
+
+    /**
+     * 지정 시점 이후에 생성된 VOC 건수를 조회합니다.
+     *
+     * @param since 기준 시점
+     * @return VOC 건수
+     */
+    long countVocsSince(LocalDateTime since);
+
+    /**
+     * 해결 완료된 VOC 건수를 조회합니다 (RESOLVED 상태만).
+     *
+     * @return 해결 완료 VOC 건수
+     */
+    long countResolvedVocs();
 }

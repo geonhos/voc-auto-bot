@@ -3,8 +3,10 @@ package com.geonho.vocautobot.adapter.in.web.statistics;
 import com.geonho.vocautobot.adapter.in.web.statistics.dto.CategoryStatsResponse;
 import com.geonho.vocautobot.adapter.in.web.statistics.dto.DashboardResponse;
 import com.geonho.vocautobot.adapter.in.web.statistics.dto.KpiResponse;
+import com.geonho.vocautobot.adapter.in.web.statistics.dto.KpiSnapshotResponse;
 import com.geonho.vocautobot.adapter.in.web.statistics.dto.PriorityStatsResponse;
 import com.geonho.vocautobot.adapter.in.web.statistics.dto.TrendResponse;
+import com.geonho.vocautobot.application.kpi.port.in.KpiSnapshotUseCase;
 import com.geonho.vocautobot.application.statistics.port.in.GetCategoryStatsUseCase;
 import com.geonho.vocautobot.application.statistics.port.in.GetKpiUseCase;
 import com.geonho.vocautobot.application.statistics.port.in.GetPriorityStatsUseCase;
@@ -19,7 +21,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -34,12 +39,14 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/v1/statistics")
 @RequiredArgsConstructor
+@Validated
 public class StatisticsController {
 
     private final GetKpiUseCase getKpiUseCase;
     private final GetTrendUseCase getTrendUseCase;
     private final GetCategoryStatsUseCase getCategoryStatsUseCase;
     private final GetPriorityStatsUseCase getPriorityStatsUseCase;
+    private final KpiSnapshotUseCase kpiSnapshotUseCase;
     private final StatisticsQueryPort statisticsQueryPort;
 
     @Operation(
@@ -101,9 +108,9 @@ public class StatisticsController {
                         .build())
                 .collect(Collectors.toList());
 
-        // 상태별 분포 (KPI에서 계산)
+        // 상태별 분포 (KPI 실데이터 사용)
         long total = kpiResult.totalVocs();
-        long resolved = Math.round(total * kpiResult.processingRate() / 100.0);
+        long resolved = kpiResult.resolvedVocs();
         long pending = total - resolved;
         List<DashboardResponse.StatusDistributionItem> statusDistribution = List.of(
                 DashboardResponse.StatusDistributionItem.builder()
@@ -205,5 +212,21 @@ public class StatisticsController {
     public ApiResponse<Map<String, Long>> getSentimentStats() {
         Map<String, Long> sentimentStats = statisticsQueryPort.countVocsBySentiment();
         return ApiResponse.success(sentimentStats);
+    }
+
+    @Operation(
+            summary = "KPI 스냅샷 트렌드 조회",
+            description = "일일 KPI 스냅샷 기반 트렌드 데이터를 조회합니다"
+    )
+    @GetMapping("/snapshot-trend")
+    public ApiResponse<List<KpiSnapshotResponse>> getSnapshotTrend(
+            @Parameter(description = "조회 일수 (기본 30일)")
+            @RequestParam(defaultValue = "30") @Min(1) @Max(365) int days
+    ) {
+        List<KpiSnapshotResponse> snapshots = kpiSnapshotUseCase.getSnapshotTrend(days)
+                .stream()
+                .map(KpiSnapshotResponse::from)
+                .toList();
+        return ApiResponse.success(snapshots);
     }
 }

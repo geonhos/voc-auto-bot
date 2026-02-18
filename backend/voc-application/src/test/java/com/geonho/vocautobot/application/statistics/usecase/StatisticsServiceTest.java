@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 @DisplayName("통계 서비스 테스트")
@@ -42,12 +43,18 @@ class StatisticsServiceTest {
             given(statisticsQueryPort.countTotalVocs()).willReturn(100L);
             given(statisticsQueryPort.countProcessedVocs()).willReturn(80L);
             given(statisticsQueryPort.calculateAverageProcessingTimeInHours()).willReturn(24.5);
+            given(statisticsQueryPort.countResolvedVocs()).willReturn(70L);
+            given(statisticsQueryPort.countVocsSince(any(LocalDateTime.class))).willReturn(10L);
 
             KpiResult result = getKpiService.getKpi();
 
             assertThat(result.totalVocs()).isEqualTo(100L);
             assertThat(result.processingRate()).isEqualTo(80.0);
             assertThat(result.avgProcessingTimeHours()).isEqualTo(24.5);
+            assertThat(result.todayVocs()).isEqualTo(10L);
+            assertThat(result.weekVocs()).isEqualTo(10L);
+            assertThat(result.monthVocs()).isEqualTo(10L);
+            assertThat(result.resolvedVocs()).isEqualTo(70L);
         }
 
         @Test
@@ -56,12 +63,15 @@ class StatisticsServiceTest {
             given(statisticsQueryPort.countTotalVocs()).willReturn(0L);
             given(statisticsQueryPort.countProcessedVocs()).willReturn(0L);
             given(statisticsQueryPort.calculateAverageProcessingTimeInHours()).willReturn(0.0);
+            given(statisticsQueryPort.countResolvedVocs()).willReturn(0L);
+            given(statisticsQueryPort.countVocsSince(any(LocalDateTime.class))).willReturn(0L);
 
             KpiResult result = getKpiService.getKpi();
 
             assertThat(result.totalVocs()).isEqualTo(0L);
             assertThat(result.processingRate()).isEqualTo(0.0);
             assertThat(result.avgProcessingTimeHours()).isEqualTo(0.0);
+            assertThat(result.todayVocs()).isEqualTo(0L);
         }
 
         @Test
@@ -70,6 +80,8 @@ class StatisticsServiceTest {
             given(statisticsQueryPort.countTotalVocs()).willReturn(3L);
             given(statisticsQueryPort.countProcessedVocs()).willReturn(1L);
             given(statisticsQueryPort.calculateAverageProcessingTimeInHours()).willReturn(12.0);
+            given(statisticsQueryPort.countResolvedVocs()).willReturn(1L);
+            given(statisticsQueryPort.countVocsSince(any(LocalDateTime.class))).willReturn(1L);
 
             KpiResult result = getKpiService.getKpi();
 
