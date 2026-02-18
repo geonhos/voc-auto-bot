@@ -13,7 +13,7 @@ mkdir -p "$OUTPUT_DIR"
 echo "=== Ollama Model Export (v${VERSION}) ==="
 
 # Models to export (override via OLLAMA_EXPORT_MODELS env var)
-DEFAULT_MODELS="nomic-embed-text:latest ${LLM_MODEL:-gemma3:4b}"
+DEFAULT_MODELS="bge-m3:latest ${LLM_MODEL:-exaone3.5:7.8b}"
 MODELS="${OLLAMA_EXPORT_MODELS:-$DEFAULT_MODELS}"
 
 # Pull required models

@@ -134,8 +134,8 @@ opensearch:
 # Ollama (LLM)
 ollama:
   base-url: http://localhost:11434
-  model: gpt-oss:20b
-  embedding-model: nomic-embed-text:latest
+  model: exaone3.5:7.8b
+  embedding-model: bge-m3:latest
 
 # Cookie - HTTP in local development
 cookie:
@@ -209,8 +209,8 @@ opensearch:
 # Ollama (LLM)
 ollama:
   base-url: ${LLM_API_URL:http://host.docker.internal:11434}
-  model: ${LLM_MODEL:gpt-oss:20b}
-  embedding-model: ${LLM_EMBEDDING_MODEL:nomic-embed-text:latest}
+  model: ${LLM_MODEL:exaone3.5:7.8b}
+  embedding-model: ${LLM_EMBEDDING_MODEL:bge-m3:latest}
 
 # Cookie - HTTPS via Nginx TLS termination
 cookie:

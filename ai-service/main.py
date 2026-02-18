@@ -27,8 +27,8 @@ async def lifespan(app: FastAPI):
 
     # Startup: Initialize services
     ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    embedding_model = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
-    llm_model = os.getenv("LLM_MODEL", "gpt-oss:20b")
+    embedding_model = os.getenv("EMBEDDING_MODEL", "bge-m3")
+    llm_model = os.getenv("LLM_MODEL", "exaone3.5:7.8b")
 
     print(f"Initializing services with Ollama at {ollama_base_url}...")
     print(f"Embedding model: {embedding_model}")

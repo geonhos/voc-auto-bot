@@ -14,7 +14,7 @@ class SentimentService:
 
     def __init__(
         self,
-        model_name: str = "gpt-oss:20b",
+        model_name: str = "exaone3.5:7.8b",
         ollama_base_url: str = "http://localhost:11434",
     ):
         self.llm = Ollama(model=model_name, base_url=ollama_base_url, temperature=0.1)

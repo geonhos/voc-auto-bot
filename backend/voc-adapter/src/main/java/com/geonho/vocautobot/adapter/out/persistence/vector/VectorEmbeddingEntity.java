@@ -30,13 +30,13 @@ public class VectorEmbeddingEntity {
     private Long vocId;
 
     /**
-     * 임베딩 벡터 (768 차원 - Ollama nomic-embed-text 모델)
+     * 임베딩 벡터 (1024 차원 - Ollama bge-m3 모델)
      * pgvector의 vector 타입 사용
      *
-     * pgvector는 PostgreSQL extension으로, SQL에서는 vector(768) 타입으로 정의됨
+     * pgvector는 PostgreSQL extension으로, SQL에서는 vector(1024) 타입으로 정의됨
      * JPA에서는 문자열 또는 실수 배열로 매핑하여 사용
      */
-    @Column(name = "embedding", columnDefinition = "vector(768)", nullable = false)
+    @Column(name = "embedding", columnDefinition = "vector(1024)", nullable = false)
     @org.hibernate.annotations.ColumnTransformer(write = "CAST(? AS vector)")
     private String embedding;
 
