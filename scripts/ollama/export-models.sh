@@ -12,10 +12,16 @@ mkdir -p "$OUTPUT_DIR"
 
 echo "=== Ollama Model Export (v${VERSION}) ==="
 
+# Models to export (override via OLLAMA_EXPORT_MODELS env var)
+DEFAULT_MODELS="nomic-embed-text:latest ${LLM_MODEL:-gemma3:4b}"
+MODELS="${OLLAMA_EXPORT_MODELS:-$DEFAULT_MODELS}"
+
 # Pull required models
 echo "[1/4] Pulling models..."
-ollama pull nomic-embed-text:latest
-ollama pull gemma3:4b
+for model in $MODELS; do
+    echo "  Pulling: $model"
+    ollama pull "$model"
+done
 
 # Get model storage location
 OLLAMA_DIR="${OLLAMA_MODELS:-$HOME/.ollama/models}"
@@ -33,12 +39,8 @@ echo "[4/4] Writing manifest..."
 cat > "$MANIFEST_FILE" <<EOF
 {
   "version": "${VERSION}",
-  "models": [
-    {"name": "nomic-embed-text", "tag": "latest", "purpose": "embedding"},
-    {"name": "gemma3", "tag": "4b", "purpose": "llm"}
-  ],
-  "exported_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "exported_by": "$(whoami)"
+  "models": "$(echo "$MODELS" | tr ' ' ',')",
+  "exported_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 EOF
 

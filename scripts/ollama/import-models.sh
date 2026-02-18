@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMPORT_DIR="${1:-.}"
-OLLAMA_DATA="${OLLAMA_DATA_DIR:-/tmp/wt-182/ollama-data/models}"
+OLLAMA_DATA="${OLLAMA_DATA_DIR:-./ollama-data/models}"
 
 echo "=== Ollama Model Import ==="
 
@@ -18,11 +18,17 @@ fi
 CHECKSUM="${ARCHIVE%.tar.gz}.sha256"
 
 # Verify integrity
+echo "[1/3] Verifying checksum..."
 if [ -f "$CHECKSUM" ]; then
-    echo "[1/3] Verifying checksum..."
     (cd "$(dirname "$ARCHIVE")" && sha256sum -c "$(basename "$CHECKSUM")")
 else
-    echo "[WARN] No checksum file found. Skipping integrity check."
+    echo "[ERROR] No checksum file found: ${CHECKSUM}"
+    echo "  Air-gapped deployments require integrity verification."
+    echo "  Use --skip-verify to bypass (not recommended)."
+    if [ "${2:-}" != "--skip-verify" ]; then
+        exit 1
+    fi
+    echo "[WARN] Skipping verification as requested."
 fi
 
 # Extract models
